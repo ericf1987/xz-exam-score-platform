@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <organization>
+        <name>中南迅智</name>
+        <url>https://ajia.cn/</url>
+    </organization>
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.xz</groupId>
+    <artifactId>xz-exam-score-platform</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>xz-exam-score-platform-manager</module>
+        <module>xz-exam-score-platform-executor</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spring.boot.version>1.4.0.RELEASE</spring.boot.version>
+        <jdbi.version>2.77</jdbi.version>
+        <druid.version>1.0.26</druid.version>
+        <h2.version>1.4.192</h2.version>
+        <jedis.version>2.9.0</jedis.version>
+        <ajiaedu.common.version>3.0-SNAPSHOT</ajiaedu.common.version>
+    </properties>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.4.0.RELEASE</version>
+    </parent>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <!-- Database -->
+            <dependency>
+                <groupId>org.jdbi</groupId>
+                <artifactId>jdbi</artifactId>
+                <version>${jdbi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Znxunzhi -->
+        <dependency>
+            <groupId>com.xz.ajiaedu</groupId>
+            <artifactId>xz-ajiaedu-common</artifactId>
+            <version>${ajiaedu.common.version}</version>
+        </dependency>
+
+        <!-- Spring Boot -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+</project>
