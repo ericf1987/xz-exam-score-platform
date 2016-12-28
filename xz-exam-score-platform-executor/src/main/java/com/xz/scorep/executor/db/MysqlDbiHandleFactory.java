@@ -16,16 +16,31 @@ import javax.sql.DataSource;
  * @author yidin
  */
 @Component
-public class DBIHandleFactory {
+public class MysqlDbiHandleFactory implements DbiHandleFactory {
 
-    private final DbConfig dbConfig;
+    private DbConfig dbConfig;
 
     private DBI rootDBI;
 
+    private boolean enabled;
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
     @Autowired
-    public DBIHandleFactory(DbConfig dbConfig) {
+    public MysqlDbiHandleFactory(DbConfig dbConfig, DbiHandleFactoryManager dbiHandleFactoryManager) {
+
+        if (!"com.mysql.jdbc.Driver".equals(dbConfig.getDriver())) {
+            return;
+        }
+
         this.dbConfig = dbConfig;
         this.rootDBI = createRootDBI();
+        this.enabled = true;
+
+        dbiHandleFactoryManager.register(DbType.MySQL, this);
     }
 
     private DBI createRootDBI() {
@@ -56,6 +71,7 @@ public class DBIHandleFactory {
     }
 
     // 创建项目数据库
+    @Override
     public void createProjectDatabase(String projectId) {
         DBIHandle rootDBIHandle = getRootDBIHandle();
         rootDBIHandle.runHandle(handle -> {
@@ -70,6 +86,7 @@ public class DBIHandleFactory {
     }
 
     // 删除项目数据库
+    @Override
     public void dropProjectDatabase(String projectId) {
         DBIHandle rootDBIHandle = getRootDBIHandle();
         rootDBIHandle.runHandle(handle -> {
@@ -79,6 +96,7 @@ public class DBIHandleFactory {
     }
 
     // 获得项目数据库访问对象
+    @Override
     public DBIHandle getProjectDBIHandle(String projectId) {
         return new DBIHandle(new DBI(createProjectDataSource(projectId)));
     }
