@@ -5,8 +5,14 @@
     <title>你好</title>
 </head>
 <body>
-<form method="post" action="generate_data">
-    <input type="submit" value="生成测试数据"/>
-</form>
+
+<fieldset>
+    <legend>导入项目考生数据</legend>
+    <form action="/import/project" method="post">
+        <div><label>项目ID: </label><input type="text" name="projectId"></div>
+        <input type="submit" value="导入项目考生数据"/>
+    </form>
+</fieldset>
+
 </body>
 </html>

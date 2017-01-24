@@ -2,6 +2,7 @@ package com.xz.scorep.executor.db;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.xz.ajiaedu.common.lang.Value;
+import com.xz.scorep.executor.config.DbConfig;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.util.StringColumnMapper;
 import org.springframework.beans.factory.annotation.Autowired;

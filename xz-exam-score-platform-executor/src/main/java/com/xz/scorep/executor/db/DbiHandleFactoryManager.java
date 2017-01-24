@@ -1,9 +1,12 @@
 package com.xz.scorep.executor.db;
 
+import com.xz.scorep.executor.config.DbConfig;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * (description)
@@ -14,6 +17,9 @@ import java.util.Map;
 @Component
 public class DbiHandleFactoryManager {
 
+    @Autowired
+    private DbConfig dbConfig;
+
     private Map<DbType, DbiHandleFactory> factoryMap = new HashMap<>();
 
     public void register(DbType dbType, DbiHandleFactory factory) {
@@ -22,7 +28,7 @@ public class DbiHandleFactoryManager {
 
     public DbiHandleFactory getDefaultDbiHandleFactory() {
         return this.factoryMap.values().stream()
-                .filter(factory -> factory != null)
+                .filter(Objects::nonNull)
                 .findFirst().orElse(null);
     }
 

@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.db;
 
+import com.xz.scorep.executor.config.DbConfig;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.skife.jdbi.v2.DBI;
 import org.springframework.beans.factory.annotation.Autowired;
