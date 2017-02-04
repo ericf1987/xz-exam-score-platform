@@ -14,7 +14,7 @@ public class ImportProjectController {
 
     @PostMapping("/import/project")
     public Result importProject(@RequestParam("projectId") String projectId) {
-        importProjectService.importProject(projectId);
+        importProjectService.importProject(ImportProjectParameters.importAll(projectId));
         return Result.success("项目 " + projectId + " 考生数据导入成功。");
     }
 

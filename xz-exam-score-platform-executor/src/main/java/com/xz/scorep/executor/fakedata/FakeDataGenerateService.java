@@ -5,6 +5,7 @@ import com.xz.scorep.executor.db.DBIHandle;
 import com.xz.scorep.executor.db.DbiHandleFactory;
 import com.xz.scorep.executor.db.DbiHandleFactoryManager;
 import com.xz.scorep.executor.db.MultipleBatchExecutor;
+import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.utils.UuidUtils;
 import org.skife.jdbi.v2.util.StringColumnMapper;
 import org.slf4j.Logger;
@@ -25,22 +26,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class FakeDataGenerateService {
 
-    static final Logger LOG = LoggerFactory.getLogger(FakeDataGenerateService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FakeDataGenerateService.class);
 
     private static final String SCORE_TABLE_COLUMNS = "(student_id varchar(36), quest_id varchar(36), score decimal(4,1))";
 
     @Autowired
-    DbiHandleFactoryManager dbiHandleFactoryManager;
+    private DbiHandleFactoryManager dbiHandleFactoryManager;
+
+    @Autowired
+    private ProjectService projectService;
 
     public void generateFakeData(FakeDataParameter fakeDataParameter) {
         String projectId = fakeDataParameter.getProjectId();
+        projectService.initProjectDatabase(projectId);
 
         DbiHandleFactory dbiHandleFactory = dbiHandleFactoryManager.getDefaultDbiHandleFactory();
-        dbiHandleFactory.dropProjectDatabase(projectId);
-        dbiHandleFactory.createProjectDatabase(projectId);
-
         DBIHandle handle = dbiHandleFactory.getProjectDBIHandle(projectId);
-        createTables(handle);
 
         try {
             Thread studentThread = createStudents(handle, fakeDataParameter);
@@ -52,16 +53,6 @@ public class FakeDataGenerateService {
         } catch (InterruptedException e) {
             LOG.error("Error generating fake data", e);
         }
-    }
-
-    private void createTables(DBIHandle dbiHandle) {
-        dbiHandle.runHandle(handle -> {
-            handle.execute("create table school (id varchar(36))");
-            handle.execute("create table class  (id varchar(36), school varchar(36))");
-            handle.execute("create table student(id varchar(36), class  varchar(36))");
-            handle.execute("create table subject(id varchar(9))");
-            handle.execute("create table quest  (id varchar(36), questNo varchar(10), subject varchar(9), full_score decimal(4,1))");
-        });
     }
 
     //////////////////////////////////////////////////////////////

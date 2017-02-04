@@ -17,6 +17,9 @@ public interface DbiHandleFactory {
     // 获得项目数据库访问对象
     DBIHandle getProjectDBIHandle(String projectId);
 
+    // 获得管理数据库访问对象
+    DBIHandle getManagerDBIHandle();
+
     // 是否启用
     boolean isEnabled();
 }

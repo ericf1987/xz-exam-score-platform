@@ -31,6 +31,10 @@ public class ImportProjectService {
         Context context = new Context();
         context.put("projectId", parameters.getProjectId());
 
+        // 初始化数据库
+        projectService.initProjectDatabase(parameters.getProjectId());
+
+        // 导入项目数据
         if (parameters.isImportProjectInfo()) {
             importProjectInfo(context);
         }

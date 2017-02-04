@@ -1,29 +1,44 @@
 package com.xz.scorep.executor.db;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.RemovalListener;
 import com.xz.ajiaedu.common.lang.Value;
 import com.xz.scorep.executor.config.DbConfig;
-import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.util.StringColumnMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
+import java.util.concurrent.TimeUnit;
 
-/**
- * (description)
- * created at 2016/12/16
- *
- * @author yidin
- */
 @Component
 public class MysqlDbiHandleFactory implements DbiHandleFactory {
 
+    private static final RemovalListener<String, DBIHandle> REMOVAL_LISTENER =
+            (RemovalListener<String, DBIHandle>) (key, dbiHandle, cause) -> {
+                if (dbiHandle != null) {
+                    dbiHandle.close();
+                }
+            };
+
+    private static final String DRIVER_NAME = "com.mysql.jdbc.Driver";
+
     private DbConfig dbConfig;
 
-    private DBI rootDBI;
+    private DBIHandle rootDbiHandle;
+
+    private DBIHandle managerDbiHandle;
 
     private boolean enabled;
+
+    private LoadingCache<String, DBIHandle> projectDbiHandleCache = Caffeine.newBuilder()
+            .maximumSize(100)
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .removalListener(REMOVAL_LISTENER)
+            .build(this::createProjectDBIHandle);
 
     @Override
     public boolean isEnabled() {
@@ -32,24 +47,23 @@ public class MysqlDbiHandleFactory implements DbiHandleFactory {
 
     @Autowired
     public MysqlDbiHandleFactory(DbConfig dbConfig, DbiHandleFactoryManager dbiHandleFactoryManager) {
+        if (!DRIVER_NAME.equals(dbConfig.getDriver())) {
+            this.enabled = false;
+        } else {
+            this.dbConfig = dbConfig;
+            this.enabled = true;
 
-        if (!"com.mysql.jdbc.Driver".equals(dbConfig.getDriver())) {
-            return;
+            dbiHandleFactoryManager.register(DbType.MySQL, this);
         }
-
-        this.dbConfig = dbConfig;
-        this.rootDBI = createRootDBI();
-        this.enabled = true;
-
-        dbiHandleFactoryManager.register(DbType.MySQL, this);
     }
 
-    private DBI createRootDBI() {
-        DataSource dataSource = createRootDataSource();
-        return new DBI(dataSource);
+    @PostConstruct
+    public void init() {
+        this.rootDbiHandle = new DBIHandle(getRootDataSource());
+        this.managerDbiHandle = new DBIHandle(getManagerDataSource());
     }
 
-    private DataSource createRootDataSource() {
+    private synchronized DataSource getRootDataSource() {
         DruidDataSource dataSource = new DruidDataSource();
         dataSource.setDriverClassName(dbConfig.getDriver());
         dataSource.setUrl(dbConfig.getUrl("information_schema"));
@@ -58,17 +72,22 @@ public class MysqlDbiHandleFactory implements DbiHandleFactory {
         return dataSource;
     }
 
-    private DataSource createProjectDataSource(String projectId) {
+    private synchronized DataSource getManagerDataSource() {
+        DruidDataSource dataSource = new DruidDataSource();
+        dataSource.setDriverClassName(dbConfig.getDriver());
+        dataSource.setUrl(dbConfig.getManagerUrl());
+        dataSource.setUsername(dbConfig.getManagerUser());
+        dataSource.setPassword(dbConfig.getManagerPass());
+        return dataSource;
+    }
+
+    private synchronized DataSource getProjectDataSource(String projectId) {
         DruidDataSource dataSource = new DruidDataSource();
         dataSource.setDriverClassName(dbConfig.getDriver());
         dataSource.setUrl(dbConfig.getUrl(projectId));
         dataSource.setUsername(projectId);
         dataSource.setPassword(projectId);
         return dataSource;
-    }
-
-    public DBIHandle getRootDBIHandle() {
-        return new DBIHandle(this.rootDBI);
     }
 
     // 创建项目数据库
@@ -99,7 +118,20 @@ public class MysqlDbiHandleFactory implements DbiHandleFactory {
     // 获得项目数据库访问对象
     @Override
     public DBIHandle getProjectDBIHandle(String projectId) {
-        return new DBIHandle(new DBI(createProjectDataSource(projectId)));
+        return this.projectDbiHandleCache.get(projectId);
+    }
+
+    private DBIHandle createProjectDBIHandle(String projectId) {
+        return new DBIHandle(getProjectDataSource(projectId));
+    }
+
+    public DBIHandle getRootDBIHandle() {
+        return this.rootDbiHandle;
+    }
+
+    @Override
+    public DBIHandle getManagerDBIHandle() {
+        return this.managerDbiHandle;
     }
 
     // 检查数据库是否存在

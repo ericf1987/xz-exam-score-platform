@@ -15,12 +15,36 @@ public class DbConfig {
 
     private String pass;
 
+    private String managerUser;
+
+    private String managerPass;
+
+    public String getManagerUser() {
+        return managerUser;
+    }
+
+    public void setManagerUser(String managerUser) {
+        this.managerUser = managerUser;
+    }
+
+    public String getManagerPass() {
+        return managerPass;
+    }
+
+    public void setManagerPass(String managerPass) {
+        this.managerPass = managerPass;
+    }
+
     public String getDriver() {
         return driver;
     }
 
     public void setDriver(String driver) {
         this.driver = driver;
+    }
+
+    public String getManagerUrl() {
+        return getUrl(getManagerUser());
     }
 
     public String getUrl(String database) {
