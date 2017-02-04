@@ -6,8 +6,10 @@ import com.xz.ajiaedu.common.appauth.AppAuthClient;
 import com.xz.ajiaedu.common.beans.exam.ExamProject;
 import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.Result;
+import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.project.SchoolService;
+import com.xz.scorep.executor.project.StudentService;
 import com.xz.scorep.executor.report.ReportConfig;
 import com.xz.scorep.executor.report.ReportConfigParser;
 import com.xz.scorep.executor.report.ReportConfigService;
@@ -27,6 +29,12 @@ public class ImportProjectService {
 
     @Autowired
     private SchoolService schoolService;
+
+    @Autowired
+    private ClassService classService;
+
+    @Autowired
+    private StudentService studentService;
 
     @Autowired
     private ReportConfigService reportConfigService;
@@ -75,7 +83,8 @@ public class ImportProjectService {
     }
 
     private void importStudents(Context context) {
-        ImportStudentHelper.importStudentList(appAuthClient, context, schoolService);
+        ImportStudentHelper.importStudentList(
+                appAuthClient, context, schoolService, classService, studentService);
     }
 
     private void importQuests(Context context) {
