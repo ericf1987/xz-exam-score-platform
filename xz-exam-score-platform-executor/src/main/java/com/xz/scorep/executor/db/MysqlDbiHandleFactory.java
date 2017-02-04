@@ -7,6 +7,8 @@ import com.github.benmanes.caffeine.cache.RemovalListener;
 import com.xz.ajiaedu.common.lang.Value;
 import com.xz.scorep.executor.config.DbConfig;
 import org.skife.jdbi.v2.util.StringColumnMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class MysqlDbiHandleFactory implements DbiHandleFactory {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MysqlDbiHandleFactory.class);
 
     private static final RemovalListener<String, DBIHandle> REMOVAL_LISTENER =
             (RemovalListener<String, DBIHandle>) (key, dbiHandle, cause) -> {
@@ -98,7 +102,7 @@ public class MysqlDbiHandleFactory implements DbiHandleFactory {
             if (databaseExists(projectId)) {
                 dropProjectDatabase(projectId);
             }
-            handle.execute("create database " + projectId);
+            handle.execute("create database " + projectId + " DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci");
             handle.execute("create user '" + projectId + "'@'%' IDENTIFIED by '" + projectId + "'");
             handle.execute("grant all on " + projectId + ".* to '" + projectId + "'@'%'");
             handle.execute("flush privileges");
@@ -110,8 +114,9 @@ public class MysqlDbiHandleFactory implements DbiHandleFactory {
     public void dropProjectDatabase(String projectId) {
         DBIHandle rootDBIHandle = getRootDBIHandle();
         rootDBIHandle.runHandle(handle -> {
-            handle.execute("drop database " + projectId);
-            handle.execute("drop user " + projectId);
+            handle.execute("drop database if exists " + projectId);
+            handle.execute("drop user if exists " + projectId);
+            LOG.info("数据库 " + projectId + " 已删除。");
         });
     }
 

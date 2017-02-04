@@ -31,4 +31,8 @@ public class ProjectServiceTest extends BaseTest {
         assertEquals(12, project.getGrade());
     }
 
+    @Test
+    public void testInitProjectDatabase() throws Exception {
+        projectService.initProjectDatabase("project1");
+    }
 }

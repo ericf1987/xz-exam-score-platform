@@ -24,7 +24,7 @@ public class ProjectService {
 
     private void createInitialTables(DBIHandle dbiHandle) {
         dbiHandle.runHandle(handle -> {
-            handle.execute("create table school (id varchar(36) primary key)");
+            handle.execute("create table school (id varchar(36) primary key, name varchar(50), area varchar(6), city varchar(6), province varchar(6))");
             handle.execute("create table class  (id varchar(36) primary key, school varchar(36))");
             handle.execute("create table student(id varchar(36) primary key, class  varchar(36))");
             handle.execute("create table subject(id varchar(9)  primary key)");
