@@ -17,7 +17,7 @@ public class FakeDataController {
     @ResponseBody
     public String generateData(HttpServletRequest request) {
         FakeDataParameter fakeDataParameter = new FakeDataParameter(
-                "FAKE_PROJECT", 3, 5, 20, 3, 50, 3
+                "FAKE_PROJECT", 3, 5, 20, 3, 20, 5
         );
         fakeDataGenerateService.generateFakeData(fakeDataParameter);
         return "数据已经生成";

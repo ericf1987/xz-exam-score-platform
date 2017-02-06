@@ -26,9 +26,21 @@ public class ProjectService {
         dbiHandle.runHandle(handle -> {
             handle.execute("create table school (id varchar(36) primary key, name varchar(50), area varchar(6), city varchar(6), province varchar(6))");
             handle.execute("create table class  (id varchar(36) primary key, name varchar(20), school_id varchar(36))");
-            handle.execute("create table student(id varchar(36) primary key, name varchar(20), class_id varchar(36))");
+            handle.execute("create table student(id varchar(36) primary key, name varchar(50), class_id varchar(36))");
             handle.execute("create table subject(id varchar(9)  primary key)");
-            handle.execute("create table quest  (id varchar(36) primary key, questNo varchar(10), subject varchar(9), full_score decimal(4,1))");
+            handle.execute("create table quest  (" +
+                    "  id varchar(36) primary key, " +
+                    "  exam_subject varchar(10), " +
+                    "  quest_subject varchar(10), " +
+                    "  question_type_id varchar(36), " +
+                    "  question_type_name varchar(10), " +
+                    "  objective varchar(5), " +
+                    "  quest_no varchar(10), " +
+                    "  full_score decimal(4,1), " +
+                    "  answer text, " +
+                    "  score_rule varchar(100), " +
+                    "  options text" +
+                    ")");
         });
     }
 

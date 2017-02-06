@@ -10,13 +10,19 @@ import com.alibaba.fastjson.JSONObject;
  */
 public class ProjectClass {
 
-     private String id;
+    private String id;
 
-     private String name;
+    private String name;
 
-     private String schoolId;
+    private String schoolId;
 
     public ProjectClass() {
+    }
+
+    public ProjectClass(String id, String name, String schoolId) {
+        this.id = id;
+        this.name = name;
+        this.schoolId = schoolId;
     }
 
     public ProjectClass(JSONObject jsonObject) {

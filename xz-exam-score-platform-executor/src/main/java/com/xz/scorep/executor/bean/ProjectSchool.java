@@ -18,6 +18,17 @@ public class ProjectSchool {
 
     private String province;
 
+    public ProjectSchool() {
+    }
+
+    public ProjectSchool(String id, String name, String area, String city, String province) {
+        this.id = id;
+        this.name = name;
+        this.area = area;
+        this.city = city;
+        this.province = province;
+    }
+
     public String getId() {
         return id;
     }

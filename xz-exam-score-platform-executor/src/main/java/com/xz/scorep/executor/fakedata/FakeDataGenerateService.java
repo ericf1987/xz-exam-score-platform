@@ -1,11 +1,15 @@
 package com.xz.scorep.executor.fakedata;
 
 import com.xz.ajiaedu.common.lang.MapBuilder;
+import com.xz.scorep.executor.bean.ExamQuest;
+import com.xz.scorep.executor.bean.ProjectClass;
+import com.xz.scorep.executor.bean.ProjectSchool;
+import com.xz.scorep.executor.bean.ProjectStudent;
 import com.xz.scorep.executor.db.DBIHandle;
 import com.xz.scorep.executor.db.DbiHandleFactory;
 import com.xz.scorep.executor.db.DbiHandleFactoryManager;
 import com.xz.scorep.executor.db.MultipleBatchExecutor;
-import com.xz.scorep.executor.project.ProjectService;
+import com.xz.scorep.executor.project.*;
 import com.xz.scorep.executor.utils.UuidUtils;
 import org.skife.jdbi.v2.util.StringColumnMapper;
 import org.slf4j.Logger;
@@ -36,6 +40,18 @@ public class FakeDataGenerateService {
     @Autowired
     private ProjectService projectService;
 
+    @Autowired
+    private SchoolService schoolService;
+
+    @Autowired
+    private ClassService classService;
+
+    @Autowired
+    private StudentService studentService;
+
+    @Autowired
+    private QuestService questService;
+
     public void generateFakeData(FakeDataParameter fakeDataParameter) {
         String projectId = fakeDataParameter.getProjectId();
         projectService.initProjectDatabase(projectId);
@@ -44,7 +60,7 @@ public class FakeDataGenerateService {
         DBIHandle handle = dbiHandleFactory.getProjectDBIHandle(projectId);
 
         try {
-            Thread studentThread = createStudents(handle, fakeDataParameter);
+            Thread studentThread = createStudents(fakeDataParameter);
             Thread questThread = createQuests(handle, fakeDataParameter);
             studentThread.join();
             questThread.join();
@@ -62,7 +78,7 @@ public class FakeDataGenerateService {
         AtomicInteger counter = new AtomicInteger();
 
         MultipleBatchExecutor batchExecutor = new MultipleBatchExecutor(dbiHandle);
-        batchExecutor.setBatchSize(50);
+        batchExecutor.setBatchSize(500);
 
         dbiHandle.runHandle(tableListHandle -> {
             tableListHandle.createQuery("select id from quest").map(StringColumnMapper.INSTANCE).list()
@@ -108,12 +124,12 @@ public class FakeDataGenerateService {
                 for (int j = 0; j < parameter.getQuestPerSubject(); j++) {
                     String questId = UuidUtils.uuid();
                     String questNo = String.valueOf(j + 1);
-                    double fullScore = 2;
+                    double fullScore = parameter.getScorePerQuest();
 
-                    dbiHandle.runHandle(handle -> handle.insert(
-                            "insert into quest(id,questNo,subject,full_score)values(?,?,?,?)",
-                            questId, questNo, subjectId, fullScore));
+                    ExamQuest quest = new ExamQuest(questId, subjectId, j < 10, questNo, fullScore);
+                    questService.saveQuest(parameter.getProjectId(), quest);
 
+                    // create score table
                     dbiHandle.runHandle(handle -> {
                         String tableName = "score_" + questId;
                         handle.execute("create table " + tableName + SCORE_TABLE_COLUMNS);
@@ -131,26 +147,27 @@ public class FakeDataGenerateService {
         return thread;
     }
 
-    private Thread createStudents(final DBIHandle dbiHandle, final FakeDataParameter parameter) {
+    private Thread createStudents(final FakeDataParameter parameter) {
         Runnable runnable = () -> {
+
+            String projectId = parameter.getProjectId();
 
             for (int i = 0; i < parameter.getSchoolPerProject(); i++) {
                 String schoolId = UuidUtils.uuid();
-                dbiHandle.runHandle(handle -> {
-                    handle.insert("insert into school(id) values(?)", schoolId);
-                });
+                String schoolName = "SCHOOL" + (i + 1);
+                ProjectSchool school = new ProjectSchool(schoolId, schoolName, "430101", "430100", "430000");
+                schoolService.saveSchool(projectId, school);
 
                 for (int j = 0; j < parameter.getClassPerSchool(); j++) {
                     String classId = UuidUtils.uuid();
-                    dbiHandle.runHandle(handle -> {
-                        handle.insert("insert into class(id,school) values(?,?)", classId, schoolId);
-                    });
+                    String className = schoolName + ":CLASS" + (j + 1);
+                    ProjectClass projectClass = new ProjectClass(classId, className, schoolId);
+                    classService.saveClass(projectId, projectClass);
 
                     for (int k = 0; k < parameter.getStudentPerClass(); k++) {
                         String studentId = UuidUtils.uuid();
-                        dbiHandle.runHandle(handle -> {
-                            handle.insert("insert into student(id,class)values(?,?)", studentId, classId);
-                        });
+                        String studentName = className + ":STU" + (k + 1);
+                        studentService.saveStudent(projectId, new ProjectStudent(studentId, studentName, classId));
                     }
                 }
             }

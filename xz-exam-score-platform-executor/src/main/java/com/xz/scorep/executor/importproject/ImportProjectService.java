@@ -1,15 +1,15 @@
 package com.xz.scorep.executor.importproject;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.appauth.AppAuthClient;
 import com.xz.ajiaedu.common.beans.exam.ExamProject;
+import com.xz.ajiaedu.common.json.JSONUtils;
 import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.Result;
-import com.xz.scorep.executor.project.ClassService;
-import com.xz.scorep.executor.project.ProjectService;
-import com.xz.scorep.executor.project.SchoolService;
-import com.xz.scorep.executor.project.StudentService;
+import com.xz.scorep.executor.bean.ExamQuest;
+import com.xz.scorep.executor.project.*;
 import com.xz.scorep.executor.report.ReportConfig;
 import com.xz.scorep.executor.report.ReportConfigParser;
 import com.xz.scorep.executor.report.ReportConfigService;
@@ -35,6 +35,9 @@ public class ImportProjectService {
 
     @Autowired
     private StudentService studentService;
+
+    @Autowired
+    QuestService questService;
 
     @Autowired
     private ReportConfigService reportConfigService;
@@ -88,7 +91,17 @@ public class ImportProjectService {
     }
 
     private void importQuests(Context context) {
+        String projectId = context.get("projectId");
+        Result result = appAuthClient.callApi("QueryQuestionByProject",
+                new Param().setParameter("projectId", projectId));
 
+        questService.clearQuests(projectId);
+
+        JSONArray quests = result.get("quests");
+        JSONUtils.<JSONObject>forEach(quests, quest -> {
+            ExamQuest examQuest = new ExamQuest(quest);
+            questService.saveQuest(projectId, examQuest);
+        });
     }
 
     //////////////////////////////////////////////////////////////

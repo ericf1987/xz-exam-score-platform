@@ -1,5 +1,7 @@
 package com.xz.scorep.executor.bean;
 
+import com.alibaba.fastjson.JSONObject;
+
 /**
  * (description)
  * created at 2017/2/4
@@ -13,6 +15,21 @@ public class ProjectStudent {
     private String name;
 
     private String classId;
+
+    public ProjectStudent() {
+    }
+
+    public ProjectStudent(String id, String name, String classId) {
+        this.id = id;
+        this.name = name;
+        this.classId = classId;
+    }
+
+    public ProjectStudent(JSONObject jsonObject) {
+        this.id = jsonObject.getString("id");
+        this.name = jsonObject.getString("name");
+        this.classId = jsonObject.getString("class");
+    }
 
     public String getId() {
         return id;

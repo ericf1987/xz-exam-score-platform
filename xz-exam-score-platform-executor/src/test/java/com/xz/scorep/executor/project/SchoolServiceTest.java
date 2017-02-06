@@ -1,7 +1,7 @@
 package com.xz.scorep.executor.project;
 
-import com.xz.ajiaedu.common.beans.user.School;
 import com.xz.scorep.executor.BaseTest;
+import com.xz.scorep.executor.bean.ProjectSchool;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,7 +18,7 @@ public class SchoolServiceTest extends BaseTest {
 
     @Test
     public void saveSchool() throws Exception {
-        School school = new School();
+        ProjectSchool school = new ProjectSchool();
         school.setId("SCHOOL1");
         school.setName("新东方学校");
         school.setArea("430101");

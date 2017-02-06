@@ -9,6 +9,7 @@ import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.bean.ProjectClass;
 import com.xz.scorep.executor.bean.ProjectSchool;
+import com.xz.scorep.executor.bean.ProjectStudent;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.project.StudentService;
@@ -30,6 +31,7 @@ public class ImportStudentHelper {
 
         importSchools(context, appAuthClient, schoolService);
         importClasses(context, appAuthClient, classService);
+        importStudents(context, appAuthClient, studentService);
     }
 
     private static void importSchools(Context context, AppAuthClient appAuthClient, SchoolService schoolService) {
@@ -81,6 +83,26 @@ public class ImportStudentHelper {
             });
         }
 
+    }
+
+    private static void importStudents(Context context, AppAuthClient appAuthClient, StudentService studentService) {
+        String projectId = context.getString("projectId");
+        List<ProjectClass> contextClasses = context.get("classes");
+
+        // 清空考生列表
+        studentService.clearStudents(projectId);
+
+        for (ProjectClass projectClass : contextClasses) {
+            Result result = appAuthClient.callApi("QueryClassExamStudent",
+                    new Param().setParameter("projectId", projectId)
+                            .setParameter("classId", projectClass.getId()));
+
+            JSONArray examStudents = result.get("examStudents");
+            JSONUtils.<JSONObject>forEach(examStudents, s -> {
+                ProjectStudent student = new ProjectStudent(s);
+                studentService.saveStudent(projectId, student);
+            });
+        }
     }
 
 }
