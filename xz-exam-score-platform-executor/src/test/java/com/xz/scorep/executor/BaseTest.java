@@ -12,6 +12,8 @@ public abstract class BaseTest {
 
     static {
         System.setProperty("unit_testing", "true");
+        System.setProperty("socksProxyHost", "127.0.0.1");
+        System.setProperty("socksProxyPort", "2346");
     }
 
 }

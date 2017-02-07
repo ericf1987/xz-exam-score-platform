@@ -7,6 +7,20 @@
 <body>
 
 <fieldset>
+    <legend>创建模拟数据</legend>
+    <form action="fake_data/generate" method="post">
+        <div><label>项目ID: </label><input type="text" name="projectId"></div>
+        <div><label>学校数量: </label><input type="text" value="5" name="schoolPerProject"></div>
+        <div><label>每所学校班级数: </label><input type="text" value="10" name="classPerSchool"></div>
+        <div><label>每个班级学生数: </label><input type="text" value="40" name="studentPerClass"></div>
+        <div><label>科目数: </label><input type="text" value="3" name="subjectPerProject"></div>
+        <div><label>每个科目题目数: </label><input type="text" value="30" name="questPerSubject"></div>
+        <div><label>每个题目分数: </label><input type="text" value="5" name="scorePerQuest"></div>
+        <div><input type="submit" value="开始生成"></div>
+    </form>
+</fieldset>
+
+<fieldset>
     <legend>导入项目考生数据</legend>
     <form action="/import/project" method="post">
         <div><label>项目ID: </label><input type="text" name="projectId"></div>

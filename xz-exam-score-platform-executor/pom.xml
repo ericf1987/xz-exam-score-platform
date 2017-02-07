@@ -7,6 +7,7 @@
     <artifactId>xz-exam-score-platform-executor</artifactId>
     <version>1.0-SNAPSHOT</version>
     <description>负责执行考试分数统计的组件</description>
+    <packaging>jar</packaging>
 
     <parent>
         <groupId>com.xz</groupId>

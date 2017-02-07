@@ -29,6 +29,11 @@ public class MultipleBatchExecutor {
         this.dbiHandle = dbiHandle;
     }
 
+    public MultipleBatchExecutor(DBIHandle dbiHandle, int batchSize) {
+        this.batchSize = batchSize;
+        this.dbiHandle = dbiHandle;
+    }
+
     public int getBatchSize() {
         return batchSize;
     }
@@ -56,7 +61,6 @@ public class MultipleBatchExecutor {
     }
 
     private void flush(String table) {
-        System.out.println("Flushing table " + table);
 
         String sql = tableSqlMap.get(table);
         List<Map<String, Object>> rows = tableRowListMap.get(table);

@@ -11,15 +11,29 @@ import javax.servlet.http.HttpServletRequest;
 public class FakeDataController {
 
     @Autowired
-    FakeDataGenerateService fakeDataGenerateService;
+    private FakeDataGenerateService fakeDataGenerateService;
 
-    @PostMapping("/generate_data")
+    @PostMapping("/fake_data/generate")
     @ResponseBody
     public String generateData(HttpServletRequest request) {
+
+        String projectId = request.getParameter("projectId");
+        int schoolPerProject = getInt(request, "schoolPerProject");
+        int classPerSchool = getInt(request, "classPerSchool");
+        int studentPerClass = getInt(request, "studentPerClass");
+        int subjectPerProject = getInt(request, "subjectPerProject");
+        int questPerSubject = getInt(request, "questPerSubject");
+        int scorePerQuest = getInt(request, "scorePerQuest");
+
         FakeDataParameter fakeDataParameter = new FakeDataParameter(
-                "FAKE_PROJECT", 3, 5, 20, 3, 20, 5
-        );
-        fakeDataGenerateService.generateFakeData(fakeDataParameter);
-        return "数据已经生成";
+                projectId, schoolPerProject, classPerSchool, studentPerClass,
+                subjectPerProject, questPerSubject, scorePerQuest);
+
+        fakeDataGenerateService.generateFakeDataAsync(fakeDataParameter);
+        return "项目 " + projectId + " 的生成模拟数据已经开始。";
+    }
+
+    private int getInt(HttpServletRequest request, String schoolPerProject) {
+        return Integer.parseInt(request.getParameter(schoolPerProject));
     }
 }
