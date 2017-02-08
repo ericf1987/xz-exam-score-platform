@@ -1,8 +1,7 @@
 package com.xz.scorep.executor.project;
 
 import com.xz.scorep.executor.bean.ProjectSchool;
-import com.xz.scorep.executor.db.DBIHandle;
-import com.xz.scorep.executor.db.DbiHandleFactoryManager;
+import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,23 +9,16 @@ import org.springframework.stereotype.Service;
 public class SchoolService {
 
     @Autowired
-    private DbiHandleFactoryManager dbiHandleFactoryManager;
+    private DAOFactory daoFactory;
 
     public void saveSchool(String projectId, ProjectSchool school) {
-        DBIHandle dbiHandle = getProjectDBIHandle(projectId);
-        dbiHandle.runHandle(handle -> {
-            String sql = "insert into school(id,name,area,city,province) values(?,?,?,?,?)";
-            handle.insert(sql, school.getId(), school.getName(),
-                    school.getArea(), school.getCity(), school.getProvince());
-        });
-    }
+        String sql = "insert into school(id,name,area,city,province) values(?,?,?,?,?)";
 
-    private DBIHandle getProjectDBIHandle(String projectId) {
-        return dbiHandleFactoryManager.getDefaultDbiHandleFactory().getProjectDBIHandle(projectId);
+        daoFactory.getProjectDao(projectId).execute(sql,
+                school.getId(), school.getName(), school.getArea(), school.getCity(), school.getProvince());
     }
 
     public void clearSchools(String projectId) {
-        getProjectDBIHandle(projectId).runHandle(
-                handle -> handle.execute("truncate table school"));
+        daoFactory.getProjectDao(projectId).execute("truncate table school");
     }
 }

@@ -1,30 +1,28 @@
 package com.xz.scorep.executor.project;
 
-import com.xz.scorep.executor.db.DbiHandleFactory;
+import com.hyd.dao.DAO;
+import com.hyd.dao.Row;
+import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 @Service
 public class SubjectService {
 
     @Autowired
-    private DbiHandleFactory dbiHandleFactory;
+    private DAOFactory daoFactory;
 
     public void clearSubjects(String projectId) {
-        dbiHandleFactory.getProjectDBIHandle(projectId)
-                .runHandle(handle -> handle.execute("truncate table subject"));
+        daoFactory.getProjectDao(projectId).execute("truncate table subject");
     }
 
     public void saveSubject(String projectId, String subjectId) {
-        dbiHandleFactory.getProjectDBIHandle(projectId).runHandle(handle -> {
-            String querySubject = "select * from subject where id=?";
-            Map<String, Object> map = handle.createQuery(querySubject).bind(0, subjectId).first();
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String querySubject = "select * from subject where id=?";
+        Row row = projectDao.queryFirst(querySubject, subjectId);
 
-            if (map == null) {
-                handle.insert("insert into subject(id) values(?)", subjectId);
-            }
-        });
+        if (row == null) {
+            projectDao.execute("insert into subject(id) values(?)", subjectId);
+        }
     }
 }

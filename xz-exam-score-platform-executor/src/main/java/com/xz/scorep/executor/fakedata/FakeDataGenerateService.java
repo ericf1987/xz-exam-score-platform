@@ -1,22 +1,20 @@
 package com.xz.scorep.executor.fakedata;
 
+import com.hyd.dao.DAO;
+import com.hyd.dao.Row;
+import com.hyd.dao.database.RowIterator;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.ProjectClass;
 import com.xz.scorep.executor.bean.ProjectSchool;
 import com.xz.scorep.executor.bean.ProjectStudent;
-import com.xz.scorep.executor.db.DBIHandle;
-import com.xz.scorep.executor.db.DbiHandleFactory;
-import com.xz.scorep.executor.db.DbiHandleFactoryManager;
+import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.*;
 import com.xz.scorep.executor.utils.UuidUtils;
-import org.skife.jdbi.v2.util.StringColumnMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -30,9 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FakeDataGenerateService {
 
     private static final Logger LOG = LoggerFactory.getLogger(FakeDataGenerateService.class);
-
-    @Autowired
-    private DbiHandleFactoryManager dbiHandleFactoryManager;
 
     @Autowired
     private ProjectService projectService;
@@ -55,6 +50,9 @@ public class FakeDataGenerateService {
     @Autowired
     private ScoreService scoreService;
 
+    @Autowired
+    private DAOFactory daoFactory;
+
     public void generateFakeDataAsync(FakeDataParameter fakeDataParameter) {
         Thread generateThread = new Thread(() -> generateFakeData(fakeDataParameter));
         generateThread.setDaemon(true);
@@ -65,16 +63,13 @@ public class FakeDataGenerateService {
         String projectId = fakeDataParameter.getProjectId();
         projectService.initProjectDatabase(projectId);
 
-        DbiHandleFactory dbiHandleFactory = dbiHandleFactoryManager.getDefaultDbiHandleFactory();
-        DBIHandle handle = dbiHandleFactory.getProjectDBIHandle(projectId);
-
         try {
             Thread studentThread = createStudents(fakeDataParameter);
             Thread questThread = createQuests(fakeDataParameter);
             studentThread.join();
             questThread.join();
 
-            createScores(fakeDataParameter, handle);
+            createScores(fakeDataParameter, daoFactory.getProjectDao(projectId));
             LOG.info("Fake project generation completed.");
         } catch (InterruptedException e) {
             LOG.error("Error generating fake data", e);
@@ -83,25 +78,21 @@ public class FakeDataGenerateService {
 
     //////////////////////////////////////////////////////////////
 
-    private void createScores(FakeDataParameter fakeDataParameter, DBIHandle dbiHandle) {
+    private void createScores(FakeDataParameter fakeDataParameter, DAO projectDao) {
 
         String projectId = fakeDataParameter.getProjectId();
         Random random = new Random();
         AtomicInteger counter = new AtomicInteger();
 
-        dbiHandle.runHandle(tableListHandle -> {
-            String queryQuestIds = "select id from quest";
-            List<String> questIds = tableListHandle.createQuery(queryQuestIds).map(StringColumnMapper.INSTANCE).list();
-            scoreService.prepareBatch(projectId, questIds);
-        });
+        scoreService.prepareBatch(projectId);
 
-        dbiHandle.runHandle(queryHandle -> dbiHandle.runHandle(insertHandle -> {
+        String queryScoreItemTemplate = "select s.id as student_id, q.id as quest_id from student s, quest q";
 
-            for (Map<String, Object> map : queryHandle.createQuery(
-                    "select s.id as student_id, q.id as quest_id from student s, quest q"
-            )) {
-                String studentId = (String) map.get("student_id");
-                String questId = (String) map.get("quest_id");
+        try (RowIterator rowIterator = projectDao.queryIterator(queryScoreItemTemplate)) {
+            while (rowIterator.next()) {
+                Row row = rowIterator.getRow();
+                String studentId = row.getString("student_id");
+                String questId = row.getString("quest_id");
                 double score = random.nextInt((int)fakeDataParameter.getScorePerQuest() * 2 + 1) / 2.0;
                 scoreService.saveScoreBatch(projectId, questId, studentId, score);
 
@@ -109,7 +100,7 @@ public class FakeDataGenerateService {
                     LOG.info(String.format("%8d score inserted.", counter.get()));
                 }
             }
-        }));
+        }
 
         scoreService.finishBatch(projectId);
     }

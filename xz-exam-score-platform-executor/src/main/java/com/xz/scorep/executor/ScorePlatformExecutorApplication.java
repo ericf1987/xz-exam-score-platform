@@ -2,8 +2,6 @@ package com.xz.scorep.executor;
 
 import com.xz.ajiaedu.common.appauth.AppAuthClient;
 import com.xz.scorep.executor.config.AppAuthConfig;
-import com.xz.scorep.executor.db.DbiHandleFactory;
-import com.xz.scorep.executor.db.DbiHandleFactoryManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -21,9 +19,6 @@ public class ScorePlatformExecutorApplication {
     @Autowired
     private AppAuthConfig appAuthConfig;
 
-    @Autowired
-    private DbiHandleFactoryManager dbiHandleFactoryManager;
-
     @Bean
     public AppAuthClient appAuthClient() {
         return new AppAuthClient(
@@ -31,10 +26,5 @@ public class ScorePlatformExecutorApplication {
                 appAuthConfig.getAppKey(),
                 appAuthConfig.getAppSecret()
         );
-    }
-
-    @Bean
-    public DbiHandleFactory dbiHandleFactory() {
-        return dbiHandleFactoryManager.getDefaultDbiHandleFactory();
     }
 }

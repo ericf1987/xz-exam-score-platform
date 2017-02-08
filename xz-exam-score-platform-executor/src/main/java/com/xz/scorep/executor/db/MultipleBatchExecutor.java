@@ -1,6 +1,6 @@
 package com.xz.scorep.executor.db;
 
-import org.skife.jdbi.v2.PreparedBatch;
+import com.hyd.dao.DAO;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,33 +17,15 @@ public class MultipleBatchExecutor {
 
     private static final int DEFAULT_BATCH_SIZE = 500;
 
+    private DAO dao;
+
     private int batchSize = DEFAULT_BATCH_SIZE;
-
-    private DBIHandle dbiHandle;
-
-    private Map<String, String> tableSqlMap = new HashMap<>();
 
     private Map<String, List<Map<String, Object>>> tableRowListMap = new HashMap<>();
 
-    public MultipleBatchExecutor(DBIHandle dbiHandle) {
-        this.dbiHandle = dbiHandle;
-    }
-
-    public MultipleBatchExecutor(DBIHandle dbiHandle, int batchSize) {
+    public MultipleBatchExecutor(DAO dao, int batchSize) {
+        this.dao = dao;
         this.batchSize = batchSize;
-        this.dbiHandle = dbiHandle;
-    }
-
-    public int getBatchSize() {
-        return batchSize;
-    }
-
-    public void setBatchSize(int batchSize) {
-        this.batchSize = batchSize;
-    }
-
-    public void prepareBatch(String table, String sql) {
-        this.tableSqlMap.put(table, sql);
     }
 
     public void push(String table, Map<String, Object> row) {
@@ -62,20 +44,15 @@ public class MultipleBatchExecutor {
 
     private void flush(String table) {
 
-        String sql = tableSqlMap.get(table);
         List<Map<String, Object>> rows = tableRowListMap.get(table);
 
-        if (sql != null && rows != null && !rows.isEmpty()) {
-            dbiHandle.runHandle(handle -> {
-                PreparedBatch preparedBatch = handle.prepareBatch(sql);
-                rows.forEach(preparedBatch::add);
-                preparedBatch.execute();
-            });
+        if (rows != null && !rows.isEmpty()) {
+            dao.insert(rows, table);
             rows.clear();
         }
     }
 
     public void finish() {
-        tableSqlMap.keySet().forEach(this::flush);
+        tableRowListMap.keySet().forEach(this::flush);
     }
 }
