@@ -14,7 +14,7 @@ import java.util.Map;
 @Service
 public class ScoreService {
 
-    private static final String SCORE_TABLE_COLUMNS = "(student_id varchar(36), score decimal(4,1))";
+    private static final String SCORE_TABLE_COLUMNS = "(student_id varchar(36) primary key, score decimal(4,1))";
 
     @Autowired
     private DAOFactory daoFactory;
@@ -31,7 +31,6 @@ public class ScoreService {
         String comment = examQuest.getExamSubject() + ":" + examQuest.getQuestNo();
         DAO dao = daoFactory.getProjectDao(projectId);
         dao.execute("create table " + tableName + SCORE_TABLE_COLUMNS + " comment '" + comment + "'");
-        dao.execute("create index idx_score_stu_" + tableName + " on " + tableName + "(student_id)");
     }
 
     private MultipleBatchExecutor getMultipleBatchExecutor(String projectId) {
