@@ -114,6 +114,7 @@ public class FakeDataGenerateService {
             for (int i = 0; i < parameter.getSubjectPerProject(); i++) {
                 String subjectId = String.format("%03d", (i + 1));
                 subjectService.saveSubject(projectId, subjectId);
+                subjectService.createSubjectScoreTable(projectId, subjectId);
 
                 for (int j = 0; j < parameter.getQuestPerSubject(); j++) {
                     String questId = UuidUtils.uuid();
@@ -122,7 +123,7 @@ public class FakeDataGenerateService {
 
                     ExamQuest quest = new ExamQuest(questId, subjectId, j < 10, questNo, fullScore);
                     questService.saveQuest(projectId, quest);
-                    scoreService.createScoreTable(projectId, quest);
+                    scoreService.createQuestScoreTable(projectId, quest);
                 }
             }
 

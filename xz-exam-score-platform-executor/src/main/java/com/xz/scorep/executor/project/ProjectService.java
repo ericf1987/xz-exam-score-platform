@@ -21,6 +21,7 @@ public class ProjectService {
         dropProjectDatabase(projectId);
         createProjectDatabase(projectId);
         createInitialTables(projectId);
+        createAggrResultTables(projectId);
     }
 
     // 检查数据库是否存在
@@ -50,6 +51,17 @@ public class ProjectService {
         dao.execute("drop database if exists " + projectId);
         dao.execute("drop user if exists " + projectId);
         LOG.info("数据库 " + projectId + " 已删除。");
+    }
+
+    private void createAggrResultTables(String projectId) {
+        DAO dao = daoFactory.getProjectDao(projectId);
+        dao.execute("create table score_project(student_id VARCHAR(36) primary key,score decimal(4,1))");
+        dao.execute("create table average_project(range_type varchar(20), range_id varchar(36), score decimal(4,1))");
+        dao.execute("create index idxavgpri on average_project(range_id)");
+        dao.execute("create table average_subject(range_type varchar(20), range_id varchar(36), subject_id varchar(20), score decimal(4,1))");
+        dao.execute("create index idxavgsri on average_subject(range_id)");
+        dao.execute("create table average_quest(range_type varchar(20), range_id varchar(36), quest_id varchar(36), score decimal(4,1))");
+        dao.execute("create index idxavgqri on average_quest(range_id)");
     }
 
     private void createInitialTables(String projectId) {

@@ -5,6 +5,8 @@ import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class QuestService {
 
@@ -28,5 +30,14 @@ public class QuestService {
                 Boolean.toString(examQuest.isObjective()), examQuest.getQuestNo(),
                 examQuest.getFullScore(), examQuest.getAnswer(), examQuest.getScoreRule(),
                 examQuest.getOptions());
+    }
+
+    public List<ExamQuest> queryQuests(String projectId) {
+        return daoFactory.getProjectDao(projectId).query(ExamQuest.class, "select * from quest");
+    }
+
+    public List<ExamQuest> queryQuests(String projectId, String subjectId) {
+        return daoFactory.getProjectDao(projectId).query(
+                ExamQuest.class, "select * from quest where exam_subject=?", subjectId);
     }
 }

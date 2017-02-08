@@ -6,6 +6,9 @@ import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class SubjectService {
 
@@ -24,5 +27,20 @@ public class SubjectService {
         if (row == null) {
             projectDao.execute("insert into subject(id) values(?)", subjectId);
         }
+    }
+
+    public void createSubjectScoreTable(String projectId, String subjectId) {
+
+        String tableName = "score_subject_" + subjectId;
+
+        String createSubjectTable = "create table " + tableName +
+                "(student_id VARCHAR(36) primary key,score decimal(4,1))";
+
+        daoFactory.getProjectDao(projectId).execute(createSubjectTable);
+    }
+
+    public List<String> querySubjectIds(String projectId) {
+        return daoFactory.getProjectDao(projectId).query("select * from subject")
+                .stream().map(row -> row.getString("id")).collect(Collectors.toList());
     }
 }

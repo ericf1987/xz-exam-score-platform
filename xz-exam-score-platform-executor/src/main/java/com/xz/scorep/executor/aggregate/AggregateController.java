@@ -1,13 +1,24 @@
 package com.xz.scorep.executor.aggregate;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class AggregateController {
 
-    @PostMapping("/aggr/start")
-    public void runAggregate(String projectId) {
+    @Autowired
+    private AggregateService aggregateService;
 
+    @PostMapping("/aggr/start")
+    @ResponseBody
+    public String runAggregate(
+            @RequestParam("projectId") String projectId,
+            @RequestParam(required = false, name = "aggrName") String aggrName
+    ) {
+        aggregateService.runAggregate(projectId, aggrName);
+        return "统计执行完毕。";
     }
 }

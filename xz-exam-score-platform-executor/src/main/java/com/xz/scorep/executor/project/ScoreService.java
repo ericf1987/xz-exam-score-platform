@@ -25,7 +25,7 @@ public class ScoreService {
         return "score_" + questId;
     }
 
-    public void createScoreTable(String projectId, ExamQuest examQuest) {
+    public void createQuestScoreTable(String projectId, ExamQuest examQuest) {
         String questId = examQuest.getId();
         String tableName = getTableName(questId);
         String comment = examQuest.getExamSubject() + ":" + examQuest.getQuestNo();
