@@ -22,11 +22,19 @@
 
 <fieldset>
     <legend>导入项目考生数据</legend>
-    <form action="/import/project" method="post">
+    <form action="import/project" method="post">
         <div><label>项目ID: </label><input type="text" name="projectId"></div>
         <input type="submit" value="导入项目考生数据"/>
     </form>
 </fieldset>
 
+<fieldset>
+    <legend>执行单个指标统计</legend>
+    <form action="aggr/start" method="post">
+        <div><label>项目ID: </label><input type="text" name="projectId"></div>
+        <div><label>指标名称: </label><input type="text" name="aggrName"></div>
+        <input type="submit" value="执行统计"/>
+    </form>
+</fieldset>
 </body>
 </html>

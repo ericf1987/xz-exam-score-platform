@@ -23,8 +23,9 @@ public class AggregateService {
 
         try {
             if (aggregator != null) {
+                LOG.info("项目 " + projectId + " 的 " + aggrName + " 统计开始...");
                 aggregator.aggregate(projectId);
-                LOG.info("项目 " + projectId + " 的统计项 " + aggrName + " 统计完毕。");
+                LOG.info("项目 " + projectId + " 的 " + aggrName + " 统计完毕。");
             } else {
                 LOG.info("找不到统计项 " + aggrName + " 的统计类");
             }
