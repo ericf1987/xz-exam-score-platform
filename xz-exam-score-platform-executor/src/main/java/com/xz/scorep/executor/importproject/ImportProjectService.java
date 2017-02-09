@@ -4,10 +4,10 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.appauth.AppAuthClient;
-import com.xz.ajiaedu.common.beans.exam.ExamProject;
 import com.xz.ajiaedu.common.json.JSONUtils;
 import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.Result;
+import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.project.*;
 import com.xz.scorep.executor.report.ReportConfig;
@@ -121,8 +121,6 @@ public class ImportProjectService {
         project.setName(obj.getString("name"));
         project.setGrade(obj.getInteger("grade"));
         project.setCreateTime(new Date());
-        project.setCategory(obj.getString("category"));
-        project.setExamStartDate(obj.getString("examStartDate"));
         return project;
     };
 

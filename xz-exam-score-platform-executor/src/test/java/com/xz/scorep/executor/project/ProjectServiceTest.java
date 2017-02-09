@@ -1,7 +1,7 @@
 package com.xz.scorep.executor.project;
 
-import com.xz.ajiaedu.common.beans.exam.ExamProject;
 import com.xz.scorep.executor.BaseTest;
+import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.utils.UuidUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

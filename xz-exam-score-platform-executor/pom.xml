@@ -31,6 +31,12 @@
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
 
+        <!-- Utils -->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

@@ -2,7 +2,7 @@ package com.xz.scorep.executor.project;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
-import com.xz.ajiaedu.common.beans.exam.ExamProject;
+import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,12 +56,16 @@ public class ProjectService {
     private void createAggrResultTables(String projectId) {
         DAO dao = daoFactory.getProjectDao(projectId);
         dao.execute("create table score_project(student_id VARCHAR(36) primary key,score decimal(4,1))");
+
         dao.execute("create table average_project(range_type varchar(20), range_id varchar(36), score decimal(4,1))");
         dao.execute("create index idxavgpri on average_project(range_id)");
         dao.execute("create table average_subject(range_type varchar(20), range_id varchar(36), subject_id varchar(20), score decimal(4,1))");
         dao.execute("create index idxavgsri on average_subject(range_id)");
         dao.execute("create table average_quest(range_type varchar(20), range_id varchar(36), quest_id varchar(36), score decimal(4,1))");
         dao.execute("create index idxavgqri on average_quest(range_id)");
+
+        dao.execute("create table segments(range_type varchar(20),range_id VARCHAR(36),target_type VARCHAR(20),target_id VARCHAR(36),score_min decimal(4,1),score_max decimal(4,1),student_count int)");
+        dao.execute("create index idxsgmtrt on segments(range_type,range_id,target_type,target_id)");
     }
 
     private void createInitialTables(String projectId) {
@@ -69,7 +73,7 @@ public class ProjectService {
         dao.execute("create table school (id varchar(36) primary key, name varchar(50), area varchar(6), city varchar(6), province varchar(6))");
         dao.execute("create table class  (id varchar(36) primary key, name varchar(20), school_id varchar(36))");
         dao.execute("create table student(id varchar(36) primary key, name varchar(50), class_id varchar(36))");
-        dao.execute("create table subject(id varchar(9)  primary key)");
+        dao.execute("create table subject(id varchar(9)  primary key, full_score decimal(4,1) default 0)");
         dao.execute("create table quest  (" +
                 "  id varchar(36) primary key, " +
                 "  exam_subject varchar(10), " +
@@ -85,13 +89,14 @@ public class ProjectService {
                 ")");
     }
 
+    //////////////////////////////////////////////////////////////
+
     public void saveProject(ExamProject project) {
-        String sql = "insert into project(id, name, grade) values(?,?,?)";
-        daoFactory.getManagerDao().execute(sql, project.getId(), project.getName(), project.getGrade());
+        daoFactory.getManagerDao().insert(project, "project");
     }
 
     public ExamProject findProject(String projectId) {
-        String sql = "select id, name, grade from project where id=?";
+        String sql = "select * from project where id=?";
         return daoFactory.getManagerDao().queryFirst(ExamProject.class, sql, projectId);
     }
 }

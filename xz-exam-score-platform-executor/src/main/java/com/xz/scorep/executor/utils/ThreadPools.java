@@ -1,4 +1,4 @@
-package com.xz.scorep.executor.aggregate.impl;
+package com.xz.scorep.executor.utils;
 
 import com.xz.ajiaedu.common.concurrent.Executors;
 
