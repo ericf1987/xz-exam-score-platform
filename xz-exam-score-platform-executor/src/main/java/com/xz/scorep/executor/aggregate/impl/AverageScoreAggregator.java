@@ -4,6 +4,7 @@ import com.hyd.dao.DAO;
 import com.xz.scorep.executor.aggregate.AggragateOrder;
 import com.xz.scorep.executor.aggregate.Aggregator;
 import com.xz.scorep.executor.bean.ExamQuest;
+import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.ThreadPools;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Component
 @AggragateOrder(2)
@@ -137,7 +139,10 @@ public class AverageScoreAggregator extends Aggregator {
 
     private void aggregateSubjectAverage(String projectId, DAO projectDao) throws InterruptedException {
         final AtomicInteger counter = new AtomicInteger(0);
-        List<String> subjectIds = subjectService.querySubjectIds(projectId);
+
+        List<String> subjectIds = subjectService.querySubjectIds(projectId)
+                .stream().map(ExamSubject::getId).collect(Collectors.toList());
+
         int subjectCount = subjectIds.size();
 
         ThreadPools.createAndRunThreadPool(subjectCount, 1,

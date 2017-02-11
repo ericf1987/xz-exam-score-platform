@@ -2,12 +2,12 @@ package com.xz.scorep.executor.project;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
+import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class SubjectService {
@@ -39,8 +39,7 @@ public class SubjectService {
         daoFactory.getProjectDao(projectId).execute(createSubjectTable);
     }
 
-    public List<String> querySubjectIds(String projectId) {
-        return daoFactory.getProjectDao(projectId).query("select * from subject")
-                .stream().map(row -> row.getString("id")).collect(Collectors.toList());
+    public List<ExamSubject> querySubjectIds(String projectId) {
+        return daoFactory.getProjectDao(projectId).query(ExamSubject.class, "select * from subject");
     }
 }

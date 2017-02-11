@@ -35,7 +35,8 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         ThreadPoolExecutor executor = Executors.newBlockingThreadPoolExecutor(20, 20, 500);
 
-        subjectService.querySubjectIds(projectId).forEach(subjectId -> {
+        subjectService.querySubjectIds(projectId).forEach(subject -> {
+            String subjectId = subject.getId();
             String tableName = "score_subject_" + subjectId;
 
             // 初始化

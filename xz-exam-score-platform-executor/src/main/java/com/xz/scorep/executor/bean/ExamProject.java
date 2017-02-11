@@ -14,11 +14,21 @@ public class ExamProject {
 
     private String name;
 
+    private String range;
+
     private Date createTime;
 
     private int grade;
 
     private double fullScore;
+
+    public String getRange() {
+        return range;
+    }
+
+    public void setRange(String range) {
+        this.range = range;
+    }
 
     public String getId() {
         return id;

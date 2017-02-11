@@ -64,8 +64,15 @@ public class ProjectService {
         dao.execute("create table average_quest(range_type varchar(20), range_id varchar(36), quest_id varchar(36), score decimal(4,1))");
         dao.execute("create index idxavgqri on average_quest(range_id)");
 
-        dao.execute("create table segments(range_type varchar(20),range_id VARCHAR(36),target_type VARCHAR(20),target_id VARCHAR(36),score_min decimal(4,1),score_max decimal(4,1),student_count int)");
+        dao.execute("create table segments(" +
+                "range_type varchar(20),range_id VARCHAR(36),target_type VARCHAR(20),target_id VARCHAR(36)," +
+                "score_min decimal(4,1),score_max decimal(4,1),student_count int)");
         dao.execute("create index idxsgmtrt on segments(range_type,range_id,target_type,target_id)");
+
+        dao.execute("create table scorelevelmap(" +
+                "range_type varchar(20),range_id VARCHAR(36),target_type VARCHAR(20),target_id VARCHAR(36)," +
+                "score_level varchar(20),student_count int,student_rate decimal(5,2))");
+        dao.execute("create index idxslm on scorelevelmap(range_type,range_id,target_type,target_id)");
     }
 
     private void createInitialTables(String projectId) {
