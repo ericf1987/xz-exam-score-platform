@@ -1,4 +1,4 @@
-package com.xz.scorep.executor.report;
+package com.xz.scorep.executor.reportconfig;
 
 /**
  * (description)

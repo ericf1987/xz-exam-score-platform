@@ -1,4 +1,4 @@
-package com.xz.scorep.executor.report;
+package com.xz.scorep.executor.reportconfig;
 
 /**
  * 报表的项目个性化配置

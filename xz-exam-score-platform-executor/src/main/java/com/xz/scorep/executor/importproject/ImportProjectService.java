@@ -10,9 +10,9 @@ import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.project.*;
-import com.xz.scorep.executor.report.ReportConfig;
-import com.xz.scorep.executor.report.ReportConfigParser;
-import com.xz.scorep.executor.report.ReportConfigService;
+import com.xz.scorep.executor.reportconfig.ReportConfig;
+import com.xz.scorep.executor.reportconfig.ReportConfigParser;
+import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

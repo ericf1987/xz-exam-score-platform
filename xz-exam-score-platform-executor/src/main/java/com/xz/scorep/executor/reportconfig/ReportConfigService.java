@@ -1,4 +1,4 @@
-package com.xz.scorep.executor.report;
+package com.xz.scorep.executor.reportconfig;
 
 import com.hyd.dao.DAO;
 import com.xz.scorep.executor.db.DAOFactory;

@@ -1,4 +1,4 @@
-package com.xz.scorep.executor.report;
+package com.xz.scorep.executor.reportconfig;
 
 import com.alibaba.fastjson.JSON;
 import com.xz.ajiaedu.common.lang.MapBuilder;
