@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss} [%5level] %-30.30logger{40}: %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!-- 配置全局缺省的输出渠道 -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+    <!-- 包输出级别 -->
+    <logger name="com.hyd.dao" level="DEBUG"/>
+    <logger name="java.io.mina" level="ERROR"/>
+    <logger name="org" level="ERROR"/>
+    <logger name="net" level="ERROR"/>
+    <logger name="com.hyd.dao.database.executor.DefaultExecutor.batch" level="ERROR"/>
+</configuration>

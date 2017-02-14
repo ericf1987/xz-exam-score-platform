@@ -114,18 +114,21 @@ public class ScoreLevelRateAggregator extends Aggregator {
         double fullScore = project.getFullScore();
 
         aggrProjectScoreLevel(projectId, "score_project", scoreLevels, fullScore, PROVINCE_PROJECT_SCORE_LEVEL,
+                Target.Project, projectId,
                 (row, map) -> {
                     map.put("range_type", Range.Province.name());
                     map.put("range_id", "430000");
                 });
 
         aggrProjectScoreLevel(projectId, "score_project", scoreLevels, fullScore, SCHOOL_PROJECT_SCORE_LEVEL,
+                Target.Project, projectId,
                 (row, map) -> {
                     map.put("range_type", Range.School.name());
                     map.put("range_id", row.getString("range_id"));
                 });
 
         aggrProjectScoreLevel(projectId, "score_project", scoreLevels, fullScore, CLASS_PROJECT_SCORE_LEVEL,
+                Target.Project, projectId,
                 (row, map) -> {
                     map.put("range_type", Range.Class.name());
                     map.put("range_id", row.getString("range_id"));
@@ -138,18 +141,21 @@ public class ScoreLevelRateAggregator extends Aggregator {
             String tableName = "score_subject_" + subject.getId();
 
             aggrProjectScoreLevel(projectId, tableName, scoreLevels, fullScore, PROVINCE_PROJECT_SCORE_LEVEL,
+                    Target.Subject, subject.getId(),
                     (row, map) -> {
                         map.put("range_type", Range.Province.name());
                         map.put("range_id", "430000");
                     });
 
             aggrProjectScoreLevel(projectId, tableName, scoreLevels, fullScore, SCHOOL_PROJECT_SCORE_LEVEL,
+                    Target.Subject, subject.getId(),
                     (row, map) -> {
                         map.put("range_type", Range.School.name());
                         map.put("range_id", row.getString("range_id"));
                     });
 
             aggrProjectScoreLevel(projectId, tableName, scoreLevels, fullScore, CLASS_PROJECT_SCORE_LEVEL,
+                    Target.Subject, subject.getId(),
                     (row, map) -> {
                         map.put("range_type", Range.Class.name());
                         map.put("range_id", row.getString("range_id"));
@@ -159,6 +165,7 @@ public class ScoreLevelRateAggregator extends Aggregator {
 
     private void aggrProjectScoreLevel(
             String projectId, String tableName, JSONObject scoreLevels, double fullScore, String sqlTemplate,
+            Target target, String targetId,
             BiConsumer<Row, Map<String, Object>> mapFixer) {
 
         String sql = sqlTemplate
@@ -185,7 +192,7 @@ public class ScoreLevelRateAggregator extends Aggregator {
         List<Map<String, Object>> insertMaps = new ArrayList<>();
 
         scoreMapRows.forEach(row -> {
-            Map<String, Object> map = createMap(totalMap, row, Target.Project, projectId);
+            Map<String, Object> map = createMap(totalMap, row, target, targetId);
             if (mapFixer != null) {
                 mapFixer.accept(row, map);
             }
