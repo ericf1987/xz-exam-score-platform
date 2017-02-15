@@ -5,6 +5,8 @@ import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class SchoolService {
 
@@ -25,5 +27,9 @@ public class SchoolService {
     public ProjectSchool findSchool(String projectId, String schoolId) {
         return daoFactory.getProjectDao(projectId).queryFirst(
                 ProjectSchool.class, "select * from school where id=?", schoolId);
+    }
+
+    public List<ProjectSchool> listSchool(String projectId) {
+        return daoFactory.getProjectDao(projectId).query(ProjectSchool.class, "select * from school");
     }
 }

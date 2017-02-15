@@ -106,4 +106,8 @@ public class ProjectService {
         String sql = "select * from project where id=?";
         return daoFactory.getManagerDao().queryFirst(ExamProject.class, sql, projectId);
     }
+
+    public String getProjectProvince(String projectId) {
+        return "430000";
+    }
 }

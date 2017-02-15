@@ -28,4 +28,9 @@ public class ClassService {
         return daoFactory.getProjectDao(projectId).query(
                 ProjectClass.class, "select * from class where school_id=?", schoolId);
     }
+
+    public List<ProjectClass> listClasses(String projectId) {
+        return daoFactory.getProjectDao(projectId).query(
+                ProjectClass.class, "select * from class");
+    }
 }
