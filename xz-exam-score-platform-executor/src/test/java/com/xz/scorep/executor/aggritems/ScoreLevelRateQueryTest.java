@@ -1,12 +1,11 @@
 package com.xz.scorep.executor.aggritems;
 
+import com.hyd.dao.Row;
 import com.xz.scorep.executor.BaseTest;
-import com.xz.scorep.executor.bean.ScoreLevelRate;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * (description)
@@ -21,16 +20,13 @@ public class ScoreLevelRateQueryTest extends BaseTest {
 
     @Test
     public void testGetSchoolProjectSLR() throws Exception {
-        List<ScoreLevelRate> list = scoreLevelRateQuery.getSchoolProjectSLR(PROJECT_ID, SCHOOL_ID);
-        list.forEach(System.out::println);
+        Row row = scoreLevelRateQuery.getSchoolProjectSLR(PROJECT_ID, SCHOOL_ID);
+        System.out.println(row);
     }
 
     @Test
     public void testGetClassProjectSLRs() throws Exception {
-        Map<String, List<ScoreLevelRate>> classProjectSLRs = scoreLevelRateQuery.getClassProjectSLRs(PROJECT_ID, SCHOOL_ID);
-        classProjectSLRs.entrySet().forEach(entry -> {
-            System.out.println(entry.getKey());
-            entry.getValue().forEach(value -> System.out.println("    " + value));
-        });
+        List<Row> classProjectSLRs = scoreLevelRateQuery.getClassProjectSLRs(PROJECT_ID, SCHOOL_ID);
+        classProjectSLRs.forEach(System.out::println);
     }
 }

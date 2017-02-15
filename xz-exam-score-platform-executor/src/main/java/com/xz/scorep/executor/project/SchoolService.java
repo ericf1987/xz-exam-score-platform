@@ -21,4 +21,9 @@ public class SchoolService {
     public void clearSchools(String projectId) {
         daoFactory.getProjectDao(projectId).execute("truncate table school");
     }
+
+    public ProjectSchool findSchool(String projectId, String schoolId) {
+        return daoFactory.getProjectDao(projectId).queryFirst(
+                ProjectSchool.class, "select * from school where id=?", schoolId);
+    }
 }

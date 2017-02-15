@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.report;
 
+import com.alibaba.fastjson.JSON;
 import com.xz.scorep.executor.BaseTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,15 +23,7 @@ public class SchoolOverviewReportTest extends BaseTest {
         String projectId = "fake_project";
         String schoolId = "207ae6fd_2e1d_41d7_96e8_d2bb68de3cb4";
         Map<?, ?> map = this.schoolOverviewReport.generateReport(projectId, schoolId);
-        System.out.println(map);
-    }
-
-    @Test
-    public void generateProvinceReport() throws Exception {
-        String projectId = "fake_project";
-        String schoolId = "0";
-        Map<?, ?> map = this.schoolOverviewReport.generateReport(projectId, schoolId);
-        System.out.println(map);
+        System.out.println(JSON.toJSONString(map, true));
     }
 
 }

@@ -3,22 +3,18 @@ package com.xz.scorep.executor.aggritems;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.report.Keys.Range;
 import com.xz.ajiaedu.common.report.Keys.Target;
-import com.xz.scorep.executor.bean.ScoreLevelRate;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Component
 public class ScoreLevelRateQuery {
-
-    public static final String SCHOOL_SLR =
-            "select * from scorelevelmap where range_type=? and range_id=? and target_type=? and target_id=?";
 
     public static final String CLASS_SLRS = "select * \n" +
             "from \n" +
@@ -35,47 +31,63 @@ public class ScoreLevelRateQuery {
     private DAOFactory daoFactory;
 
     // 查询学校总分四率
-    public List<ScoreLevelRate> getSchoolProjectSLR(String projectId, String schoolId) {
+    public Row getSchoolProjectSLR(String projectId, String schoolId) {
         return getSchoolSLR(projectId, schoolId, Target.Project, projectId);
     }
 
     // 查询班级总分四率
-    public Map<String, List<ScoreLevelRate>> getClassProjectSLRs(String projectId, String schoolId) {
-
+    public List<Row> getClassProjectSLRs(String projectId, String schoolId) {
         return getClassSLRs(projectId, schoolId, Target.Project, projectId);
     }
 
     //////////////////////////////////////////////////////////////
 
     // 查询班级四率
-    private Map<String, List<ScoreLevelRate>> getClassSLRs(
+    private List<Row> getClassSLRs(
             String projectId, String schoolId, Target target, String targetId) {
 
         List<Row> rows = daoFactory.getProjectDao(projectId).query(
                 CLASS_SLRS, target.name(), targetId, Range.Class.name(), schoolId);
 
-        Map<String, List<ScoreLevelRate>> result = new HashMap<>();
+        // 竖表转横表
+        Map<String, Row> resultRowMap = rows.stream().collect(Collectors.groupingBy(
+                row -> row.getString("range_id"),
+                Collector.of(
+                        Row::new,
+                        (combinedRow, row) -> combinedRow.put(
+                                row.getString("score_level").toLowerCase(),
+                                row.getDouble("student_rate", 0)
+                        ),
+                        (combinedRow1, combinedRow2) -> {
+                            Row combined = new Row();
+                            combined.putAll(combinedRow1);
+                            combined.putAll(combinedRow2);
+                            return combined;
+                        },
+                        Collector.Characteristics.IDENTITY_FINISH
+                )
+        ));
 
-        rows.forEach(row -> {
-            String classId = row.getString("range_id");
-            ScoreLevelRate rate = new ScoreLevelRate(row);
+        // 补完 class_id 属性
+        resultRowMap.entrySet().forEach(entry -> entry.getValue().put("class_id", entry.getKey()));
 
-            if (!result.containsKey(classId)) {
-                result.put(classId, new ArrayList<>());
-            }
-
-            result.get(classId).add(rate);
-        });
-
-        return result;
+        return new ArrayList<>(resultRowMap.values());
     }
 
     // 查询学校四率
-    private List<ScoreLevelRate> getSchoolSLR(String projectId, String schoolId, Target target, String targetId) {
+    private Row getSchoolSLR(String projectId, String schoolId, Target target, String targetId) {
 
         List<Row> rows = daoFactory.getProjectDao(projectId).query(
-                SCHOOL_SLR, Range.School.name(), schoolId, target.name(), targetId);
+                CLASS_SLRS, Range.School.name(), schoolId, target.name(), targetId);
 
-        return rows.stream().map(ScoreLevelRate::new).collect(Collectors.toList());
+        Row result = new Row();
+        result.put("school_id", schoolId);
+
+        rows.forEach(row -> result.put(
+                row.getString("score_level").toLowerCase(),
+                row.getDouble("student_rate", 0)
+        ));
+
+        return result;
     }
 }

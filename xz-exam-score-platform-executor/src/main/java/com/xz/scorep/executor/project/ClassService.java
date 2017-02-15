@@ -5,6 +5,8 @@ import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class ClassService {
 
@@ -20,5 +22,10 @@ public class ClassService {
 
     public void clearClasses(String projectId) {
         daoFactory.getProjectDao(projectId).execute("truncate table class");
+    }
+
+    public List<ProjectClass> listClasses(String projectId, String schoolId) {
+        return daoFactory.getProjectDao(projectId).query(
+                ProjectClass.class, "select * from class where school_id=?", schoolId);
     }
 }
