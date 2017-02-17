@@ -32,7 +32,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
         LOG.info("项目 {} 的学生总分已清空", projectId);
 
         AtomicInteger counter = new AtomicInteger(0);
-        List<String> subjectIds = subjectService.querySubjectIds(projectId)
+        List<String> subjectIds = subjectService.listSubjects(projectId)
                 .stream().map(ExamSubject::getId).collect(Collectors.toList());
 
         subjectIds.forEach(subjectId -> {

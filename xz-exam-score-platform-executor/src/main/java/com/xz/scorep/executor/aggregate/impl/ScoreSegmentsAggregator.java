@@ -103,7 +103,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
 
     private void aggrSubjectScoreSegments(String projectId, DAO projectDao) throws InterruptedException {
         ThreadPools.createAndRunThreadPool(10, 100, pool ->
-                subjectService.querySubjectIds(projectId).forEach(subject -> {
+                subjectService.listSubjects(projectId).forEach(subject -> {
                     String subjectId = subject.getId();
                     pool.submit(() -> aggrSubjectScoreSegments0(projectId, projectDao, subjectId));
                 }));

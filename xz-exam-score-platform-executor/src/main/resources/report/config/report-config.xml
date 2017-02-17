@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <report-config>
 
-    <report-set id="default" base="com.xz.examscore.asynccomponents.report">
+    <report-set id="default" base="com.xz.scorep.executor.exportexcel.impl">
 
         <report-category name="总体成绩分析" range="province">
             <report-category name="基础分析">

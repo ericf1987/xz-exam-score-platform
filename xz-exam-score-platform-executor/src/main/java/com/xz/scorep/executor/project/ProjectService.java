@@ -80,7 +80,7 @@ public class ProjectService {
         dao.execute("create table school (id varchar(36) primary key, name varchar(50), area varchar(6), city varchar(6), province varchar(6))");
         dao.execute("create table class  (id varchar(36) primary key, name varchar(20), school_id varchar(36))");
         dao.execute("create table student(id varchar(36) primary key, name varchar(50), class_id varchar(36))");
-        dao.execute("create table subject(id varchar(9)  primary key, full_score decimal(4,1) default 0)");
+        dao.execute("create table subject(id varchar(9)  primary key, name varchar(20), full_score decimal(4,1) default 0)");
         dao.execute("create table quest  (" +
                 "  id varchar(36) primary key, " +
                 "  exam_subject varchar(10), " +

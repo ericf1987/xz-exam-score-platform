@@ -1,4 +1,4 @@
-package com.xz.scorep.executor.exportexcel.impl;
+package com.xz.scorep.executor.exportexcel.impl.total;
 
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;

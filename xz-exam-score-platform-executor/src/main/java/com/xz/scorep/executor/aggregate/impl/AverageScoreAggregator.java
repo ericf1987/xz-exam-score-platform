@@ -140,7 +140,7 @@ public class AverageScoreAggregator extends Aggregator {
     private void aggregateSubjectAverage(String projectId, DAO projectDao) throws InterruptedException {
         final AtomicInteger counter = new AtomicInteger(0);
 
-        List<String> subjectIds = subjectService.querySubjectIds(projectId)
+        List<String> subjectIds = subjectService.listSubjects(projectId)
                 .stream().map(ExamSubject::getId).collect(Collectors.toList());
 
         int subjectCount = subjectIds.size();

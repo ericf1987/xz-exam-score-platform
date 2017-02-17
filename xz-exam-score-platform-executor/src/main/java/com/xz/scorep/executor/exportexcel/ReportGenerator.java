@@ -17,10 +17,10 @@ import java.util.List;
  */
 public abstract class ReportGenerator {
 
-    static final Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
 
     @Autowired
-    SheetManager sheetManager;
+    private SheetManager sheetManager;
 
     /**
      * 生成并保存报表文件

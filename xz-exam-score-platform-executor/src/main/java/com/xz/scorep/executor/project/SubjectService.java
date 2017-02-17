@@ -39,7 +39,7 @@ public class SubjectService {
         daoFactory.getProjectDao(projectId).execute(createSubjectTable);
     }
 
-    public List<ExamSubject> querySubjectIds(String projectId) {
+    public List<ExamSubject> listSubjects(String projectId) {
         return daoFactory.getProjectDao(projectId).query(ExamSubject.class, "select * from subject");
     }
 }

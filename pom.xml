@@ -30,6 +30,7 @@
         <jedis.version>2.9.0</jedis.version>
         <ajiaedu.common.version>3.0-SNAPSHOT</ajiaedu.common.version>
         <hydrogen.dao.version>2.4.0-SNAPSHOT</hydrogen.dao.version>
+        <poi.version>3.15</poi.version>
     </properties>
 
     <parent>
@@ -61,6 +62,23 @@
                 <groupId>com.hyd</groupId>
                 <artifactId>hydrogen-dao</artifactId>
                 <version>${hydrogen.dao.version}</version>
+            </dependency>
+
+            <!-- POI -->
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml-schemas</artifactId>
+                <version>${poi.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

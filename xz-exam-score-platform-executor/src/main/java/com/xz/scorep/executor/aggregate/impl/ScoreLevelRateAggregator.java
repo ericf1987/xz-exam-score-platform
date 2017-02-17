@@ -136,7 +136,7 @@ public class ScoreLevelRateAggregator extends Aggregator {
     }
 
     private void aggregateSubjectScoreLevels(String projectId, JSONObject scoreLevels) {
-        subjectService.querySubjectIds(projectId).forEach(subject -> {
+        subjectService.listSubjects(projectId).forEach(subject -> {
             double fullScore = subject.getFullScore();
             String tableName = "score_subject_" + subject.getId();
 

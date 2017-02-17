@@ -35,7 +35,7 @@ import static com.xz.ajiaedu.common.concurrent.Executors.newBlockingThreadPoolEx
 @Component
 public class ExcelReportManager implements ApplicationContextAware {
 
-    static final Logger LOG = LoggerFactory.getLogger(ExcelReportManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ExcelReportManager.class);
 
     private ThreadPoolExecutor executionPool;
 
@@ -66,9 +66,9 @@ public class ExcelReportManager implements ApplicationContextAware {
      *
      * @param projectId 项目ID
      */
-    public void generateReports(final String projectId, boolean async, boolean isExamAlliance) {
+    public void generateReports(final String projectId, boolean async) {
 
-        List<ReportTask> reportTasks = createReportGenerators(projectId, isExamAlliance);
+        List<ReportTask> reportTasks = createReportGenerators(projectId);
         ThreadPoolExecutor pool = async ? executionPool : newBlockingThreadPoolExecutor(10, 10, 100);
         CountDownLatch countDownLatch = new CountDownLatch(reportTasks.size());
 
@@ -113,7 +113,7 @@ public class ExcelReportManager implements ApplicationContextAware {
         return System.getProperty("unit_testing") != null;
     }
 
-    public List<ReportTask> createReportGenerators(String projectId, boolean isExamAlliance) {
+    public List<ReportTask> createReportGenerators(String projectId) {
 
         List<XmlNode> reportSets = reportConfig.getChildren(xmlNode ->
                 xmlNode.getTagName().equals("report-set") && xmlNode.getString("id").equals(projectId));
@@ -136,7 +136,7 @@ public class ExcelReportManager implements ApplicationContextAware {
         return reportTasks;
     }
 
-    private void iterateReportSet(
+    protected void iterateReportSet(
             Context context, XmlNode xmlNode, String category, List<ReportTask> reportTasks, Range range) throws Exception {
 
         String projectId = context.get("projectId");
@@ -165,10 +165,10 @@ public class ExcelReportManager implements ApplicationContextAware {
             String reportClassNamePrefix = context.get("basePackage");
             String reportClassName = reportClassNamePrefix + reportClassNameSuffix;
 
-            ReportGenerator reportGenerator = (ReportGenerator)
-                    this.applicationContext.getBean(Class.forName(reportClassName));
-
-            reportTasks.add(createReportTasks(category, filename, reportGenerator, range));
+            ReportGenerator reportGenerator = getReportGenerator(category, reportClassName);
+            if (reportGenerator != null) {
+                reportTasks.add(createReportTasks(category, filename, reportGenerator, range));
+            }
 
         } else {  // reportSet
 
@@ -178,6 +178,15 @@ public class ExcelReportManager implements ApplicationContextAware {
                 iterateReportSet(context, child, category, reportTasks, range);
             }
 
+        }
+    }
+
+    private ReportGenerator getReportGenerator(String category, String reportClassName) {
+        try {
+            return (ReportGenerator) this.applicationContext.getBean(Class.forName(reportClassName));
+        } catch (ClassNotFoundException e) {
+            LOG.error("Report class missing: " + category + "|" + reportClassName);
+            return null;
         }
     }
 
@@ -192,6 +201,7 @@ public class ExcelReportManager implements ApplicationContextAware {
      * @param projectId 项目ID
      * @param savePath  报表根目录
      * @param filePath  报表根目录下的文件路径
+     *
      * @return 报表文件路径
      */
     private String getSaveFilePath(String projectId, String savePath, String filePath) {

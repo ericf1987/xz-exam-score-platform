@@ -10,14 +10,25 @@ public class ExamSubject {
 
     private String id;
 
+    private String name;
+
     private double fullScore;
 
-    public ExamSubject(String id, double fullScore) {
+    public ExamSubject(String id, String name, double fullScore) {
         this.id = id;
+        this.name = name;
         this.fullScore = fullScore;
     }
 
     public ExamSubject() {
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getId() {

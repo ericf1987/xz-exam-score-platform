@@ -56,7 +56,7 @@ public class AverageQuery {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<String> subjectQueries = new ArrayList<>();
 
-        subjectService.querySubjectIds(projectId).forEach(subject -> {
+        subjectService.listSubjects(projectId).forEach(subject -> {
             String subjectId = subject.getId();
             subjectQueries.add(AVG_SUBJECT_PROVINCE.replace("{{subject}}", subjectId));
         });
@@ -76,7 +76,7 @@ public class AverageQuery {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<String> subjectQueries = new ArrayList<>();
 
-        subjectService.querySubjectIds(projectId).forEach(subject -> {
+        subjectService.listSubjects(projectId).forEach(subject -> {
             String subjectId = subject.getId();
             subjectQueries.add(AVG_SUBJECT_SCHOOL.replace("{{subject}}", subjectId));
         });
