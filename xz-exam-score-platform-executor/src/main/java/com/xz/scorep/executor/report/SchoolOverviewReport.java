@@ -3,7 +3,7 @@ package com.xz.scorep.executor.report;
 import com.xz.scorep.executor.aggritems.AverageQuery;
 import com.xz.scorep.executor.aggritems.MinMaxQuery;
 import com.xz.scorep.executor.aggritems.ScoreLevelRateQuery;
-import com.xz.scorep.executor.aggritems.StudentCountQuery;
+import com.xz.scorep.executor.aggritems.StudentQuery;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.table.Table;
@@ -26,7 +26,7 @@ public class SchoolOverviewReport extends AbstractReport {
     private AverageQuery averageQuery;
 
     @Autowired
-    private StudentCountQuery studentCountQuery;
+    private StudentQuery studentQuery;
 
     @Autowired
     private MinMaxQuery minMaxQuery;
@@ -44,7 +44,7 @@ public class SchoolOverviewReport extends AbstractReport {
 
         Table schoolTable = new Table("school_id");
         schoolTable.setValue(schoolId, "school_name", schoolService.findSchool(projectId, schoolId).getName());
-        schoolTable.setValue(schoolId, "student_count", studentCountQuery.getSchoolStudentCount(projectId, schoolId));
+        schoolTable.setValue(schoolId, "student_count", studentQuery.getSchoolStudentCount(projectId, schoolId));
         schoolTable.setValue(schoolId, "average", averageQuery.getSchoolProjectAverage(projectId, schoolId));
         schoolTable.readRow(scoreLevelRateQuery.getSchoolProjectSLR(projectId, schoolId));
         schoolTable.readRow(minMaxQuery.getSchoolProjectMinMax(projectId, schoolId));
@@ -56,7 +56,7 @@ public class SchoolOverviewReport extends AbstractReport {
         classService.listClasses(projectId, schoolId).forEach(
                 c -> classTable.setValue(c.getId(), "class_name", c.getName()));
 
-        studentCountQuery.getClassStudentCount(projectId, schoolId).entrySet().forEach(
+        studentQuery.getClassStudentCount(projectId, schoolId).entrySet().forEach(
                 entry -> classTable.setValue(entry.getKey(), "student_count", entry.getValue()));
 
         minMaxQuery.getClassProjectMinMax(projectId, schoolId).forEach(

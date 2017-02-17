@@ -1,16 +1,19 @@
 package com.xz.scorep.executor.aggritems;
 
 import com.hyd.dao.Row;
+import com.hyd.dao.database.commandbuilder.Command;
+import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
-public class StudentCountQuery {
+public class StudentQuery {
 
     @Autowired
     private DAOFactory daoFactory;
@@ -33,5 +36,32 @@ public class StudentCountQuery {
         ));
     }
 
+    public List<Row> listStudentInfo(String projectId, Range range) {
 
+        String sql = "select " +
+                "  student.id as student_id, " +
+                "  student.exam_no as exam_no, " +
+                "  student.school_exam_no as school_exam_no, " +
+                "  student.name as student_name, " +
+                "  class.name as class_name," +
+                "  school.name as school_name," +
+                "  school.area as area " +
+                "from " +
+                "  student, class, school " +
+                "where " +
+                "  student.class_id=class.id and" +
+                "  class.school_id=school.id";
+
+        List<Object> params = new ArrayList<>();
+
+        if (range.match(Range.SCHOOL)) {
+            sql += " and school.id=?";
+            params.add(range.getId());
+        } else if (range.match(Range.CLASS)) {
+            sql += " and class.id=?";
+            params.add(range.getId());
+        }
+
+        return daoFactory.getProjectDao(projectId).query(new Command(sql, params));
+    }
 }

@@ -100,4 +100,8 @@ public class FakeDataParameter {
     public double getProjectFullScore() {
         return subjectPerProject * questPerSubject * scorePerQuest;
     }
+
+    public double getSubjectFullScore() {
+        return questPerSubject * scorePerQuest;
+    }
 }

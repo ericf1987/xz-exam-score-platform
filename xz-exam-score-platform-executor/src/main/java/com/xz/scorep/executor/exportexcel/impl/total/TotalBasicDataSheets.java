@@ -4,11 +4,11 @@ import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.excel.ExcelWriter;
 import com.xz.ajiaedu.common.lang.Ranker;
 import com.xz.scorep.executor.aggritems.ScoreQuery;
+import com.xz.scorep.executor.aggritems.StudentQuery;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
-import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetHeaderBuilder;
 import com.xz.scorep.executor.exportexcel.SheetHeaderBuilder.Direction;
@@ -28,7 +28,7 @@ public class TotalBasicDataSheets extends SheetGenerator {
     private SubjectService subjectService;
 
     @Autowired
-    private DAOFactory daoFactory;
+    private StudentQuery studentQuery;
 
     @Autowired
     private ScoreQuery scoreQuery;
@@ -48,18 +48,7 @@ public class TotalBasicDataSheets extends SheetGenerator {
         String projectId = examProject.getId();
 
         // 基本信息列
-        table.readRows(daoFactory.getProjectDao(projectId).query(
-                "select " +
-                        "  student.id as student_id, " +
-                        "  student.name as student_name, " +
-                        "  class.name as class_name," +
-                        "  school.name as school_name," +
-                        "  school.area as area " +
-                        "from " +
-                        "  student, class, school " +
-                        "where " +
-                        "  student.class_id=class.id and" +
-                        "  class.school_id=school.id"));
+        table.readRows(studentQuery.listStudentInfo(projectId, Range.province("430000")));
 
         // 全科分数和排名
         table.readRows(getProjectScoreAndRank(projectId));

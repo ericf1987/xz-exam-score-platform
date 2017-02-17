@@ -114,14 +114,16 @@ public class FakeDataGenerateService {
     }
 
     private Thread createQuests(final FakeDataParameter parameter) {
+
         Runnable runnable = () -> {
 
             LOG.info("Generating subjects and quests...");
             String projectId = parameter.getProjectId();
+            double subjectFullScore = parameter.getSubjectFullScore();
 
             for (int i = 0; i < parameter.getSubjectPerProject(); i++) {
                 String subjectId = String.format("%03d", (i + 1));
-                subjectService.saveSubject(projectId, subjectId);
+                subjectService.saveSubject(projectId, subjectId, subjectFullScore);
                 subjectService.createSubjectScoreTable(projectId, subjectId);
 
                 for (int j = 0; j < parameter.getQuestPerSubject(); j++) {
@@ -153,7 +155,7 @@ public class FakeDataGenerateService {
 
             for (int i = 0; i < parameter.getSchoolPerProject(); i++) {
                 String schoolId = UuidUtils.uuid();
-                String schoolName = "SCHOOL" + (i + 1);
+                String schoolName = "第" + (i + 1) + "中学";
                 String area = AREAS[i % AREAS.length];
 
                 ProjectSchool school = new ProjectSchool(
@@ -163,7 +165,7 @@ public class FakeDataGenerateService {
 
                 for (int j = 0; j < parameter.getClassPerSchool(); j++) {
                     String classId = UuidUtils.uuid();
-                    String className = schoolName + ":CLASS" + (j + 1);
+                    String className = (j + 1) + "班";
 
                     ProjectClass projectClass = new ProjectClass(
                             classId, className, schoolId, area, CITY, PROVINCE);
