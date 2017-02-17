@@ -136,6 +136,8 @@ public class FakeDataGenerateService {
     }
 
     private Thread createStudents(final FakeDataParameter parameter) {
+
+
         Runnable runnable = () -> {
 
             String projectId = parameter.getProjectId();
@@ -156,12 +158,14 @@ public class FakeDataGenerateService {
                     for (int k = 0; k < parameter.getStudentPerClass(); k++) {
                         String studentId = UuidUtils.uuid();
                         String studentName = className + ":STU" + (k + 1);
-                        studentService.saveStudent(projectId, new ProjectStudent(studentId, studentName, classId));
+                        ProjectStudent student = new ProjectStudent(studentId, studentName, classId);
+                        studentService.getMultiSaver(projectId).push("student", student);
                         studentCount++;
                     }
                 }
             }
 
+            studentService.getMultiSaver(projectId).finish();
             LOG.info(studentCount + " Students created.");
         };
 

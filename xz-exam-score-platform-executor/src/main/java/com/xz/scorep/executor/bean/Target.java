@@ -1,5 +1,7 @@
 package com.xz.scorep.executor.bean;
 
+import com.xz.ajiaedu.common.report.Keys;
+
 /**
  * (description)
  * created at 2017/2/15
@@ -8,16 +10,24 @@ package com.xz.scorep.executor.bean;
  */
 public class Target {
 
-    private String name;
+    private String type;
 
     private String id;
 
-    public String getName() {
-        return name;
+    public Target(String type, String id) {
+        this.type = type;
+        this.id = id;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public Target() {
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getId() {
@@ -28,4 +38,9 @@ public class Target {
         this.id = id;
     }
 
+    //////////////////////////////////////////////////////////////
+
+    public static Target project(String projectId) {
+        return new Target(Keys.Target.Project.name(), projectId);
+    }
 }

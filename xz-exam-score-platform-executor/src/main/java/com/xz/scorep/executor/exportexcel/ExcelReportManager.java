@@ -33,9 +33,9 @@ import static com.xz.ajiaedu.common.concurrent.Executors.newBlockingThreadPoolEx
  * @author yiding_he
  */
 @Component
-public class ReportManager implements ApplicationContextAware {
+public class ExcelReportManager implements ApplicationContextAware {
 
-    static final Logger LOG = LoggerFactory.getLogger(ReportManager.class);
+    static final Logger LOG = LoggerFactory.getLogger(ExcelReportManager.class);
 
     private ThreadPoolExecutor executionPool;
 
