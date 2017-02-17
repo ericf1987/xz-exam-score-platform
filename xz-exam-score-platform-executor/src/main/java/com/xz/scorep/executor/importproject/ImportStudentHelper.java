@@ -99,7 +99,7 @@ public class ImportStudentHelper {
 
             JSONArray examStudents = result.get("examStudents");
             JSONUtils.<JSONObject>forEach(examStudents, s -> {
-                ProjectStudent student = new ProjectStudent(s);
+                ProjectStudent student = new ProjectStudent(s);  // todo 填充 shoolId 等属性
                 studentService.saveStudent(projectId, student);
             });
         }

@@ -1,7 +1,9 @@
 package com.xz.scorep.executor.exportexcel;
 
 import com.xz.ajiaedu.common.excel.ExcelWriter;
+import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.Range;
+import com.xz.scorep.executor.project.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,9 @@ public abstract class ReportGenerator {
     @Autowired
     private SheetManager sheetManager;
 
+    @Autowired
+    private ProjectService projectService;
+
     /**
      * 生成并保存报表文件
      *
@@ -31,6 +36,7 @@ public abstract class ReportGenerator {
      */
     public void generate(String projectId, Range range, String savePath) {
         try {
+            ExamProject project = projectService.findProject(projectId);
             List<SheetTask> sheetTasks = getSheetTasks(projectId, range);
             InputStream stream = getClass().getResourceAsStream("report/templates/default.xlsx");
             ExcelWriter excelWriter = new ExcelWriter(stream);
@@ -41,7 +47,7 @@ public abstract class ReportGenerator {
                 excelWriter.openOrCreateSheet(sheetTask.getTitle());
                 SheetGenerator sheetGenerator = sheetManager.getSheetGenerator(sheetTask.getGeneratorClass());
                 if (sheetGenerator != null) {
-                    sheetGenerator.generate(projectId, excelWriter, sheetTask);
+                    sheetGenerator.generate(project, excelWriter, sheetTask);
                 }
             }
 

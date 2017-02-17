@@ -16,19 +16,52 @@ public class ProjectClass {
 
     private String schoolId;
 
+    private String area;
+
+    private String city;
+
+    private String province;
+
     public ProjectClass() {
     }
 
-    public ProjectClass(String id, String name, String schoolId) {
+    public ProjectClass(String id, String name, String schoolId, String area, String city, String province) {
         this.id = id;
         this.name = name;
         this.schoolId = schoolId;
+        this.area = area;
+        this.city = city;
+        this.province = province;
     }
 
     public ProjectClass(JSONObject jsonObject) {
         this.id = jsonObject.getString("id");
         this.name = jsonObject.getString("name");
         this.schoolId = jsonObject.getString("schoolId");
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getProvince() {
+        return province;
+    }
+
+    public void setProvince(String province) {
+        this.province = province;
     }
 
     public String getId() {

@@ -3,18 +3,17 @@ package com.xz.scorep.executor.fakedata;
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.hyd.dao.database.RowIterator;
-import com.xz.scorep.executor.bean.ExamQuest;
-import com.xz.scorep.executor.bean.ProjectClass;
-import com.xz.scorep.executor.bean.ProjectSchool;
-import com.xz.scorep.executor.bean.ProjectStudent;
+import com.xz.scorep.executor.bean.*;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.*;
+import com.xz.scorep.executor.utils.ChineseName;
 import com.xz.scorep.executor.utils.UuidUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -28,6 +27,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FakeDataGenerateService {
 
     private static final Logger LOG = LoggerFactory.getLogger(FakeDataGenerateService.class);
+
+    private static final String[] AREAS = {"430101", "430102", "430103"};
+
+    public static final String CITY = "430100";
+
+    public static final String PROVINCE = "430000";
 
     @Autowired
     private ProjectService projectService;
@@ -61,6 +66,9 @@ public class FakeDataGenerateService {
 
     public void generateFakeData(FakeDataParameter fakeDataParameter) {
         String projectId = fakeDataParameter.getProjectId();
+        projectService.saveProject(new ExamProject(
+                projectId, projectId, "", new Date(), 11, fakeDataParameter.getProjectFullScore()
+        ));
         projectService.initProjectDatabase(projectId);
 
         try {
@@ -146,19 +154,31 @@ public class FakeDataGenerateService {
             for (int i = 0; i < parameter.getSchoolPerProject(); i++) {
                 String schoolId = UuidUtils.uuid();
                 String schoolName = "SCHOOL" + (i + 1);
-                ProjectSchool school = new ProjectSchool(schoolId, schoolName, "430101", "430100", "430000");
+                String area = AREAS[i % AREAS.length];
+
+                ProjectSchool school = new ProjectSchool(
+                        schoolId, schoolName, area, CITY, PROVINCE);
+
                 schoolService.saveSchool(projectId, school);
 
                 for (int j = 0; j < parameter.getClassPerSchool(); j++) {
                     String classId = UuidUtils.uuid();
                     String className = schoolName + ":CLASS" + (j + 1);
-                    ProjectClass projectClass = new ProjectClass(classId, className, schoolId);
+
+                    ProjectClass projectClass = new ProjectClass(
+                            classId, className, schoolId, area, CITY, PROVINCE);
+
                     classService.saveClass(projectId, projectClass);
 
                     for (int k = 0; k < parameter.getStudentPerClass(); k++) {
                         String studentId = UuidUtils.uuid();
-                        String studentName = className + ":STU" + (k + 1);
-                        ProjectStudent student = new ProjectStudent(studentId, studentName, classId);
+                        String studentName = ChineseName.nextRandomName();
+                        String examNo = String.format("%06d", studentCount);
+
+                        ProjectStudent student = new ProjectStudent(
+                                studentId, examNo, examNo,
+                                studentName, classId, schoolId, area, CITY, PROVINCE);
+
                         studentService.getMultiSaver(projectId).push("student", student);
                         studentCount++;
                     }

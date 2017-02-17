@@ -16,10 +16,27 @@ public class SheetHeaderBuilder {
 
     private ExcelWriter excelWriter;
 
+    public Position getPosition() {
+        return position;
+    }
+
+    public void set(String text) {
+        set(text, 1, 1);
+    }
+
     public void set(String text, int rowspan, int colspan) {
         excelWriter.set(position.rowIndex, position.columnIndex, text);
-        excelWriter.mergeCells(position.rowIndex, position.columnIndex,
-                position.rowIndex + rowspan - 1, position.columnIndex + colspan - 1);
+
+        if (rowspan > 1 || colspan > 1) {
+            excelWriter.mergeCells(position.rowIndex, position.columnIndex,
+                    position.rowIndex + rowspan - 1, position.columnIndex + colspan - 1);
+        }
+    }
+
+    public void move(Direction... directions) {
+        for (Direction direction : directions) {
+            move(direction);
+        }
     }
 
     public void move(Direction direction) {
@@ -34,6 +51,16 @@ public class SheetHeaderBuilder {
         }
     }
 
+    public void setAndMove(String text, Direction... directions) {
+        set(text);
+        move(directions);
+    }
+
+    public void setAndMove(String text, Direction direction) {
+        set(text);
+        move(direction);
+    }
+
     public void setAndMove(String text, int rowspan, int colspan, Direction direction) {
         set(text, rowspan, colspan);
         move(direction);
@@ -45,7 +72,7 @@ public class SheetHeaderBuilder {
 
     //////////////////////////////////////////////////////////////
 
-    private static class Position {
+    public static class Position {
 
         private int rowIndex;
 

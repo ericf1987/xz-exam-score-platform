@@ -22,6 +22,18 @@ public class ExamProject {
 
     private double fullScore;
 
+    public ExamProject() {
+    }
+
+    public ExamProject(String id, String name, String range, Date createTime, int grade, double fullScore) {
+        this.id = id;
+        this.name = name;
+        this.range = range;
+        this.createTime = createTime;
+        this.grade = grade;
+        this.fullScore = fullScore;
+    }
+
     public String getRange() {
         return range;
     }

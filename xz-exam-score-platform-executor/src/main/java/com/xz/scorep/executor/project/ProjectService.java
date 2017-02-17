@@ -78,8 +78,8 @@ public class ProjectService {
     private void createInitialTables(String projectId) {
         DAO dao = daoFactory.getProjectDao(projectId);
         dao.execute("create table school (id varchar(36) primary key, name varchar(50), area varchar(6), city varchar(6), province varchar(6))");
-        dao.execute("create table class  (id varchar(36) primary key, name varchar(20), school_id varchar(36))");
-        dao.execute("create table student(id varchar(36) primary key, name varchar(50), class_id varchar(36))");
+        dao.execute("create table class  (id varchar(36) primary key, name varchar(20), school_id varchar(36), area varchar(6), city varchar(6), province varchar(6))");
+        dao.execute("create table student(id varchar(36) primary key, name varchar(50), exam_no varchar(20), school_exam_no varchar(20), class_id varchar(36), school_id varchar(36), area varchar(6), city varchar(6), province varchar(6))");
         dao.execute("create table subject(id varchar(9)  primary key, name varchar(20), full_score decimal(4,1) default 0)");
         dao.execute("create table quest  (" +
                 "  id varchar(36) primary key, " +
@@ -99,7 +99,9 @@ public class ProjectService {
     //////////////////////////////////////////////////////////////
 
     public void saveProject(ExamProject project) {
-        daoFactory.getManagerDao().insert(project, "project");
+        DAO managerDao = daoFactory.getManagerDao();
+        managerDao.delete(project, "project");
+        managerDao.insert(project, "project");
     }
 
     public ExamProject findProject(String projectId) {

@@ -94,4 +94,10 @@ public class FakeDataParameter {
     public void setScorePerQuest(double scorePerQuest) {
         this.scorePerQuest = scorePerQuest;
     }
+
+    //////////////////////////////////////////////////////////////
+
+    public double getProjectFullScore() {
+        return subjectPerProject * questPerSubject * scorePerQuest;
+    }
 }

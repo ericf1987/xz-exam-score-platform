@@ -17,7 +17,7 @@ public class ExcelReportManagerTest extends BaseTest {
 
     @Test
     public void generateReports() throws Exception {
-        excelReportManager.generateReports("fake_project", false);
+        excelReportManager.generateReports("fake_project_small", false);
     }
 
 }

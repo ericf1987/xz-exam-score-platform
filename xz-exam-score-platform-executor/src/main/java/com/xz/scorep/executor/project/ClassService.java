@@ -14,10 +14,7 @@ public class ClassService {
     private DAOFactory daoFactory;
 
     public void saveClass(String projectId, ProjectClass projectClass) {
-        String sql = "insert into class(id, name, school_id) values(?,?,?)";
-
-        daoFactory.getProjectDao(projectId)
-                .execute(sql, projectClass.getId(), projectClass.getName(), projectClass.getSchoolId());
+        daoFactory.getProjectDao(projectId).insert(projectClass, "class");
     }
 
     public void clearClasses(String projectId) {

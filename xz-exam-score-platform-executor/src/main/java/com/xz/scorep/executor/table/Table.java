@@ -4,7 +4,9 @@ import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.NaturalOrderComparator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * (description)
@@ -18,10 +20,24 @@ public class Table {
 
     private List<TableRow> rows = new ArrayList<>();
 
+    private Map<String, Integer> columnIndexes = new HashMap<>();
+
     private static final NaturalOrderComparator NAME_COMPARATOR = new NaturalOrderComparator();
 
     public Table(String key) {
         this.key = key;
+    }
+
+    public void setColumnIndex(String columnName, int index) {
+        this.columnIndexes.put(columnName, index);
+    }
+
+    public int getColumnIndex(String columnName) {
+        if (!columnIndexes.containsKey(columnName)) {
+            return -1;
+        } else {
+            return columnIndexes.get(columnName);
+        }
     }
 
     public void setValue(String keyId, String propertyName, Object propertyValue) {
@@ -53,9 +69,23 @@ public class Table {
         return rows;
     }
 
-    public void sortBy(String columnName) {
-        this.rows.sort((o1, o2) -> NAME_COMPARATOR.compare(
-                String.valueOf(o1.get(columnName)),
-                String.valueOf(o2.get(columnName))));
+    public void sortBy(String... columnNames) {
+        this.rows.sort((o1, o2) -> {
+            for (String columnName : columnNames) {
+                int result = NAME_COMPARATOR.compare(
+                        String.valueOf(o1.get(columnName)),
+                        String.valueOf(o2.get(columnName)));
+
+                if (result != 0) {
+                    return result;
+                }
+            }
+
+            return 0;
+        });
+    }
+
+    public void readRows(List<Row> rows) {
+        rows.forEach(this::readRow);
     }
 }
