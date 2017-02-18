@@ -20,11 +20,14 @@ public abstract class SheetGenerator {
      * @param sheetTask   任务对象（包含 range 和 target）
      */
     public void generate(ExamProject project, ExcelWriter excelWriter, SheetTask sheetTask) throws Exception {
-        generateSheet(project, excelWriter, sheetTask);
+        SheetContext sheetContext = new SheetContext();
+        sheetContext.setProject(project);
+        sheetContext.setExcelWriter(excelWriter);
+        sheetContext.setSheetTask(sheetTask);
+        generateSheet(sheetContext);
     }
 
-    protected abstract void generateSheet(
-            ExamProject project, ExcelWriter excelWriter, SheetTask sheetTask) throws Exception;
+    protected abstract void generateSheet(SheetContext sheetContext) throws Exception;
 
     protected void writeTableToSheet(ExcelWriter excelWriter, Table table, int startRow) {
         int[] rowCounter = {startRow};

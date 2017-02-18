@@ -9,10 +9,10 @@ import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
+import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetHeaderBuilder;
 import com.xz.scorep.executor.exportexcel.SheetHeaderBuilder.Direction;
-import com.xz.scorep.executor.exportexcel.SheetTask;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.table.Table;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +34,10 @@ public class TotalBasicDataSheets extends SheetGenerator {
     private ScoreQuery scoreQuery;
 
     @Override
-    protected void generateSheet(ExamProject examProject, ExcelWriter excelWriter, SheetTask sheetTask) throws Exception {
+    protected void generateSheet(SheetContext sheetContext) throws Exception {
         Table table = new Table("student_id");
+        ExamProject examProject = sheetContext.getProject();
+        ExcelWriter excelWriter = sheetContext.getExcelWriter();
 
         fillHeader(table, examProject, excelWriter);
         fillData(table, examProject);
@@ -81,12 +83,9 @@ public class TotalBasicDataSheets extends SheetGenerator {
 
     private void fillHeader(Table table, ExamProject examProject, ExcelWriter excelWriter) {
 
-        table.setColumnIndex("exam_no", 0);
-        table.setColumnIndex("school_exam_no", 1);
-        table.setColumnIndex("student_name", 2);
-        table.setColumnIndex("area", 3);
-        table.setColumnIndex("school_name", 4);
-        table.setColumnIndex("class_name", 5);
+        // 从 0 开始依次设置表头字段名称
+        String[] columnNames = {"exam_no", "school_exam_no", "student_name", "area", "school_name", "class_name"};
+        table.setColumnNames(0, columnNames);
 
         String projectId = examProject.getId();
         SheetHeaderBuilder builder = new SheetHeaderBuilder(excelWriter);
