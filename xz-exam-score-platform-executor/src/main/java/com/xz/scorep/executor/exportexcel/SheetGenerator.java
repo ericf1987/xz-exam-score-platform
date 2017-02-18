@@ -1,9 +1,11 @@
 package com.xz.scorep.executor.exportexcel;
 
+import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.excel.ExcelWriter;
+import com.xz.ajiaedu.common.lang.Ranker;
 import com.xz.scorep.executor.bean.ExamProject;
-import com.xz.scorep.executor.table.Table;
-import com.xz.scorep.executor.table.TableRow;
+
+import java.util.List;
 
 /**
  * 生成报表文件中的单个 Sheet
@@ -29,20 +31,23 @@ public abstract class SheetGenerator {
 
     protected abstract void generateSheet(SheetContext sheetContext) throws Exception;
 
-    protected void writeTableToSheet(ExcelWriter excelWriter, Table table, int startRow) {
-        int[] rowCounter = {startRow};
-        table.getRows().forEach(tableRow -> {
-            writeRow(excelWriter, table, tableRow, rowCounter[0]);
-            rowCounter[0]++;
-        });
-    }
+    // 1. 从 scoreColumnName 属性获取分数，
+    // 2. 对分数进行排名，
+    // 3. 将排名写入 rankColumnName 属性
+    protected void writeRanks(List<Row> rows, String scoreColumnName, String rankColumnName) {
 
-    protected void writeRow(ExcelWriter excelWriter, Table table, TableRow tableRow, int rowIndex) {
-        tableRow.entrySet().forEach(entry -> {
-            int columnIndex = table.getColumnIndex(entry.getKey());
-            if (columnIndex > -1) {
-                excelWriter.set(rowIndex, columnIndex, entry.getValue());
-            }
+        Ranker<String> ranker = new Ranker<>();
+
+        rows.forEach(row -> {
+            String studentId = row.getString("student_id");
+            double score = row.getDouble(scoreColumnName, 0);
+            ranker.put(studentId, score);
+        });
+
+        rows.forEach(row -> {
+            String studentId = row.getString("student_id");
+            int rank = ranker.getRank(studentId, false);
+            row.put(rankColumnName, rank + 1);  // ranker 输出的名次，0 表示第一名
         });
     }
 }

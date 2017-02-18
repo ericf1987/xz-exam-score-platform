@@ -1,6 +1,8 @@
 package com.xz.scorep.executor.exportexcel;
 
 import com.xz.ajiaedu.common.excel.ExcelWriter;
+import com.xz.scorep.executor.utils.Direction;
+import com.xz.scorep.executor.utils.Position;
 
 /**
  * (description)
@@ -10,9 +12,9 @@ import com.xz.ajiaedu.common.excel.ExcelWriter;
  */
 public class SheetHeaderBuilder {
 
-    public enum Direction {UP, RIGHT, DOWN, LEFT;}
-
     private Position position = new Position(0, 0);
+
+    private int maxRowIndex = 0;
 
     private ExcelWriter excelWriter;
 
@@ -25,11 +27,14 @@ public class SheetHeaderBuilder {
     }
 
     public void set(String text, int rowspan, int colspan) {
-        excelWriter.set(position.rowIndex, position.columnIndex, text);
+        excelWriter.set(position.getRowIndex(), position.getColumnIndex(), text);
 
         if (rowspan > 1 || colspan > 1) {
-            excelWriter.mergeCells(position.rowIndex, position.columnIndex,
-                    position.rowIndex + rowspan - 1, position.columnIndex + colspan - 1);
+            excelWriter.mergeCells(
+                    position.getRowIndex(),
+                    position.getColumnIndex(),
+                    position.getRowIndex() + rowspan - 1,
+                    position.getColumnIndex() + colspan - 1);
         }
     }
 
@@ -41,14 +46,16 @@ public class SheetHeaderBuilder {
 
     public void move(Direction direction) {
         if (direction == Direction.UP) {
-            position.rowIndex--;
+            position.rowIndexAdd(-1);
         } else if (direction == Direction.RIGHT) {
-            position.columnIndex++;
+            position.columnIndexAdd(1);
         } else if (direction == Direction.DOWN) {
-            position.rowIndex++;
+            position.rowIndexAdd(1);
         } else if (direction == Direction.LEFT) {
-            position.columnIndex--;
+            position.columnIndexAdd(-1);
         }
+
+        this.maxRowIndex = Math.max(this.maxRowIndex, position.getRowIndex());
     }
 
     public void setAndMove(String text, Direction... directions) {
@@ -70,36 +77,7 @@ public class SheetHeaderBuilder {
         this.excelWriter = excelWriter;
     }
 
-    //////////////////////////////////////////////////////////////
-
-    public static class Position {
-
-        private int rowIndex;
-
-        private int columnIndex;
-
-        public Position() {
-        }
-
-        public Position(int rowIndex, int columnIndex) {
-            this.rowIndex = rowIndex;
-            this.columnIndex = columnIndex;
-        }
-
-        public int getRowIndex() {
-            return rowIndex;
-        }
-
-        public void setRowIndex(int rowIndex) {
-            this.rowIndex = rowIndex;
-        }
-
-        public int getColumnIndex() {
-            return columnIndex;
-        }
-
-        public void setColumnIndex(int columnIndex) {
-            this.columnIndex = columnIndex;
-        }
+    public int getMaxRowIndex() {
+        return maxRowIndex;
     }
 }

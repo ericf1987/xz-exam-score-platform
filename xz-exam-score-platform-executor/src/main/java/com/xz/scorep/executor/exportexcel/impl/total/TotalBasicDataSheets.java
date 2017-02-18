@@ -1,20 +1,15 @@
 package com.xz.scorep.executor.exportexcel.impl.total;
 
 import com.hyd.dao.Row;
-import com.xz.ajiaedu.common.excel.ExcelWriter;
-import com.xz.ajiaedu.common.lang.Ranker;
 import com.xz.scorep.executor.aggritems.ScoreQuery;
 import com.xz.scorep.executor.aggritems.StudentQuery;
-import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
-import com.xz.scorep.executor.exportexcel.SheetHeaderBuilder;
-import com.xz.scorep.executor.exportexcel.SheetHeaderBuilder.Direction;
 import com.xz.scorep.executor.project.SubjectService;
-import com.xz.scorep.executor.table.Table;
+import com.xz.scorep.executor.utils.Direction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +18,8 @@ import java.util.stream.Stream;
 
 @Component
 public class TotalBasicDataSheets extends SheetGenerator {
+
+    private static final Range PROVINCE_RANGE = Range.province("430000");
 
     @Autowired
     private SubjectService subjectService;
@@ -34,79 +31,107 @@ public class TotalBasicDataSheets extends SheetGenerator {
     private ScoreQuery scoreQuery;
 
     @Override
-    protected void generateSheet(SheetContext sheetContext) throws Exception {
-        Table table = new Table("student_id");
-        ExamProject examProject = sheetContext.getProject();
-        ExcelWriter excelWriter = sheetContext.getExcelWriter();
+    protected void generateSheet(SheetContext context) throws Exception {
 
-        fillHeader(table, examProject, excelWriter);
-        fillData(table, examProject);
+        setupColumns(context);
+        fillHeader(context);
+        fillData(context);
 
-        table.sortBy("area", "school_name", "class_name");
-        writeTableToSheet(excelWriter, table, 2);
+        context.rowSortBy("area", "school_name", "class_name");
+        context.saveData();
     }
 
-    private void fillData(Table table, ExamProject examProject) {
-        String projectId = examProject.getId();
+    private void setupColumns(SheetContext context) {
 
-        // 基本信息列
-        table.readRows(studentQuery.listStudentInfo(projectId, Range.province("430000")));
+        // 1. 考生基本信息字段
+        String[] stuInfoColumns = {
+                "exam_no", "school_exam_no", "student_name", "area", "school_name", "class_name"
+        };
 
-        // 全科分数和排名
-        table.readRows(getProjectScoreAndRank(projectId));
+        for (int i = 0; i < stuInfoColumns.length; i++) {
+            context.columnSet(i, stuInfoColumns[i]);
+        }
 
-        // 各科分数和排名
-        subjectService.listSubjects(projectId).forEach(subject -> {
-            List<Row> rows = scoreQuery.listStudentScore(projectId,
-                    Range.province("430000"), Target.subject(subject.getId()));
+        // 2. 各科成绩和排名字段
+        // 查询科目列表并在第一个位置加上“全科”科目
+        List<ExamSubject> subjects = subjectService.listSubjects(context.getProjectId());
+        subjects.add(0, fakeTotalSubject());
 
-            fillRank(rows, "score_" + subject.getId(), "rank_" + subject.getId());
+        // 设置每个科目的分数和排名字段名称
+        for (int i = 0; i < subjects.size(); i++) {
+            ExamSubject subject = subjects.get(i);
+            int columnIndex = i * 2 + stuInfoColumns.length;
+            context.columnSet(columnIndex, "score_" + subject.getId());
+            context.columnSet(columnIndex + 1, "rank_" + subject.getId());
+        }
+    }
 
-            table.readRows(rows);
+    private void fillHeader(SheetContext context) {
+
+        // 考生基本信息表头
+        Stream.of("考号", "学校考号", "姓名", "市区", "学校", "班级")
+                .forEach(text -> {
+                    context.headerPut(text, 2, 1);
+                    context.headerMove(Direction.RIGHT);
+                });
+
+        // 科目列表表头：科目列表前面加个全科
+        Stream<ExamSubject> subjectStreamWithTotal =
+                getSubjectStreamWithTotal(context.getProjectId());
+
+        subjectStreamWithTotal.forEach(subject -> {
+            context.headerPut(subject.getName(), 1, 2);
+            context.headerMove(Direction.DOWN);
+            context.headerPut("得分");
+            context.headerMove(Direction.RIGHT);
+            context.headerPut("排名");
+            context.headerMove(Direction.RIGHT, Direction.UP);
         });
     }
 
+    private void fillData(SheetContext sheetContext) {
+        String projectId = sheetContext.getProjectId();
+
+        // 基本信息列
+        sheetContext.rowAdd(studentQuery.listStudentInfo(projectId, PROVINCE_RANGE));
+
+        // 全科分数和排名
+        sheetContext.rowAdd(getProjectScoreAndRank(projectId));
+
+        // 各科分数和排名
+        subjectService.listSubjects(projectId).forEach(subject -> {
+
+            List<Row> rows = scoreQuery.listStudentScore(
+                    projectId, PROVINCE_RANGE, Target.subject(subject.getId()));
+
+            String scoreColumnName = "score_" + subject.getId();
+            String rankColumnName = "rank_" + subject.getId();
+            writeRanks(rows, scoreColumnName, rankColumnName);
+
+            sheetContext.rowAdd(rows);
+        });
+    }
+
+    //////////////////////////////////////////////////////////////
+
     private List<Row> getProjectScoreAndRank(String projectId) {
         List<Row> rows = scoreQuery.listStudentScore(projectId,
-                Range.province("430000"), Target.project(projectId));
+                PROVINCE_RANGE, Target.project(projectId));
 
-        fillRank(rows, "score_000", "rank_000");
+        writeRanks(rows, "score_000", "rank_000");
 
         return rows;
     }
 
-    private void fillRank(List<Row> rows, String scoreColumnName, String rankColumnName) {
-        Ranker<String> ranker = new Ranker<>();  // ranker 输出的名词，0 表示第一名
-        rows.forEach(row -> ranker.put(row.getString("student_id"), row.getDouble(scoreColumnName, 0)));
-        rows.forEach(row -> row.put(rankColumnName, ranker.getRank(row.getString("student_id"), false) + 1));
+    private Stream<ExamSubject> getSubjectStreamWithTotal(String projectId) {
+        return Stream.concat(
+                Stream.of(fakeTotalSubject()),
+                subjectService.listSubjects(projectId).stream()
+        );
     }
 
-    private void fillHeader(Table table, ExamProject examProject, ExcelWriter excelWriter) {
-
-        // 从 0 开始依次设置表头字段名称
-        String[] columnNames = {"exam_no", "school_exam_no", "student_name", "area", "school_name", "class_name"};
-        table.setColumnNames(0, columnNames);
-
-        String projectId = examProject.getId();
-        SheetHeaderBuilder builder = new SheetHeaderBuilder(excelWriter);
-
-        // 考生基本信息表头
-        Stream.of("考号", "学校考号", "姓名", "市区", "学校", "班级")
-                .forEach(text -> builder.setAndMove(text, 2, 1, Direction.RIGHT));
-
-        // 科目列表表头：科目列表前面加个全科
-        Stream.concat(
-                Stream.of(new ExamSubject("000", "全科", 0)),  // fullScore 用不到
-                subjectService.listSubjects(projectId).stream()
-        ).forEach(subject -> {
-
-            int currentColumnIndex = builder.getPosition().getColumnIndex();
-            table.setColumnIndex("score_" + subject.getId(), currentColumnIndex);
-            table.setColumnIndex("rank_" + subject.getId(), currentColumnIndex + 1);
-
-            builder.setAndMove(subject.getName(), 1, 2, Direction.DOWN);
-            builder.setAndMove("得分", Direction.RIGHT);
-            builder.setAndMove("排名", Direction.RIGHT, Direction.UP);
-        });
+    private ExamSubject fakeTotalSubject() {
+        // fullScore 传 0 是因为用不到
+        return new ExamSubject("000", "全科", 0);
     }
 }

@@ -25,11 +25,14 @@ public class Table {
 
     private static final NaturalOrderComparator NAME_COMPARATOR = new NaturalOrderComparator();
 
+    public Table() {
+    }
+
     public Table(String key) {
         this.key = key;
     }
 
-    public void setColumnIndex(String columnName, int index) {
+    public void setColumnIndex(int index, String columnName) {
         this.columnIndexes.put(columnName, index);
     }
 
@@ -93,7 +96,7 @@ public class Table {
     public void setColumnNames(int startIndex, String... columnNames) {
         IntStream.range(startIndex, startIndex + columnNames.length).forEach(index -> {
             String columnName = columnNames[index - startIndex];
-            setColumnIndex(columnName, index);
+            setColumnIndex(index, columnName);
         });
     }
 }
