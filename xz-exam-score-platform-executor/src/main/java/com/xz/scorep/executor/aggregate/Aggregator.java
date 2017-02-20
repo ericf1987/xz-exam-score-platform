@@ -14,17 +14,28 @@ import javax.annotation.PostConstruct;
 public abstract class Aggregator {
 
     @Autowired
-    protected AggregateService aggregateService;
+    private AggregateService aggregateService;
 
     @Autowired
     protected DAOFactory daoFactory;
 
     @PostConstruct
     public void aggregatorInitialization() {
-        String className = this.getClass().getSimpleName();
-        String aggrName = className.substring(0, className.length() - "Aggregator".length());
-        this.aggregateService.registerAggregator(aggrName, this);
+        this.aggregateService.registerAggregator(this);
     }
 
     public abstract void aggregate(String projectId) throws Exception;
+
+    public String getAggrName() {
+        String className = this.getClass().getSimpleName();
+        return className.substring(0, className.length() - "Aggregator".length());
+    }
+
+    public int getAggregateOrder() {
+        if (!this.getClass().isAnnotationPresent(AggragateOrder.class)) {
+            return 0;
+        } else {
+            return this.getClass().getAnnotation(AggragateOrder.class).value();
+        }
+    }
 }

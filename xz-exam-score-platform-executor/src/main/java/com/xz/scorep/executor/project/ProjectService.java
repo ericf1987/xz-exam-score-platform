@@ -94,6 +94,11 @@ public class ProjectService {
                 "  score_rule varchar(100), " +
                 "  options text" +
                 ")");
+
+        dao.execute("CREATE TABLE quest_point (" +
+                "  quest_id varchar(36) NOT NULL," +
+                "  point_id varchar(20) NOT NULL," +
+                "  point_name varchar(100) NOT NULL)");
     }
 
     //////////////////////////////////////////////////////////////

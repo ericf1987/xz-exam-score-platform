@@ -13,6 +13,8 @@ import com.xz.scorep.executor.project.*;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigParser;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,8 @@ import java.util.Date;
 
 @Service
 public class ImportProjectService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ImportProjectService.class);
 
     @Autowired
     private AppAuthClient appAuthClient;
@@ -37,7 +41,7 @@ public class ImportProjectService {
     private StudentService studentService;
 
     @Autowired
-    QuestService questService;
+    private QuestService questService;
 
     @Autowired
     private ReportConfigService reportConfigService;
@@ -51,20 +55,33 @@ public class ImportProjectService {
 
         // 导入项目数据
         if (parameters.isImportProjectInfo()) {
+            LOG.info("导入项目 {} 基本信息...", parameters.getProjectId());
             importProjectInfo(context);
         }
 
         if (parameters.isImportReportConfig()) {
+            LOG.info("导入项目 {} 报表配置...", parameters.getProjectId());
             importReportConfig(context);
         }
 
         if (parameters.isImportStudents()) {
+            LOG.info("导入项目 {} 考生信息...", parameters.getProjectId());
             importStudents(context);
         }
 
         if (parameters.isImportQuests()) {
+            LOG.info("导入项目 {} 题目信息...", parameters.getProjectId());
             importQuests(context);
         }
+
+        LOG.info("导入项目 {} 阅卷分数...", parameters.getProjectId());
+        importScore(context);
+
+        LOG.info("导入项目 {} 完成。", parameters.getProjectId());
+    }
+
+    private void importScore(Context context) {
+
     }
 
     private void importProjectInfo(Context context) {
