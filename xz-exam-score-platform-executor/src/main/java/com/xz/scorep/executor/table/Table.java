@@ -32,6 +32,10 @@ public class Table {
         this.key = key;
     }
 
+    public void setKey(String key) {
+        this.key = key;
+    }
+
     public void setColumnIndex(int index, String columnName) {
         this.columnIndexes.put(columnName, index);
     }

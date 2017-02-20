@@ -128,4 +128,7 @@ public class SheetContext {
         });
     }
 
+    public void tableSetKey(String keyName) {
+        this.table.setKey(keyName);
+    }
 }

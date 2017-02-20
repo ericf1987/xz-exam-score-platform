@@ -32,12 +32,13 @@ public class TotalBasicDataSheets extends SheetGenerator {
 
     @Override
     protected void generateSheet(SheetContext context) throws Exception {
+        context.tableSetKey("student_id");
 
         setupColumns(context);
         fillHeader(context);
         fillData(context);
 
-        context.rowSortBy("area", "school_name", "class_name");
+        context.rowSortBy("rank_000");
         context.saveData();
     }
 
@@ -115,9 +116,12 @@ public class TotalBasicDataSheets extends SheetGenerator {
     //////////////////////////////////////////////////////////////
 
     private List<Row> getProjectScoreAndRank(String projectId) {
-        List<Row> rows = scoreQuery.listStudentScore(projectId,
-                PROVINCE_RANGE, Target.project(projectId));
 
+        // 查询全科分数
+        List<Row> rows = scoreQuery.listStudentScore(
+                projectId, PROVINCE_RANGE, Target.project(projectId));
+
+        // 填充排名
         writeRanks(rows, "score_000", "rank_000");
 
         return rows;
