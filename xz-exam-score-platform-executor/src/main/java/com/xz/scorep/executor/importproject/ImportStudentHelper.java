@@ -68,6 +68,8 @@ public class ImportStudentHelper {
         classService.clearClasses(projectId);
 
         // 重新保存班级列表
+        List<ProjectClass> classList = new ArrayList<>();
+
         for (ProjectSchool school : contextSchools) {
             Result result = appAuthClient.callApi("QueryExamClassByProject",
                     new Param().setParameter("projectId", projectId)
@@ -79,10 +81,11 @@ public class ImportStudentHelper {
                 o.put("schoolId", school.getId());   // 补充 schoolId 属性作为 ProjectClass 构造方法的参数
                 ProjectClass c = new ProjectClass(o);
                 contextClasses.add(c);
-                classService.saveClass(projectId, c);
+                classList.add(c);
             });
         }
 
+        classService.saveClass(projectId, classList);
     }
 
     private static void importStudents(Context context, AppAuthClient appAuthClient, StudentService studentService) {
@@ -98,10 +101,14 @@ public class ImportStudentHelper {
                             .setParameter("classId", projectClass.getId()));
 
             JSONArray examStudents = result.get("examStudents");
+            List<ProjectStudent> studentList = new ArrayList<>();
+
             JSONUtils.<JSONObject>forEach(examStudents, s -> {
                 ProjectStudent student = new ProjectStudent(s);  // todo 填充 shoolId 等属性
-                studentService.saveStudent(projectId, student);
+                studentList.add(student);
             });
+
+            studentService.saveStudent(projectId, studentList);
         }
     }
 

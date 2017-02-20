@@ -17,6 +17,10 @@ public class ClassService {
         daoFactory.getProjectDao(projectId).insert(projectClass, "class");
     }
 
+    public void saveClass(String projectId, List<ProjectClass> classList) {
+        daoFactory.getProjectDao(projectId).insert(classList, "class");
+    }
+
     public void clearClasses(String projectId) {
         daoFactory.getProjectDao(projectId).execute("truncate table class");
     }

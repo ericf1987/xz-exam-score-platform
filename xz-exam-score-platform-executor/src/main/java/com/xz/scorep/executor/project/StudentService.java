@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -22,10 +23,11 @@ public class StudentService {
     }
 
     public void saveStudent(String projectId, ProjectStudent student) {
-        String sql = "insert into student(id,name,class_id) values(?,?,?)";
+        daoFactory.getProjectDao(projectId).insert(student, "student");
+    }
 
-        daoFactory.getProjectDao(projectId)
-                .execute(sql, student.getId(), student.getName(), student.getClassId());
+    public void saveStudent(String projectId, List<ProjectStudent> studentList) {
+        daoFactory.getProjectDao(projectId).insert(studentList, "student");
     }
 
     public MultipleBatchExecutor getMultiSaver(String projectId) {
