@@ -76,7 +76,7 @@ public class ImportStudentHelper {
 
             JSONArray classes = result.get("classes");
             JSONUtils.<JSONObject>forEach(classes, o -> {
-                o.put("schoolId", school.getId());   // 补充作为 ProjectClass 构造方法的参数
+                o.put("schoolId", school.getId());   // 补充 schoolId 属性作为 ProjectClass 构造方法的参数
                 ProjectClass c = new ProjectClass(o);
                 contextClasses.add(c);
                 classService.saveClass(projectId, c);

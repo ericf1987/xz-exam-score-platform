@@ -18,7 +18,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class ImportProjectService {
@@ -51,7 +53,10 @@ public class ImportProjectService {
         context.put("projectId", parameters.getProjectId());
 
         // 初始化数据库
-        projectService.initProjectDatabase(parameters.getProjectId());
+        if (parameters.isRecreateDatabase()) {
+            LOG.info("重新创建项目 {} 的数据库...", parameters.getProjectId());
+            projectService.initProjectDatabase(parameters.getProjectId());
+        }
 
         // 导入项目数据
         if (parameters.isImportProjectInfo()) {
@@ -99,7 +104,10 @@ public class ImportProjectService {
                 new Param().setParameter("projectId", context.getString("projectId")));
 
         ReportConfig reportConfig = reportConfigParser.parse(context, result);
-        reportConfigService.saveReportConfig(reportConfig);
+
+        if (reportConfig != null) {
+            reportConfigService.saveReportConfig(reportConfig);
+        }
     }
 
     private void importStudents(Context context) {
@@ -115,10 +123,13 @@ public class ImportProjectService {
         questService.clearQuests(projectId);
 
         JSONArray quests = result.get("quests");
+        List<ExamQuest>  questList = new ArrayList<>();
         JSONUtils.<JSONObject>forEach(quests, quest -> {
             ExamQuest examQuest = new ExamQuest(quest);
-            questService.saveQuest(projectId, examQuest);
+            questList.add(examQuest);
         });
+
+        questService.saveQuest(projectId, questList);
     }
 
     //////////////////////////////////////////////////////////////

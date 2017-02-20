@@ -13,8 +13,17 @@ public class ImportProjectController {
     private ImportProjectService importProjectService;
 
     @PostMapping("/import/project")
-    public Result importProject(@RequestParam("projectId") String projectId) {
-        importProjectService.importProject(ImportProjectParameters.importAll(projectId));
+    public Result importProject(
+            @RequestParam(name = "projectId") String projectId,
+            @RequestParam(required = false, defaultValue = "false", name = "recreateDatabase") boolean recreateDatabase,
+            @RequestParam(required = false, defaultValue = "false", name = "projectInfo") boolean projectInfo,
+            @RequestParam(required = false, defaultValue = "false", name = "reportConfig") boolean reportConfig,
+            @RequestParam(required = false, defaultValue = "false", name = "students") boolean students,
+            @RequestParam(required = false, defaultValue = "false", name = "quests") boolean quests
+    ) {
+        importProjectService.importProject(ImportProjectParameters.importSelected(
+                projectId, recreateDatabase, projectInfo, reportConfig, students, quests
+        ));
         return Result.success("项目 " + projectId + " 考生数据导入成功。");
     }
 

@@ -3,6 +3,7 @@ package com.xz.scorep.executor.db;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.hyd.dao.DAO;
 import com.hyd.dao.DataSources;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.config.DbConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -33,7 +34,11 @@ public class DAOFactory {
     }
 
     public DAO getManagerDao() {
-        return dataSources.getDAO(DS_MANAGER);
+        DAO dao = dataSources.getDAO(DS_MANAGER);
+        if (dao == null) {
+            throw new IllegalStateException("Manager DAO is null");
+        }
+        return dao;
     }
 
     public synchronized DAO getProjectDao(String projectId) {
@@ -62,11 +67,12 @@ public class DAOFactory {
     }
 
     private synchronized DataSource getProjectDataSource(String projectId) {
+        String username = StringUtil.substring(projectId, 0, 32);
         DruidDataSource dataSource = new DruidDataSource();
         dataSource.setDriverClassName(dbConfig.getDriver());
         dataSource.setUrl(dbConfig.getUrl(projectId));
-        dataSource.setUsername(projectId);
-        dataSource.setPassword(projectId);
+        dataSource.setUsername(username);
+        dataSource.setPassword(username);
         return dataSource;
     }
 

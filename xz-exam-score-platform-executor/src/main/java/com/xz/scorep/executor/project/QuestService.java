@@ -13,23 +13,16 @@ public class QuestService {
     @Autowired
     private DAOFactory daoFactory;
 
-    private static final String SQL_INSERT = "INSERT INTO quest(" +
-            "  id, exam_subject, quest_subject, question_type_id, " +
-            "  question_type_name, objective, quest_no, full_score, " +
-            "  answer, score_rule, `options`" +
-            ")VALUES(?,?,?,?,?,?,?,?,?,?,?)";
-
     public void clearQuests(String projectId) {
         daoFactory.getProjectDao(projectId).execute("truncate table quest");
     }
 
     public void saveQuest(String projectId, ExamQuest examQuest) {
-        daoFactory.getProjectDao(projectId).execute(SQL_INSERT,
-                examQuest.getId(), examQuest.getExamSubject(), examQuest.getQuestSubject(),
-                examQuest.getQuestionTypeId(), examQuest.getQuestionTypeName(),
-                Boolean.toString(examQuest.isObjective()), examQuest.getQuestNo(),
-                examQuest.getFullScore(), examQuest.getAnswer(), examQuest.getScoreRule(),
-                examQuest.getOptions());
+        daoFactory.getProjectDao(projectId).insert(examQuest, "quest");
+    }
+
+    public void saveQuest(String projectId, List<ExamQuest> examQuests) {
+        daoFactory.getProjectDao(projectId).insert(examQuests, "quest");
     }
 
     public List<ExamQuest> queryQuests(String projectId) {

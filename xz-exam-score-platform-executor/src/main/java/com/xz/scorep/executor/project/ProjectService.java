@@ -2,6 +2,7 @@ package com.xz.scorep.executor.project;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.slf4j.Logger;
@@ -38,18 +39,21 @@ public class ProjectService {
             dropProjectDatabase(projectId);
         }
 
+        String username = StringUtil.substring(projectId, 0, 32);
+
         DAO dao = daoFactory.getRootDao();
-        dao.execute("create database " + projectId + " DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci");
-        dao.execute("create user '" + projectId + "'@'%' IDENTIFIED by '" + projectId + "'");
-        dao.execute("grant all on " + projectId + ".* to '" + projectId + "'@'%'");
+        dao.execute("create database `" + projectId + "` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci");
+        dao.execute("create user '" + username + "'@'%' IDENTIFIED by '" + username + "'");
+        dao.execute("grant all on `" + projectId + "`.* to '" + username + "'@'%'");
         dao.execute("flush privileges");
     }
 
     // 删除项目数据库
     private void dropProjectDatabase(String projectId) {
+        String username = StringUtil.substring(projectId, 0, 32);
         DAO dao = daoFactory.getRootDao();
-        dao.execute("drop database if exists " + projectId);
-        dao.execute("drop user if exists " + projectId);
+        dao.execute("drop database if exists `" + projectId + "`");
+        dao.execute("drop user if exists `" + username + "`");
         LOG.info("数据库 " + projectId + " 已删除。");
     }
 

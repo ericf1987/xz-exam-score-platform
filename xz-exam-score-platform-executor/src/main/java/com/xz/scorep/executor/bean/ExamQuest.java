@@ -1,11 +1,8 @@
 package com.xz.scorep.executor.bean;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.xz.ajiaedu.common.lang.StringUtil;
-
-import java.util.List;
-
-import static com.xz.ajiaedu.common.json.JSONUtils.toList;
 
 /**
  * 题目
@@ -32,7 +29,7 @@ public class ExamQuest {
 
     private String scoreRule;
 
-    private List<String> options;
+    private String options;
 
     public ExamQuest() {
     }
@@ -62,7 +59,9 @@ public class ExamQuest {
         this.fullScore = jsonObject.getDoubleValue("score");
         this.answer = jsonObject.getString("answer");
         this.scoreRule = jsonObject.getString("scoreRule");
-        this.options = toList(jsonObject.getJSONArray("items"));
+
+        JSONArray items = jsonObject.getJSONArray("items");
+        this.options = items == null? "": items.toJSONString();
     }
 
     public String getId() {
@@ -145,11 +144,11 @@ public class ExamQuest {
         this.scoreRule = scoreRule;
     }
 
-    public List<String> getOptions() {
+    public String getOptions() {
         return options;
     }
 
-    public void setOptions(List<String> options) {
+    public void setOptions(String options) {
         this.options = options;
     }
 }
