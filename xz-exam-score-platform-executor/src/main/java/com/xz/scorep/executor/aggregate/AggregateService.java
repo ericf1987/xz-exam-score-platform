@@ -34,7 +34,7 @@ public class AggregateService {
         }
     }
 
-    public void runAllAggregate(String projectId) {
-        // todo implement this
+    public void runAggregate(String projectId) {
+
     }
 }

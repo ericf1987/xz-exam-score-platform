@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.aggregate;
 
+import com.xz.ajiaedu.common.lang.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +19,11 @@ public class AggregateController {
             @RequestParam("projectId") String projectId,
             @RequestParam(required = false, name = "aggrName") String aggrName
     ) {
-        aggregateService.runAggregate(projectId, aggrName);
+        if (StringUtil.isNotBlank(aggrName)) {
+            aggregateService.runAggregate(projectId, aggrName);
+        } else {
+            aggregateService.runAggregate(projectId);
+        }
         return "统计执行完毕。";
     }
 }
