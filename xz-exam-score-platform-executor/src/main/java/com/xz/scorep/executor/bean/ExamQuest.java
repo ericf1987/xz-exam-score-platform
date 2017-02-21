@@ -21,6 +21,8 @@ public class ExamQuest {
 
     private boolean objective;
 
+    private boolean giveFullScore;      // 是否不论考生选择什么一律给满分（缺考和作弊除外）
+
     private String questNo;
 
     private double fullScore;
@@ -55,6 +57,8 @@ public class ExamQuest {
                 "o".equals(objTag) :
                 StringUtil.isOneOf(questType, "0", "1", "2");
 
+        this.giveFullScore = jsonObject.getBooleanValue("awardScoreTag");
+
         this.questNo = jsonObject.getString("paperQuestNum");
         this.fullScore = jsonObject.getDoubleValue("score");
         this.answer = jsonObject.getString("answer");
@@ -62,6 +66,14 @@ public class ExamQuest {
 
         JSONArray items = jsonObject.getJSONArray("items");
         this.options = items == null? "": items.toJSONString();
+    }
+
+    public boolean isGiveFullScore() {
+        return giveFullScore;
+    }
+
+    public void setGiveFullScore(boolean giveFullScore) {
+        this.giveFullScore = giveFullScore;
     }
 
     public String getId() {

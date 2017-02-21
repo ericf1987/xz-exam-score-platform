@@ -2,6 +2,8 @@ package com.xz.scorep.executor.importproject;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.hyd.dao.DAO;
+import com.mongodb.MongoClient;
 import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.appauth.AppAuthClient;
 import com.xz.ajiaedu.common.json.JSONUtils;
@@ -9,6 +11,8 @@ import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.ExamQuest;
+import com.xz.scorep.executor.db.DAOFactory;
+import com.xz.scorep.executor.mongo.MongoClientFactory;
 import com.xz.scorep.executor.project.*;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigParser;
@@ -47,6 +51,15 @@ public class ImportProjectService {
 
     @Autowired
     private ReportConfigService reportConfigService;
+
+    @Autowired
+    private MongoClientFactory mongoClientFactory;
+
+    @Autowired
+    private ScoreService scoreService;
+
+    @Autowired
+    private DAOFactory daoFactory;
 
     public void importProject(ImportProjectParameters parameters) {
         Context context = new Context();
@@ -87,6 +100,17 @@ public class ImportProjectService {
 
     private void importScore(Context context) {
 
+        String projectId = context.get("projectId");
+        scoreService.clearScores(projectId);
+
+        MongoClient mongoClient = mongoClientFactory.getProjectMongoClient(projectId);
+        if (mongoClient == null) {
+            throw new IllegalArgumentException("项目 " + projectId + " 在网阅数据库中不存在");
+        }
+
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        ImportScoreHelper helper = new ImportScoreHelper(context, mongoClient, projectDao);
+        helper.importScore();
     }
 
     private void importProjectInfo(Context context) {
@@ -129,6 +153,7 @@ public class ImportProjectService {
             questList.add(examQuest);
         });
 
+        context.put("questList", questList);
         questService.saveQuest(projectId, questList);
     }
 

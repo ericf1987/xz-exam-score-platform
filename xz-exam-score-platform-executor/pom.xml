@@ -17,7 +17,7 @@
 
     <dependencies>
 
-        <!-- Database -->
+        <!-- MySQL -->
         <dependency>
             <groupId>com.hyd</groupId>
             <artifactId>hydrogen-dao</artifactId>
@@ -50,6 +50,13 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml-schemas</artifactId>
         </dependency>
+
+        <!-- MongoDB -->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

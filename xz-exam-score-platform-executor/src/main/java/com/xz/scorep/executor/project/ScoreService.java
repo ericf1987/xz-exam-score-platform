@@ -14,10 +14,20 @@ import java.util.Map;
 @Service
 public class ScoreService {
 
-    private static final String SCORE_TABLE_COLUMNS = "(student_id varchar(36) primary key, score decimal(4,1))";
+    private static final String SCORE_TABLE_COLUMNS = "(" +
+            "  student_id varchar(36) primary key, " +
+            "  score decimal(4,1) not null, " +
+            "  right varchar(5) not null" +
+            ")";
 
     @Autowired
     private DAOFactory daoFactory;
+
+    @Autowired
+    private QuestService questService;
+
+    @Autowired
+    private SubjectService subjectService;
 
     private Map<String, MultipleBatchExecutor> batchExecutorMap = new HashMap<>();
 
@@ -56,5 +66,21 @@ public class ScoreService {
 
     public void finishBatch(String projectId) {
         getMultipleBatchExecutor(projectId).finish();
+    }
+
+    public void clearScores(String projectId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+
+        questService.queryQuests(projectId).forEach(quest -> {
+            String tableName = "score_" + quest.getId();
+            projectDao.execute("truncate table " + tableName);
+        });
+
+        subjectService.listSubjects(projectId).forEach(subject -> {
+            String tableName = "score_subject_" + subject.getId();
+            projectDao.execute("truncate table " + tableName);
+        });
+
+        projectDao.execute("truncate table score_project");
     }
 }
