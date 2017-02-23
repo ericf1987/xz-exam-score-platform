@@ -37,7 +37,6 @@ public class ProjectClass {
     public ProjectClass(JSONObject jsonObject) {
         this.id = jsonObject.getString("id");
         this.name = jsonObject.getString("name");
-        this.schoolId = jsonObject.getString("schoolId");
     }
 
     public String getArea() {

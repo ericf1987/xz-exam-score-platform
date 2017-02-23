@@ -11,6 +11,7 @@ import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.ExamQuest;
+import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.mongo.MongoClientFactory;
 import com.xz.scorep.executor.project.*;
@@ -31,6 +32,8 @@ public class ImportProjectService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ImportProjectService.class);
 
+    public static final String PROJECT_ID_KEY = "projectId";
+
     @Autowired
     private AppAuthClient appAuthClient;
 
@@ -45,6 +48,9 @@ public class ImportProjectService {
 
     @Autowired
     private StudentService studentService;
+
+    @Autowired
+    private SubjectService subjectService;
 
     @Autowired
     private QuestService questService;
@@ -62,45 +68,50 @@ public class ImportProjectService {
     private DAOFactory daoFactory;
 
     public void importProject(ImportProjectParameters parameters) {
+
+        String projectId = parameters.getProjectId();
         Context context = new Context();
-        context.put("projectId", parameters.getProjectId());
+        context.put(PROJECT_ID_KEY, projectId);
 
         // 初始化数据库
         if (parameters.isRecreateDatabase()) {
-            LOG.info("重新创建项目 {} 的数据库...", parameters.getProjectId());
-            projectService.initProjectDatabase(parameters.getProjectId());
+            LOG.info("重新创建项目 {} 的数据库...", projectId);
+            projectService.initProjectDatabase(projectId);
         }
 
         // 导入项目数据
         if (parameters.isImportProjectInfo()) {
-            LOG.info("导入项目 {} 基本信息...", parameters.getProjectId());
+            LOG.info("导入项目 {} 基本信息...", projectId);
             importProjectInfo(context);
+            importSubjects(context);
         }
 
         if (parameters.isImportReportConfig()) {
-            LOG.info("导入项目 {} 报表配置...", parameters.getProjectId());
+            LOG.info("导入项目 {} 报表配置...", projectId);
             importReportConfig(context);
         }
 
         if (parameters.isImportStudents()) {
-            LOG.info("导入项目 {} 考生信息...", parameters.getProjectId());
+            LOG.info("导入项目 {} 考生信息...", projectId);
             importStudents(context);
         }
 
         if (parameters.isImportQuests()) {
-            LOG.info("导入项目 {} 题目信息...", parameters.getProjectId());
+            LOG.info("导入项目 {} 题目信息...", projectId);
             importQuests(context);
+        } else {
+            context.put("questList", questService.queryQuests(projectId));
         }
 
-        LOG.info("导入项目 {} 阅卷分数...", parameters.getProjectId());
+        LOG.info("导入项目 {} 阅卷分数...", projectId);
         importScore(context);
 
-        LOG.info("导入项目 {} 完成。", parameters.getProjectId());
+        LOG.info("导入项目 {} 完成。", projectId);
     }
 
     private void importScore(Context context) {
 
-        String projectId = context.get("projectId");
+        String projectId = context.get(PROJECT_ID_KEY);
         scoreService.clearScores(projectId);
 
         MongoClient mongoClient = mongoClientFactory.getProjectMongoClient(projectId);
@@ -113,10 +124,22 @@ public class ImportProjectService {
         helper.importScore();
     }
 
-    private void importProjectInfo(Context context) {
-        String projectId = context.get("projectId");
-        Result result = appAuthClient.callApi("QueryProjectById",
+    private void importSubjects(Context context) {
+        String projectId = context.getString(PROJECT_ID_KEY);
+        Result result = appAuthClient.callApi("QuerySubjectListByProjectId",
                 new Param().setParameter("projectId", projectId));
+
+        JSONArray subjects = result.get("result");
+        JSONUtils.<JSONObject>forEach(subjects, subjectDoc -> {
+            ExamSubject subject = new ExamSubject(subjectDoc);
+            subjectService.saveSubject(projectId, subject);
+        });
+    }
+
+    private void importProjectInfo(Context context) {
+        String projectId = context.get(PROJECT_ID_KEY);
+        Result result = appAuthClient.callApi("QueryProjectById",
+                new Param().setParameter(PROJECT_ID_KEY, projectId));
 
         ExamProject project = projectResultParser.parse(context, result);
         context.put("project", project);
@@ -125,7 +148,7 @@ public class ImportProjectService {
 
     private void importReportConfig(Context context) {
         Result result = appAuthClient.callApi("QueryProjectReportConfig",
-                new Param().setParameter("projectId", context.getString("projectId")));
+                new Param().setParameter("projectId", context.getString(PROJECT_ID_KEY)));
 
         ReportConfig reportConfig = reportConfigParser.parse(context, result);
 
@@ -135,22 +158,27 @@ public class ImportProjectService {
     }
 
     private void importStudents(Context context) {
-        ImportStudentHelper.importStudentList(
-                appAuthClient, context, schoolService, classService, studentService);
+
+        ImportStudentHelper helper = new ImportStudentHelper(
+                appAuthClient, schoolService, classService, studentService);
+
+        helper.importStudentList(context);
     }
 
     private void importQuests(Context context) {
-        String projectId = context.get("projectId");
+        String projectId = context.get(PROJECT_ID_KEY);
         Result result = appAuthClient.callApi("QueryQuestionByProject",
-                new Param().setParameter("projectId", projectId));
+                new Param().setParameter(PROJECT_ID_KEY, projectId));
 
         questService.clearQuests(projectId);
 
         JSONArray quests = result.get("quests");
         List<ExamQuest>  questList = new ArrayList<>();
+
         JSONUtils.<JSONObject>forEach(quests, quest -> {
             ExamQuest examQuest = new ExamQuest(quest);
             questList.add(examQuest);
+            scoreService.createQuestScoreTable(projectId, examQuest);
         });
 
         context.put("questList", questList);
@@ -170,7 +198,7 @@ public class ImportProjectService {
     private ResultParser<ExamProject> projectResultParser = (context, result) -> {
         JSONObject obj = result.get("result");
         ExamProject project = new ExamProject();
-        project.setId(context.getString("projectId"));
+        project.setId(context.getString(PROJECT_ID_KEY));
         project.setName(obj.getString("name"));
         project.setGrade(obj.getInteger("grade"));
         project.setCreateTime(new Date());

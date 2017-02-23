@@ -4,11 +4,14 @@ import com.hyd.dao.DAO;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.xz.ajiaedu.common.lang.Context;
+import com.xz.ajiaedu.common.lang.Counter;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.ajiaedu.common.score.ScorePattern;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.db.MultipleBatchExecutor;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -23,6 +26,8 @@ import static org.apache.commons.lang.StringUtils.defaultString;
  */
 public class ImportScoreHelper {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ImportScoreHelper.class);
+
     public static final String MGR_DB_NAME = "project_database";
 
     private Context context;
@@ -33,10 +38,13 @@ public class ImportScoreHelper {
 
     private MultipleBatchExecutor scoreBatchExecutor;
 
+    private Counter counter = new Counter(5000,
+            count -> LOG.info("已导入成绩 {} 条", count));
+
     public ImportScoreHelper(Context context, MongoClient mongoClient, DAO projectDao) {
         this.context = context;
         this.mongoClient = mongoClient;
-        this.scoreBatchExecutor = new MultipleBatchExecutor(projectDao, 500);
+        this.scoreBatchExecutor = new MultipleBatchExecutor(projectDao, 100);
 
         prepare();
     }
@@ -61,6 +69,7 @@ public class ImportScoreHelper {
         }
 
         scoreBatchExecutor.finish();
+        counter.finish();
     }
 
     // 查询项目信息
@@ -108,7 +117,8 @@ public class ImportScoreHelper {
             ExamQuest quest = getQuest(subjectId, questNo);
             score = calculateSbjScore(quest, fullScore, score, cheat, absent, effective);
 
-            saveScore(studentId, quest, new ScoreValue(score, score == fullScore));
+            ScoreValue scoreValue = new ScoreValue(score, score == fullScore);
+            saveScore(studentId, quest, scoreValue, false);
         }
     }
 
@@ -142,31 +152,32 @@ public class ImportScoreHelper {
         for (Document scoreDoc : objectiveList) {
             String questNo = scoreDoc.getString("questionNo");
             String studentAnswer = readStudentAnswer(scoreDoc);
+            ExamQuest quest = getQuest(subjectId, questNo);
 
             // 客观题必须要有作答，如未作答也应该是 “*”
             if (!absent && !cheat && StringUtil.isBlank(studentAnswer)) {
-                throw new IllegalStateException("未找到" +
-                        "项目 " + projectId + " 中考生 " + studentId +
-                        " 对科目 " + subjectId + " 中题目 " + questNo + " 的作答");
+                saveScore(studentId, quest, new ScoreValue(0, false), true);
+
+            } else {
+                boolean giveFullScore = quest.isGiveFullScore();
+                ScoreValue scoreValue = calculateObjScore(
+                        quest, studentAnswer, giveFullScore, cheat, absent);
+
+                saveScore(studentId, quest, scoreValue, false);
             }
-
-            ExamQuest quest = getQuest(subjectId, questNo);
-            boolean giveFullScore = quest.isGiveFullScore();
-            ScoreValue scoreValue = calculateObjScore(
-                    quest, studentAnswer, giveFullScore, cheat, absent);
-
-            saveScore(studentId, quest, scoreValue);
         }
 
     }
 
-    private void saveScore(String studentId, ExamQuest quest, ScoreValue scoreValue) {
+    private void saveScore(String studentId, ExamQuest quest, ScoreValue scoreValue, boolean missing) {
         Map<String, Object> scoreMap = new HashMap<>();
         scoreMap.put("student_id", studentId);
         scoreMap.put("score", scoreValue.getScore());
-        scoreMap.put("right", Boolean.toString(scoreValue.isRight()));
+        scoreMap.put("is_right", Boolean.toString(scoreValue.isRight()));
+        scoreMap.put("missing", Boolean.toString(missing));
 
         String tableName = "score_" + quest.getId();
+        counter.incre();
         scoreBatchExecutor.push(tableName, scoreMap);
     }
 

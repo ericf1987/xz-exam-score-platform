@@ -57,7 +57,7 @@ public class AggregateService {
                 aggregator.aggregate(projectId);
                 LOG.info("项目 " + projectId + " 的 " + aggrName + " 统计完毕。");
             } catch (Exception e) {
-                LOG.error("项目 " + projectId + " 的 " + aggrName + " 统计失败");
+                LOG.error("项目 " + projectId + " 的 " + aggrName + " 统计失败", e);
             }
         }
     }

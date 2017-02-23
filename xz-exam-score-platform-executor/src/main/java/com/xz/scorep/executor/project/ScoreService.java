@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ScoreService {
@@ -17,7 +19,8 @@ public class ScoreService {
     private static final String SCORE_TABLE_COLUMNS = "(" +
             "  student_id varchar(36) primary key, " +
             "  score decimal(4,1) not null, " +
-            "  right varchar(5) not null" +
+            "  is_right varchar(5) not null, " +
+            "  missing varchar(5) not null default 'false'" +
             ")";
 
     @Autowired
@@ -40,7 +43,9 @@ public class ScoreService {
         String tableName = getTableName(questId);
         String comment = examQuest.getExamSubject() + ":" + examQuest.getQuestNo();
         DAO dao = daoFactory.getProjectDao(projectId);
-        dao.execute("create table " + tableName + SCORE_TABLE_COLUMNS + " comment '" + comment + "'");
+
+        dao.execute("create table if not exists `" +
+                tableName + "`" + SCORE_TABLE_COLUMNS + " comment '" + comment + "'");
     }
 
     private MultipleBatchExecutor getMultipleBatchExecutor(String projectId) {
@@ -71,16 +76,12 @@ public class ScoreService {
     public void clearScores(String projectId) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        questService.queryQuests(projectId).forEach(quest -> {
-            String tableName = "score_" + quest.getId();
-            projectDao.execute("truncate table " + tableName);
-        });
+        List<String> scoreTableNames = projectDao.query("show tables").stream()
+                .map(map -> (String) map.values().stream().findFirst().orElse(null))
+                .filter(tableName -> tableName != null && tableName.startsWith("score_"))
+                .collect(Collectors.toList());
 
-        subjectService.listSubjects(projectId).forEach(subject -> {
-            String tableName = "score_subject_" + subject.getId();
-            projectDao.execute("truncate table " + tableName);
-        });
-
-        projectDao.execute("truncate table score_project");
+        scoreTableNames.forEach(
+                tableName -> projectDao.execute("truncate table `" + tableName + "`"));
     }
 }

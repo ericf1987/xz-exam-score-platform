@@ -48,8 +48,12 @@ public class SubjectService {
     }
 
     public void saveSubject(String projectId, String subjectId, double fullScore) {
-        DAO projectDao = daoFactory.getProjectDao(projectId);
         ExamSubject subject = new ExamSubject(subjectId, getSubjectName(subjectId), fullScore);
+        saveSubject(projectId, subject);
+    }
+
+    public void saveSubject(String projectId, ExamSubject subject) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
         projectDao.delete(subject, "subject");
         projectDao.insert(subject, "subject");
     }
@@ -71,5 +75,4 @@ public class SubjectService {
     public static String getSubjectName(String subjectId) {
         return SUBJECT_NAMES.get(subjectId);
     }
-
 }
