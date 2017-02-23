@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.importproject;
 
+import ch.qos.logback.classic.Level;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.hyd.dao.DAO;
@@ -18,6 +19,7 @@ import com.xz.scorep.executor.project.*;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigParser;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
+import com.xz.scorep.executor.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +75,8 @@ public class ImportProjectService {
         Context context = new Context();
         context.put(PROJECT_ID_KEY, projectId);
 
+        LogUtils.changeLogLevel("com.hyd.dao", Level.INFO);
+
         // 初始化数据库
         if (parameters.isRecreateDatabase()) {
             LOG.info("重新创建项目 {} 的数据库...", projectId);
@@ -107,6 +111,8 @@ public class ImportProjectService {
         importScore(context);
 
         LOG.info("导入项目 {} 完成。", projectId);
+
+        LogUtils.restoreLogLevel("com.hyd.dao");
     }
 
     private void importScore(Context context) {
@@ -133,6 +139,7 @@ public class ImportProjectService {
         JSONUtils.<JSONObject>forEach(subjects, subjectDoc -> {
             ExamSubject subject = new ExamSubject(subjectDoc);
             subjectService.saveSubject(projectId, subject);
+            subjectService.createSubjectScoreTable(projectId, subject.getId());
         });
     }
 

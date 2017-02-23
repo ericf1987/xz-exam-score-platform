@@ -63,7 +63,7 @@ public class SubjectService {
         String tableName = "score_subject_" + subjectId;
 
         String createSubjectTable = "create table " + tableName +
-                "(student_id VARCHAR(36) primary key,score decimal(4,1))";
+                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)";
 
         daoFactory.getProjectDao(projectId).execute(createSubjectTable);
     }

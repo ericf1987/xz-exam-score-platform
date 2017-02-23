@@ -11,12 +11,15 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
+/**
+ * DAO 对象工厂类
+ */
 @Component
 public class DAOFactory {
 
-    public static final String DS_ROOT = "root";
+    private static final String DS_ROOT = "root";
 
-    public static final String DS_MANAGER = "manager";
+    private static final String DS_MANAGER = "manager";
 
     @Autowired
     private DbConfig dbConfig;
@@ -25,14 +28,17 @@ public class DAOFactory {
 
     @PostConstruct
     public void init() {
+        // 预定义数据库
         dataSources.setDataSource(DS_ROOT, getRootDataSource());
         dataSources.setDataSource(DS_MANAGER, getManagerDataSource());
     }
 
+    // 获得 root 连接
     public DAO getRootDao() {
         return dataSources.getDAO(DS_ROOT);
     }
 
+    // 获得管理库连接
     public DAO getManagerDao() {
         DAO dao = dataSources.getDAO(DS_MANAGER);
         if (dao == null) {
@@ -41,6 +47,7 @@ public class DAOFactory {
         return dao;
     }
 
+    // 获得项目库连接 DAO
     public synchronized DAO getProjectDao(String projectId) {
         if (!dataSources.contains(projectId)) {
             dataSources.setDataSource(projectId, getProjectDataSource(projectId));

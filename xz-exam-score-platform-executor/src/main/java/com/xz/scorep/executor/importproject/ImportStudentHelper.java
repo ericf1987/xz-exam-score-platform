@@ -144,10 +144,10 @@ public class ImportStudentHelper {
                 student.setProvince(projectClass.getProvince());
 
                 studentList.add(student);
+                studentCounter.incre();
             });
 
             studentService.saveStudent(projectId, studentList);
-            studentCounter.incre();
         }
     }
 

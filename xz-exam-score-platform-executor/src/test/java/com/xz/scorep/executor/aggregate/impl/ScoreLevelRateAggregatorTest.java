@@ -17,7 +17,8 @@ public class ScoreLevelRateAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        scoreLevelRateAggregator.aggregate("fake_project");
+        String projectId = "430300-9cef9f2059ce4a36a40a7a60b07c7e00";
+        scoreLevelRateAggregator.aggregate(projectId);
     }
 
 }

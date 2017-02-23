@@ -27,29 +27,26 @@ public class ScoreSegmentsAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(ScoreSegmentsAggregator.class);
 
-    public static final String PROVINCE_PROJECT_SEGMENT = "select " +
+    private static final String PROVINCE_PROJECT_SEGMENT = "select " +
             "    a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
-            "    @minscore := IF(score<@minscore+@step,@minscore,@minscore+@step) as minscore,\n" +
-            "    @maxscore := @minscore + @step as maxscore\n" +
-            "  from score_project,\n" +
-            "    (select \n" +
-            "      @step := {{step}}, \n" +
-            "      @times := cast((select min(score) from score_project)/@step as SIGNED),\n" +
-            "      @minscore := @step * @times) xxx\n" +
-            "  order by score\n" +
+            "    @times := cast(score/@step as SIGNED),\n" +
+            "    @minscore := @step*@times as minscore,\n" +
+            "    @maxscore := @minscore+@step as maxscore\n" +
+            "  from\n" +
+            "    score_project, \n" +
+            "    (select @step := {{step}}) x\n" +
+            "  order by score" +
             ") a group by minscore,maxscore";
 
-    public static final String SCHOOL_PROJECT_SEGMENT = "select school_id, a.minscore, a.maxscore, count(1) as `count` from (\n" +
+    private static final String SCHOOL_PROJECT_SEGMENT = "select school_id, a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
             "    school.id as school_id,\n" +
-            "    @minscore := IF(score<@minscore+@step,@minscore,@minscore+@step) as minscore,\n" +
-            "    @maxscore := @minscore + @step as maxscore\n" +
+            "    @times := cast(score/@step as SIGNED),\n" +
+            "    @minscore := @step*@times as minscore,\n" +
+            "    @maxscore := @minscore+@step as maxscore\n" +
             "  from score_project, student, class, school,\n" +
-            "    (select \n" +
-            "      @step := {{step}}, \n" +
-            "      @times := cast((select min(score) from score_project)/@step as SIGNED),\n" +
-            "      @minscore := @step * @times) xxx\n" +
+            "    (select @step := {{step}}) x\n" +
             "  where\n" +
             "    score_project.student_id=student.id and\n" +
             "    student.class_id=class.id and\n" +
@@ -57,29 +54,25 @@ public class ScoreSegmentsAggregator extends Aggregator {
             "  order by score\n" +
             ") a group by school_id,minscore,maxscore";
 
-    public static final String PROVINCE_SUBJECT_SEGMENT = "select a.minscore, a.maxscore, count(1) as `count` from (\n" +
+    private static final String PROVINCE_SUBJECT_SEGMENT = "select a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
             "    student_id, score,\n" +
-            "    @minscore := IF(score<@minscore+@step,@minscore,@minscore+@step) as minscore,\n" +
-            "    @maxscore := @minscore + @step as maxscore\n" +
+            "    @times := cast(score/@step as SIGNED),\n" +
+            "    @minscore := @step*@times as minscore,\n" +
+            "    @maxscore := @minscore+@step as maxscore\n" +
             "  from score_subject_{{subject}},\n" +
-            "    (select \n" +
-            "      @step := 10, \n" +
-            "      @times := cast((select min(score) from score_subject_{{subject}})/@step as SIGNED),\n" +
-            "      @minscore := @step * @times) xxx\n" +
+            "    (select @step := {{step}}) x\n" +
             "  order by score\n" +
             ") a group by minscore,maxscore";
 
-    public static final String SCHOOL_SUBJECT_SEGMENT = "select school_id, a.minscore, a.maxscore, count(1) as `count` from (\n" +
+    private static final String SCHOOL_SUBJECT_SEGMENT = "select school_id, a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
             "    school.id as school_id,\n" +
-            "    @minscore := IF(score<@minscore+@step,@minscore,@minscore+@step) as minscore,\n" +
-            "    @maxscore := @minscore + @step as maxscore\n" +
+            "    @times := cast(score/@step as SIGNED),\n" +
+            "    @minscore := @step*@times as minscore,\n" +
+            "    @maxscore := @minscore+@step as maxscore\n" +
             "  from score_subject_{{subject}}, student, class, school,\n" +
-            "    (select \n" +
-            "      @step := 10, \n" +
-            "      @times := cast((select min(score) from score_subject_{{subject}})/@step as SIGNED),\n" +
-            "      @minscore := @step * @times) xxx\n" +
+            "    (select @step := {{step}}) x\n" +
             "  where\n" +
             "    score_subject_{{subject}}.student_id=student.id and\n" +
             "    student.class_id=class.id and\n" +

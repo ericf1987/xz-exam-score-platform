@@ -57,7 +57,7 @@ public class ScoreService {
     }
 
     public void prepareBatch(String projectId) {
-        MultipleBatchExecutor executor = new MultipleBatchExecutor(daoFactory.getProjectDao(projectId), 500);
+        MultipleBatchExecutor executor = new MultipleBatchExecutor(daoFactory.getProjectDao(projectId), 1000);
         batchExecutorMap.put(projectId, executor);
     }
 

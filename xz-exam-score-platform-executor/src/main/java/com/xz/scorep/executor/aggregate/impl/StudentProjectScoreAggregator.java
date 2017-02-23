@@ -45,8 +45,8 @@ public class StudentProjectScoreAggregator extends Aggregator {
     private void accumulateScore(DAO projectDao, String subjectId) {
         String tableName = "score_subject_" + subjectId;
 
-        String combineSql = "update score_project p \n" +
-                "  left join " + tableName + " q on p.student_id=q.student_id\n" +
+        String combineSql = "update score_project p " +
+                "  left join " + tableName + " q on p.student_id=q.student_id" +
                 "  set p.score=p.score+q.score";
 
         projectDao.execute(combineSql);

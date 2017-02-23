@@ -87,6 +87,7 @@ public class ScoreLevelRateAggregator extends Aggregator {
         JSONObject scoreLevels = JSON.parseObject(reportConfig.getScoreLevels());
 
         daoFactory.getProjectDao(projectId).execute("truncate table scorelevelmap");
+        LOG.info("scorelevelmap 内容已清除");
 
         aggregateProjectScoreLevels(projectId, scoreLevels);
         aggregateSubjectScoreLevels(projectId, scoreLevels);
@@ -105,7 +106,7 @@ public class ScoreLevelRateAggregator extends Aggregator {
         map.put("target_id", targetId);
         map.put("student_count", count);
         map.put("score_level", row.getString("level"));
-        map.put("student_rate", total == 0 ? 0 : ((double) count / total));
+        map.put("student_rate", total == 0 ? 0 : ((double) count / total * 100));
         return map;
     }
 
