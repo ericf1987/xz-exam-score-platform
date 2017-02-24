@@ -19,10 +19,11 @@ public class ImportProjectController {
             @RequestParam(required = false, defaultValue = "false", name = "projectInfo") boolean projectInfo,
             @RequestParam(required = false, defaultValue = "false", name = "reportConfig") boolean reportConfig,
             @RequestParam(required = false, defaultValue = "false", name = "students") boolean students,
-            @RequestParam(required = false, defaultValue = "false", name = "quests") boolean quests
+            @RequestParam(required = false, defaultValue = "false", name = "quests") boolean quests,
+            @RequestParam(required = false, defaultValue = "false", name = "score") boolean score
     ) {
         importProjectService.importProject(ImportProjectParameters.importSelected(
-                projectId, recreateDatabase, projectInfo, reportConfig, students, quests
+                projectId, recreateDatabase, projectInfo, reportConfig, students, quests, score
         ));
         return Result.success("项目 " + projectId + " 考生数据导入成功。");
     }

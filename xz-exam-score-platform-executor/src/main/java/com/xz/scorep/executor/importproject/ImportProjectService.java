@@ -107,8 +107,10 @@ public class ImportProjectService {
             context.put("questList", questService.queryQuests(projectId));
         }
 
-        LOG.info("导入项目 {} 阅卷分数...", projectId);
-        importScore(context);
+        if (parameters.isImportScore()) {
+            LOG.info("导入项目 {} 阅卷分数...", projectId);
+            importScore(context);
+        }
 
         LOG.info("导入项目 {} 完成。", projectId);
 

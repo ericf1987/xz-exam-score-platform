@@ -32,7 +32,7 @@ public class ImportProjectParameters {
 
     public static ImportProjectParameters importSelected(
             String projectId, boolean recreateDatabase,
-            boolean projectInfo, boolean reportConfig, boolean students, boolean quests) {
+            boolean projectInfo, boolean reportConfig, boolean students, boolean quests, boolean score) {
         ImportProjectParameters parameters = new ImportProjectParameters();
         parameters.setRecreateDatabase(recreateDatabase);
         parameters.setProjectId(projectId);
@@ -40,6 +40,7 @@ public class ImportProjectParameters {
         parameters.setImportReportConfig(reportConfig);
         parameters.setImportStudents(students);
         parameters.setImportQuests(quests);
+        parameters.setImportScore(score);
         return parameters;
     }
 
@@ -55,8 +56,18 @@ public class ImportProjectParameters {
 
     private boolean importQuests;           // 是否导入题目信息（科目、题目）
 
+    private boolean importScore;            // 是否导入分数信息
+
     private ImportProjectParameters() {
 
+    }
+
+    public boolean isImportScore() {
+        return importScore;
+    }
+
+    public void setImportScore(boolean importScore) {
+        this.importScore = importScore;
     }
 
     public String getProjectId() {

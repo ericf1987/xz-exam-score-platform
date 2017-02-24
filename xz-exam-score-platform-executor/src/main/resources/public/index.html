@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>你好</title>
+    <style>
+        .chk-item {
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
@@ -25,11 +30,12 @@
     <form action="import/project" method="post">
         <div><label>项目ID: </label><input type="text" name="projectId"></div>
         <div>
-            <label><input type="checkbox" name="recreateDatabase" value="true"/>重新创建数据库</label> &nbsp;
-            <label><input type="checkbox" name="projectInfo" value="true"/>导入项目基本信息</label> &nbsp;
-            <label><input type="checkbox" name="reportConfig" value="true"/>导入报表配置</label> &nbsp;
-            <label><input type="checkbox" name="students" value="true"/>导入考生列表</label> &nbsp;
-            <label><input type="checkbox" name="quests" value="true"/>导入题目列表</label>
+            <label class="chk-item"><input type="checkbox" name="recreateDatabase" value="true"/>重新创建数据库</label> &nbsp;
+            <label class="chk-item"><input type="checkbox" name="projectInfo" value="true"/>导入项目基本信息</label> &nbsp;
+            <label class="chk-item"><input type="checkbox" name="reportConfig" value="true"/>导入报表配置</label> &nbsp;
+            <label class="chk-item"><input type="checkbox" name="students" value="true"/>导入考生列表</label> &nbsp;
+            <label class="chk-item"><input type="checkbox" name="quests" value="true"/>导入题目列表</label> &nbsp;
+            <label class="chk-item"><input type="checkbox" name="score" value="true" checked/>导入成绩</label>
         </div>
         <input type="submit" value="导入项目"/>
     </form>
