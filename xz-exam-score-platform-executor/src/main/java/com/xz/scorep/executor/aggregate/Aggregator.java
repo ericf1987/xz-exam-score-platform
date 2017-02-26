@@ -14,7 +14,7 @@ import javax.annotation.PostConstruct;
 public abstract class Aggregator {
 
     @Autowired
-    private AggregateService aggregateService;
+    private AggregateService aggregateService;              // 用于管理统计状态和流程
 
     @Autowired
     protected DAOFactory daoFactory;

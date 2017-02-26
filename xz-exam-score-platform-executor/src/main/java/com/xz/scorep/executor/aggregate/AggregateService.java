@@ -1,8 +1,8 @@
 package com.xz.scorep.executor.aggregate;
 
-import com.xz.scorep.executor.utils.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -11,6 +11,12 @@ import java.util.*;
 public class AggregateService {
 
     private static final Logger LOG = LoggerFactory.getLogger(AggregateService.class);
+
+    @Autowired
+    private AggregationExecutorService executorService;
+
+    @Autowired
+    private AggregationService aggregationService;
 
     private Map<String, Aggregator> aggregatorMap = new HashMap<>();
 
@@ -31,7 +37,22 @@ public class AggregateService {
      */
     public void runAggregate(String projectId, String aggrName) {
         Aggregator aggregator = this.aggregatorMap.get(aggrName);
-        runAggregate(projectId, aggregator);
+        runAggregate(new Aggregation(projectId), aggregator);
+    }
+
+    /**
+     * 执行所有统计项（异步）
+     *
+     * @param projectId 项目ID
+     */
+    public void runAggregateAsync(final String projectId) {
+        Aggregation aggregation = new Aggregation(projectId);
+
+        Runnable runnable = () -> {
+            runAggregate(projectId);
+        };
+
+        executorService.submit(runnable);
     }
 
     /**
@@ -39,19 +60,40 @@ public class AggregateService {
      *
      * @param projectId 项目ID
      */
-    public void runAggregate(String projectId) {
-        Stopwatch stopwatch = Stopwatch.start();
+    public void runAggregate(final String projectId) {
 
-        List<Aggregator> aggregators = new ArrayList<>(this.aggregatorMap.values());
-        aggregators.sort(Comparator.comparingInt(Aggregator::getAggregateOrder));
-        aggregators.forEach(aggregator -> runAggregate(projectId, aggregator));
+        Aggregation aggregation = new Aggregation(projectId);
 
-        LOG.info(stopwatch.stop("项目 " + projectId + " 统计完成，耗时 {0} ms"));
+        try {
+            aggregation.setStatus(AggregateStatus.Running);
+            aggregation.setStartTime(new Date());
+            aggregationService.insertAggregation(aggregation);
+
+            List<Aggregator> aggregators = new ArrayList<>(this.aggregatorMap.values());
+            aggregators.sort(Comparator.comparingInt(Aggregator::getAggregateOrder));
+
+            for (Aggregator aggregator : aggregators) {
+                aggregator.aggregate(projectId);
+            }
+        } catch (Exception e) {
+            LOG.error("项目 " + projectId + " 统计失败", e);
+        } finally {
+            aggregation.setStatus(AggregateStatus.Finished);
+            aggregation.setEndTime(new Date());
+
+            aggregationService.endAggregation(
+                    aggregation.getId(), aggregation.getStatus(), aggregation.getEndTime());
+
+            LOG.info("项目 " + projectId + " 统计完成，耗时 " + aggregation.duration() + " ms");
+        }
     }
 
-    private void runAggregate(String projectId, Aggregator aggregator) {
+    private void runAggregate(Aggregation aggregation, Aggregator aggregator) {
         if (aggregator != null) {
+
+            String projectId = aggregation.getProjectId();
             String aggrName = aggregator.getAggrName();
+
             try {
                 LOG.info("项目 " + projectId + " 的 " + aggrName + " 统计开始...");
                 aggregator.aggregate(projectId);

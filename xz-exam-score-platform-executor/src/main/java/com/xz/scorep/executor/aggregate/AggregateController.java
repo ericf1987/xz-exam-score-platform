@@ -17,12 +17,17 @@ public class AggregateController {
     @ResponseBody
     public String runAggregate(
             @RequestParam("projectId") String projectId,
-            @RequestParam(required = false, name = "aggrName") String aggrName
+            @RequestParam(required = false, name = "aggrName") String aggrName,
+            @RequestParam(required = false, name = "async", defaultValue = "false") boolean async
     ) {
         if (StringUtil.isNotBlank(aggrName)) {
             aggregateService.runAggregate(projectId, aggrName);
         } else {
-            aggregateService.runAggregate(projectId);
+            if (async) {
+                aggregateService.runAggregateAsync(projectId);
+            } else {
+                aggregateService.runAggregate(projectId);
+            }
         }
         return "统计执行完毕。";
     }
