@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -70,7 +69,6 @@ public class ExcelReportManager implements ApplicationContextAware {
 
         List<ReportTask> reportTasks = createReportGenerators(projectId);
         ThreadPoolExecutor pool = async ? executionPool : newBlockingThreadPoolExecutor(10, 10, 100);
-        CountDownLatch countDownLatch = new CountDownLatch(reportTasks.size());
 
         for (final ReportTask reportTask : reportTasks) {
             Runnable runnable = () -> {
@@ -79,12 +77,10 @@ public class ExcelReportManager implements ApplicationContextAware {
                     String saveFilePath = getSaveFilePath(projectId, excelConfig.getSavePath(), filePath);
 
                     LOG.info("开始生成报表 " + reportTask + ", 路径：" + saveFilePath);
-                    reportTask.getReportGenerator().generate(projectId, reportTask.getRange(), saveFilePath);
+                    reportTask.getReportGenerator().generate(projectId, reportTask.getRange(), reportTask.getTarget(), saveFilePath);
 
                 } catch (Exception e) {
                     LOG.error("生成报表失败", e);
-                } finally {
-                    countDownLatch.countDown();
                 }
             };
 
@@ -96,16 +92,11 @@ public class ExcelReportManager implements ApplicationContextAware {
             try {
                 pool.shutdown();
                 pool.awaitTermination(1, TimeUnit.DAYS);
+                LOG.info("====项目" + projectId + "报表全部生成完毕。");
             } catch (InterruptedException e) {
+                LOG.error("====项目" + projectId + "报表生成超时！");
                 throw new ExcelReportException(e);
             }
-        }
-
-        try {
-            countDownLatch.await(1, TimeUnit.HOURS);
-            LOG.info("====项目" + projectId + "报表全部生成完毕。");
-        } catch (InterruptedException e) {
-            LOG.error("====项目" + projectId + "报表生成超时！");
         }
     }
 
@@ -193,7 +184,7 @@ public class ExcelReportManager implements ApplicationContextAware {
 
     private ReportTask createReportTasks(
             String category, String filename, ReportGenerator reportGenerator, Range range) {
-        return new ReportTask(reportGenerator, category, filename, range);
+        return new ReportTask(reportGenerator, category, filename, range, null);
     }
 
     /**

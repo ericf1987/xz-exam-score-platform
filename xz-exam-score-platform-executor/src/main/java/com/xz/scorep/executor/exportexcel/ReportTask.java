@@ -2,6 +2,7 @@ package com.xz.scorep.executor.exportexcel;
 
 
 import com.xz.scorep.executor.bean.Range;
+import com.xz.scorep.executor.bean.Target;
 
 /**
  * (description)
@@ -19,11 +20,14 @@ public class ReportTask {
 
     private Range range;
 
-    public ReportTask(ReportGenerator reportGenerator, String category, String filename, Range range) {
+    private Target target;
+
+    public ReportTask(ReportGenerator reportGenerator, String category, String filename, Range range, Target target) {
         this.reportGenerator = reportGenerator;
         this.category = category;
         this.filename = filename;
         this.range = range;
+        this.target = target;
     }
 
     public Range getRange() {
@@ -58,13 +62,22 @@ public class ReportTask {
         this.filename = filename;
     }
 
+    public Target getTarget() {
+        return target;
+    }
+
+    public void setTarget(Target target) {
+        this.target = target;
+    }
+
     @Override
     public String toString() {
         return "ReportTask{" +
-                "reportGenerator=" + reportGenerator.getClass().getSimpleName() +
+                "reportGenerator=" + reportGenerator +
                 ", category='" + category + '\'' +
                 ", filename='" + filename + '\'' +
                 ", range=" + range +
+                ", target=" + target +
                 '}';
     }
 }

@@ -17,7 +17,7 @@ import java.util.List;
 public class TotalBasicDataReport  extends ReportGenerator {
 
     @Override
-    protected List<SheetTask> getSheetTasks(String projectId, Range range) {
+    protected List<SheetTask> getSheetTasks(String projectId, Range range, Target target) {
         List<SheetTask> tasks = new ArrayList<>();
         SheetTask projectTask = new SheetTask("全部科目", TotalBasicDataSheets.class);
         projectTask.setTarget(Target.project(projectId));
