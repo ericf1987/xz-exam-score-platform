@@ -19,6 +19,8 @@ import static com.xz.scorep.executor.exportexcel.SheetContext.STYLE_CENTERED;
 @Component
 public class TotalDistributionSheet0 extends SheetGenerator {
 
+    public static final String TOTAL_SCHOOL_ID = "z";  // 表示总计那一行的主键 value
+
     @Autowired
     private DAOFactory daoFactory;
 
@@ -47,7 +49,7 @@ public class TotalDistributionSheet0 extends SheetGenerator {
         sheetContext.rowAdd(rows);
 
         Row totalRow = new Row();
-        totalRow.put("school_id", "z");
+        totalRow.put("school_id", TOTAL_SCHOOL_ID);
         totalRow.put("subject_name", "总分");
         totalRow.put("school_name", "总计");
         sheetContext.rowAdd(totalRow);
