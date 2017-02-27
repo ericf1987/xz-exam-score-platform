@@ -81,4 +81,16 @@ public class ExamProject {
     public void setFullScore(double fullScore) {
         this.fullScore = fullScore;
     }
+
+    @Override
+    public String toString() {
+        return "ExamProject{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", range='" + range + '\'' +
+                ", createTime=" + createTime +
+                ", grade=" + grade +
+                ", fullScore=" + fullScore +
+                '}';
+    }
 }
