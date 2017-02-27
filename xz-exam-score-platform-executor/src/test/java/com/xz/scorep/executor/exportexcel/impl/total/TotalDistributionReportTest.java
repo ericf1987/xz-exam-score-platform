@@ -12,10 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author yidin
  */
-public class ScoreDistributionReportTest extends BaseTest {
+public class TotalDistributionReportTest extends BaseTest {
 
     @Autowired
-    private ScoreDistributionReport report;
+    private TotalDistributionReport report;
 
     @Test
     public void testGenerateReport() throws Exception {

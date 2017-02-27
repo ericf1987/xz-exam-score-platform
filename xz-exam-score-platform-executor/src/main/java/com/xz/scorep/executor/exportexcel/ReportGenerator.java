@@ -45,7 +45,6 @@ public abstract class ReportGenerator {
             excelWriter.clearSheets();
 
             for (SheetTask sheetTask : sheetTasks) {
-                sheetTask.setRange(range);
                 excelWriter.openOrCreateSheet(sheetTask.getTitle());
                 SheetGenerator sheetGenerator = sheetManager.getSheetGenerator(sheetTask.getGeneratorClass());
                 if (sheetGenerator != null) {

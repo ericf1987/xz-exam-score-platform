@@ -19,8 +19,6 @@ import java.util.stream.Stream;
 @Component
 public class TotalBasicDataSheets extends SheetGenerator {
 
-    private static final Range PROVINCE_RANGE = Range.province("430000");
-
     @Autowired
     private SubjectService subjectService;
 
@@ -94,7 +92,7 @@ public class TotalBasicDataSheets extends SheetGenerator {
         String projectId = sheetContext.getProjectId();
 
         // 基本信息列
-        sheetContext.rowAdd(studentQuery.listStudentInfo(projectId, PROVINCE_RANGE));
+        sheetContext.rowAdd(studentQuery.listStudentInfo(projectId, Range.PROVINCE_RANGE));
 
         // 全科分数和排名
         sheetContext.rowAdd(getProjectScoreAndRank(projectId));
@@ -103,7 +101,7 @@ public class TotalBasicDataSheets extends SheetGenerator {
         subjectService.listSubjects(projectId).forEach(subject -> {
 
             List<Row> rows = scoreQuery.listStudentScore(
-                    projectId, PROVINCE_RANGE, Target.subject(subject.getId()));
+                    projectId, Range.PROVINCE_RANGE, Target.subject(subject.getId()));
 
             String scoreColumnName = "score_" + subject.getId();
             String rankColumnName = "rank_" + subject.getId();
@@ -119,7 +117,7 @@ public class TotalBasicDataSheets extends SheetGenerator {
 
         // 查询全科分数
         List<Row> rows = scoreQuery.listStudentScore(
-                projectId, PROVINCE_RANGE, Target.project(projectId));
+                projectId, Range.PROVINCE_RANGE, Target.project(projectId));
 
         // 填充排名
         writeRanks(rows, "score_000", "rank_000");

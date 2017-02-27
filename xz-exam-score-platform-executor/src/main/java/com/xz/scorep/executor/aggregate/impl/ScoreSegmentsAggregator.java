@@ -2,10 +2,10 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
-import com.xz.ajiaedu.common.report.Keys.Range;
-import com.xz.ajiaedu.common.report.Keys.Target;
 import com.xz.scorep.executor.aggregate.AggragateOrder;
 import com.xz.scorep.executor.aggregate.Aggregator;
+import com.xz.scorep.executor.bean.Range;
+import com.xz.scorep.executor.bean.Target;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
@@ -109,7 +109,8 @@ public class ScoreSegmentsAggregator extends Aggregator {
 
         projectDao.query(provinceSql).forEach(row -> {
             String province = "430000";
-            provinceSegmentRows.add(createCountMap(row, Range.Province, province, Target.Project, projectId));
+            provinceSegmentRows.add(createCountMap(
+                    row, Range.province(province), Target.subject(subjectId)));
         });
 
         projectDao.insert(provinceSegmentRows, "segments");
@@ -123,7 +124,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
 
         projectDao.query(schoolSql).forEach(row -> {
             String schoolId = row.getString("school_id");
-            schoolSegmentRows.add(createCountMap(row, Range.School, schoolId, Target.Project, projectId));
+            schoolSegmentRows.add(createCountMap(row, Range.school(schoolId), Target.subject(subjectId)));
         });
 
         projectDao.insert(schoolSegmentRows, "segments");
@@ -135,7 +136,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
         // 总体总分成绩分段
         projectDao.query(PROVINCE_PROJECT_SEGMENT.replace("{{step}}", "50")).forEach(row -> {
             Map<String, Object> map = createCountMap(row,
-                    Range.Province, "430000", Target.Project, projectId);
+                    Range.PROVINCE_RANGE, Target.project(projectId));
             projectDao.insert(map, "segments");
         });
         LOG.info("项目 {} 的总体总分成绩分段统计完成", projectId);
@@ -147,7 +148,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
 
         projectDao.query(SCHOOL_PROJECT_SEGMENT.replace("{{step}}", "50")).forEach(row -> {
             String schoolId = row.getString("school_id");
-            schoolSegmentRows.add(createCountMap(row, Range.School, schoolId, Target.Project, projectId));
+            schoolSegmentRows.add(createCountMap(row, Range.school(schoolId), Target.project(projectId)));
         });
 
         projectDao.insert(schoolSegmentRows, "segments");
@@ -156,13 +157,13 @@ public class ScoreSegmentsAggregator extends Aggregator {
 
     private Map<String, Object> createCountMap(
             Row row,
-            Range range, String rangeId, Target target, String targetId) {
+            Range range, Target target) {
 
         Map<String, Object> map = new HashMap<>();
-        map.put("range_type", range.name());
-        map.put("range_id", rangeId);
-        map.put("target_type", target.name());
-        map.put("target_id", targetId);
+        map.put("range_type", range.getType());
+        map.put("range_id", range.getId());
+        map.put("target_type", target.getType());
+        map.put("target_id", target.getId());
 
         map.put("score_min", row.getDoubleObject("minscore"));
         map.put("score_max", row.getDoubleObject("maxscore"));

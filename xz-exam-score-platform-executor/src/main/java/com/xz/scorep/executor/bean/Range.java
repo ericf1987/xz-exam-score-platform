@@ -22,6 +22,8 @@ public class Range {
 
     public static final String STUDENT = "student";
 
+    public static final Range PROVINCE_RANGE = province("430000");
+
     public static Range student(String student) {
         return new Range(Range.STUDENT, student);
     }
