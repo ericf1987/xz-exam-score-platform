@@ -5,6 +5,10 @@ import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
 import com.xz.scorep.executor.project.ProjectService;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,8 +45,7 @@ public abstract class ReportGenerator {
             ExamProject project = projectService.findProject(projectId);
             List<SheetTask> sheetTasks = getSheetTasks(projectId, range, target);
             InputStream stream = getClass().getResourceAsStream("report/templates/default.xlsx");
-            ExcelWriter excelWriter = new ExcelWriter(stream);
-            excelWriter.clearSheets();
+            ExcelWriter excelWriter = createExcelWriter(stream);
 
             for (SheetTask sheetTask : sheetTasks) {
                 excelWriter.openOrCreateSheet(sheetTask.getTitle());
@@ -58,6 +61,31 @@ public abstract class ReportGenerator {
         }
 
         LOG.info("生成报表 " + this.getClass() + " 结束。");
+    }
+
+    private ExcelWriter createExcelWriter(InputStream stream) {
+        ExcelWriter excelWriter = new ExcelWriter(stream);
+        excelWriter.clearSheets();
+
+        createHeaderStyle(excelWriter);
+        createDataCenteredStyle(excelWriter);
+
+        return excelWriter;
+    }
+
+    private void createDataCenteredStyle(ExcelWriter excelWriter) {
+        CellStyle style = excelWriter.createCellStyle(SheetContext.STYLE_CENTERED);
+        style.setAlignment(HorizontalAlignment.CENTER);
+    }
+
+    private void createHeaderStyle(ExcelWriter excelWriter) {
+        CellStyle headerStyle = excelWriter.createCellStyle(SheetContext.STYLE_HEADER);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+        Font font = excelWriter.createFont();
+        font.setBold(true);
+        headerStyle.setFont(font);
     }
 
     /**

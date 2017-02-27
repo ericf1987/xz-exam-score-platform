@@ -8,12 +8,18 @@ import com.xz.scorep.executor.table.TableRow;
 import com.xz.scorep.executor.utils.Direction;
 import com.xz.scorep.executor.utils.Position;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 生成 Sheet 的上下文，提供所有需要的方法
  */
 public class SheetContext {
+
+    public static final String STYLE_HEADER = "header";         // 表头单元格样式
+
+    public static final String STYLE_CENTERED = "centered";     // 数据单元格居中样式
 
     private ExamProject project;
 
@@ -24,6 +30,8 @@ public class SheetContext {
     private Table table = new Table();
 
     private SheetHeaderBuilder sheetHeaderBuilder;
+
+    private Map<Integer, String> columnStyles = new HashMap<>();
 
     public Table getTable() {
         return table;
@@ -100,6 +108,10 @@ public class SheetContext {
         this.table.sortBy(colNames);
     }
 
+    public void tablePutValue(String key, String columnName, Object value) {
+        this.table.setValue(key, columnName, value);
+    }
+
     private int startRow = 0;
 
     public void rowStartPosition(int rowIndex) {
@@ -124,11 +136,28 @@ public class SheetContext {
             int columnIndex = table.getColumnIndex(entry.getKey());
             if (columnIndex > -1) {
                 excelWriter.set(rowIndex, columnIndex, entry.getValue());
+
+                if (columnStyles.containsKey(columnIndex)) {
+                    String styleName = columnStyles.get(columnIndex);
+                    excelWriter.setCellStyle(rowIndex, columnIndex, styleName);
+                }
             }
         });
     }
 
     public void tableSetKey(String keyName) {
         this.table.setKey(keyName);
+    }
+
+    public void columnWidth(int columnIndex, int widthEm) {
+        excelWriter.setWidth(columnIndex, widthEm);
+    }
+
+    public void columnStyle(int columnIndex, String styleName) {
+        columnStyles.put(columnIndex, styleName);
+    }
+
+    public void freeze(int rowIndex, int colIndex) {
+        excelWriter.getCurrentSheet().createFreezePane(rowIndex, colIndex);
     }
 }

@@ -36,6 +36,8 @@ public class SheetHeaderBuilder {
                     position.getRowIndex() + rowspan - 1,
                     position.getColumnIndex() + colspan - 1);
         }
+
+        excelWriter.setCellStyle(position.getRowIndex(), position.getColumnIndex(), SheetContext.STYLE_HEADER);
     }
 
     public void move(Direction... directions) {
