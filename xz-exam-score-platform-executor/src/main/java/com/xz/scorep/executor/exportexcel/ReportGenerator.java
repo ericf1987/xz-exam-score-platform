@@ -5,10 +5,7 @@ import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
 import com.xz.scorep.executor.project.ProjectService;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,8 +66,14 @@ public abstract class ReportGenerator {
 
         createHeaderStyle(excelWriter);
         createDataCenteredStyle(excelWriter);
+        createGreenRowStyle(excelWriter);
 
         return excelWriter;
+    }
+
+    private void createGreenRowStyle(ExcelWriter excelWriter) {
+        CellStyle cellStyle = excelWriter.createCellStyle(SheetContext.STYLE_GREEN);
+        cellStyle.setFillBackgroundColor(IndexedColors.GREEN.getIndex());
     }
 
     private void createDataCenteredStyle(ExcelWriter excelWriter) {

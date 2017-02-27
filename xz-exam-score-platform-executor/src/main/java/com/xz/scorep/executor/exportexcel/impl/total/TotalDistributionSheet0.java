@@ -53,6 +53,7 @@ public class TotalDistributionSheet0 extends SheetGenerator {
         totalRow.put("subject_name", "总分");
         totalRow.put("school_name", "总计");
         sheetContext.rowAdd(totalRow);
+        sheetContext.rowStyle(TOTAL_SCHOOL_ID, SheetContext.STYLE_GREEN);  // 这个没用，暂不知道为什么
 
         List<Row> schoolSegments = dao.query("select \n" +
                 "  range_id as school_id,\n" +

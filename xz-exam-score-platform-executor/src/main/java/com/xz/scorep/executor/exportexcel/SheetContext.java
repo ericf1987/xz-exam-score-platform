@@ -21,6 +21,8 @@ public class SheetContext {
 
     public static final String STYLE_CENTERED = "centered";     // 数据单元格居中样式
 
+    public static final String STYLE_GREEN = "green";
+
     private ExamProject project;
 
     private ExcelWriter excelWriter;
@@ -32,6 +34,8 @@ public class SheetContext {
     private SheetHeaderBuilder sheetHeaderBuilder;
 
     private Map<Integer, String> columnStyles = new HashMap<>();
+
+    private Map<String, String> rowStyles = new HashMap<>();
 
     public Table getTable() {
         return table;
@@ -127,6 +131,11 @@ public class SheetContext {
         int[] rowCounter = {this.startRow};
         table.getRows().forEach(tableRow -> {
             writeRow(excelWriter, table, tableRow, rowCounter[0]);
+            String tableKeyValue = String.valueOf(tableRow.get(table.getKey()));
+            if (rowStyles.containsKey(tableKeyValue)) {
+                String styleName = rowStyles.get(tableKeyValue);
+                excelWriter.setRowStyle(rowCounter[0], styleName);
+            }
             rowCounter[0]++;
         });
     }
@@ -155,6 +164,10 @@ public class SheetContext {
 
     public void columnStyle(int columnIndex, String styleName) {
         columnStyles.put(columnIndex, styleName);
+    }
+
+    public void rowStyle(String key, String styleName) {
+        rowStyles.put(key, styleName);
     }
 
     public void freeze(int rowIndex, int colIndex) {
