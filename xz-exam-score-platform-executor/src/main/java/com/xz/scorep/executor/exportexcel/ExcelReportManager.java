@@ -148,7 +148,8 @@ public class ExcelReportManager implements ApplicationContextAware {
                 List<Range> rangeList = rangeService.queryRanges(projectId, nodeRange);
                 for (Range _r : rangeList) {
                     for (XmlNode child : xmlNode.getChildren()) {
-                        iterateReportSet(context, child, category + "/" + nodeName + "/" + _r.getId(), reportTasks, _r);
+                        String parsedNodeName = nodeName.replace("{{name}}", _r.getName());
+                        iterateReportSet(context, child, category + "/" + parsedNodeName, reportTasks, _r);
                     }
                 }
             } else {

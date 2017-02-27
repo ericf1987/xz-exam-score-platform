@@ -79,16 +79,24 @@ public class Target {
 
     public static Target questAbilityLevel(String questAbilityLevel) {return new Target(QUEST_ABILITY_LEVEL, questAbilityLevel);}
 
-    private String name;
+    private String type;
 
     private Object id;
+
+    private String name;
 
     public Target() {
     }
 
-    public Target(String name, Object id) {
-        this.name = name;
+    public Target(String type, Object id) {
+        this.type = type;
         this.id = id;
+    }
+
+    public Target(String type, Object id, String name) {
+        this.type = type;
+        this.id = id;
+        this.name = name;
     }
 
     public String getName() {
@@ -107,15 +115,17 @@ public class Target {
         }
     }
 
-    // 反序列化需要
     public Target setId(Object id) {
         this.id = id;
         return this;
     }
 
-    // 反序列化需要
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean match(String target) {
+        return Objects.equals(target, this.type);
     }
 
     @SuppressWarnings("SimplifiableIfStatement")
@@ -126,27 +136,25 @@ public class Target {
 
         Target target = (Target) o;
 
-        if (!name.equals(target.name)) return false;
-        return id.equals(target.id);
-
+        if (!type.equals(target.type)) return false;
+        if (!id.equals(target.id)) return false;
+        return name != null ? name.equals(target.name) : target.name == null;
     }
 
     @Override
     public int hashCode() {
-        int result = name.hashCode();
+        int result = type.hashCode();
         result = 31 * result + id.hashCode();
+        result = 31 * result + (name != null ? name.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "Target{" +
-                "name='" + name + '\'' +
-                ", id='" + id + '\'' +
+                "type='" + type + '\'' +
+                ", id=" + id +
+                ", name='" + name + '\'' +
                 '}';
-    }
-
-    public boolean match(String target) {
-        return Objects.equals(target, this.name);
     }
 }

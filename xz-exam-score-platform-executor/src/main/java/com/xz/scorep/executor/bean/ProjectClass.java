@@ -86,4 +86,10 @@ public class ProjectClass {
     public void setSchoolId(String schoolId) {
         this.schoolId = schoolId;
     }
+
+    //////////////////////////////////////////////////////////////
+
+    public String fixedName() {
+        return this.name == null ? "" : (this.name.endsWith("班") ? this.name : (this.name + "班"));
+    }
 }

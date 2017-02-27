@@ -46,16 +46,56 @@ public class Range {
         return new Range(Range.PROVINCE, province);
     }
 
-    private String name;
+    public static Range student(String student, String name) {
+        return new Range(Range.STUDENT, student, name);
+    }
+
+    public static Range clazz(String clazz, String name) {
+        return new Range(Range.CLASS, clazz, name);
+    }
+
+    public static Range school(String school, String name) {
+        return new Range(Range.SCHOOL, school, name);
+    }
+
+    public static Range area(String area, String name) {
+        return new Range(Range.AREA, area, name);
+    }
+
+    public static Range city(String city, String name) {
+        return new Range(Range.CITY, city, name);
+    }
+
+    public static Range province(String province, String name) {
+        return new Range(Range.PROVINCE, province, name);
+    }
+
+    private String type;
 
     private String id;
+
+    private String name;
 
     public Range() {
     }
 
-    public Range(String name, String id) {
-        this.name = name;
+    public Range(String type, String id) {
+        this.type = type;
         this.id = id;
+    }
+
+    public Range(String type, String id, String name) {
+        this.type = type;
+        this.id = id;
+        this.name = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getName() {
@@ -76,8 +116,8 @@ public class Range {
         this.id = id;
     }
 
-    public boolean match(String range) {
-        return Objects.equals(this.name, range);
+    public boolean match(String rangeType) {
+        return Objects.equals(this.type, rangeType);
     }
 
     @SuppressWarnings("SimplifiableIfStatement")
@@ -88,23 +128,25 @@ public class Range {
 
         Range range = (Range) o;
 
-        if (!name.equals(range.name)) return false;
-        return id.equals(range.id);
-
+        if (!type.equals(range.type)) return false;
+        if (!id.equals(range.id)) return false;
+        return name != null ? name.equals(range.name) : range.name == null;
     }
 
     @Override
     public int hashCode() {
-        int result = name.hashCode();
+        int result = type.hashCode();
         result = 31 * result + id.hashCode();
+        result = 31 * result + (name != null ? name.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "Range{" +
-                "name='" + name + '\'' +
+                "type='" + type + '\'' +
                 ", id='" + id + '\'' +
+                ", name='" + name + '\'' +
                 '}';
     }
 }

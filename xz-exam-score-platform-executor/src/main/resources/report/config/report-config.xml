@@ -6,11 +6,11 @@
         <report-category name="总体成绩分析" range="province">
             <report name="分数分析" class=".total.TotalBasicDataReport"/>
 
-            <report-category name="{{schoolName}}成绩分析" range="school">
-                <report name="分数分析" class=".schools.TotalBasicDataReport"/>
+            <report-category name="{{name}}成绩分析" range="school">
+                <report name="分数分析" class=".total.TotalBasicDataReport"/>
 
-                <report-category name="{{className}}成绩分析" range="class">
-                    <report name="分数分析" class=".schools.TotalBasicDataReport"/>
+                <report-category name="{{name}}成绩分析" range="class">
+                    <report name="分数分析" class=".total.TotalBasicDataReport"/>
                 </report-category>
             </report-category>
         </report-category>

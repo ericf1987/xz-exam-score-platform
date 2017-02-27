@@ -20,16 +20,16 @@ public class RangeService {
     public List<Range> queryRanges(String projectId, String rangeType) {
 
         if (rangeType.equalsIgnoreCase("province")) {
-            return Collections.singletonList(Range.province("430000"));
+            return Collections.singletonList(Range.province("430000", "湖南省"));
 
         } else if (rangeType.equalsIgnoreCase("school")) {
             return schoolService.listSchool(projectId).stream()
-                    .map(school -> Range.school(school.getId()))
+                    .map(school -> Range.school(school.getId(), school.getName()))
                     .collect(Collectors.toList());
 
         } else if (rangeType.equalsIgnoreCase("class")) {
             return classService.listClasses(projectId).stream()
-                    .map(c -> Range.clazz(c.getId()))
+                    .map(c -> Range.clazz(c.getId(), c.fixedName()))
                     .collect(Collectors.toList());
 
         }
