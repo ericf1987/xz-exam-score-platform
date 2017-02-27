@@ -3,16 +3,61 @@
 
     <report-set id="default" base="com.xz.scorep.executor.exportexcel.impl">
 
-        <report-category name="总体成绩分析" range="province">
-            <report name="分数分析" class=".total.TotalBasicDataReport"/>
+        <dir name="全科报表">
+            <report name="联考学校分数分布统计" class=".total.ScoreDistributionReport"/>
+            <report name="联考学校平均分统计分析" class=".total.ScoreLevelAverageReport"/>
 
-            <report-category name="{{name}}成绩分析" range="school">
-                <report name="分数分析" class=".total.TotalBasicDataReport"/>
+            <iterate type="range:school">
+                <dir name="{{school}}">
+                    <dir name="01 分数排名、得分明细表">
+                        <report name="_全校分数排名、得分明细表(全科)" class=""/>
+                        <iterate type="range:class">
+                            <report name="{{class}}381分数排名、得分明细表(全科)" class=""/>
+                        </iterate>
+                    </dir>
+                    <dir name="02 三率、平均分表">
+                        <report name="_平均分及三率统计（总分）" class=""/>
+                        <iterate type="target:subject">
+                            <report name="平均分及三率统计（{{subject}}）" class=""/>
+                        </iterate>
+                    </dir>
+                    <dir name="03 主、客观题分析表">
+                        <iterate type="target:subject">
+                            <report name="主、客观题分析（{{subject}}）" class=""/>
+                        </iterate>
+                    </dir>
+                    <dir name="04 分数段分布统计">
+                        <report name="_分数段分布统计分析（总分）" class=""/>
+                        <iterate type="target:subject">
+                            <report name="分数段分布统计分析（{{subject}}）" class=""/>
+                        </iterate>
+                    </dir>
+                </dir>
+            </iterate>
+        </dir>
 
-                <report-category name="{{name}}成绩分析" range="class">
-                    <report name="分数分析" class=".total.TotalBasicDataReport"/>
-                </report-category>
-            </report-category>
-        </report-category>
+        <dir name="单科报表">
+            <iterate type="target:subject">
+                <dir name="{{subject}}">
+                    <iterate type="range:school">
+                        <dir name="{{school}}">
+                            <dir name="01 分数排名、得分明细表">
+                                <report name="_全校分数排名、得分明细表({{subject}})" class=""/>
+                                <iterate type="range:class">
+                                    <report name="{{class}}381分数排名、得分明细表({{subject}})" class=""/>
+                                </iterate>
+                            </dir>
+                            <dir name="02 三率、平均分表">
+                                <report name="平均分及三率统计（{{subject}}）" class=""/>
+                            </dir>
+                            <dir name="03 主、客观题分析表">
+                                <report name="主、客观题分析（{{subject}}）" class=""/>
+                            </dir>
+                        </dir>
+                    </iterate>
+
+                </dir>
+            </iterate>
+        </dir>
     </report-set>
 </report-config>
