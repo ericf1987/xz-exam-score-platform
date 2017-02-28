@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.InputStream;
 import java.util.List;
 
+import static org.apache.poi.ss.usermodel.IndexedColors.BLACK;
+
 /**
  * (description)
  * created at 16/05/30
@@ -22,6 +24,8 @@ import java.util.List;
 public abstract class ReportGenerator {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
+
+    public static final String DEFAULT_FONT = "defaultFont";
 
     @Autowired
     private SheetManager sheetManager;
@@ -46,6 +50,7 @@ public abstract class ReportGenerator {
 
             for (SheetTask sheetTask : sheetTasks) {
                 excelWriter.openOrCreateSheet(sheetTask.getTitle());
+                initSheet(excelWriter.getSheetByName(sheetTask.getTitle()));
                 SheetGenerator sheetGenerator = sheetManager.getSheetGenerator(sheetTask.getGeneratorClass());
                 if (sheetGenerator != null) {
                     sheetGenerator.generate(project, excelWriter, sheetTask);
@@ -60,35 +65,50 @@ public abstract class ReportGenerator {
         LOG.info("生成报表 " + this.getClass() + " 结束。");
     }
 
+    private void initSheet(Sheet sheet) {
+        sheet.setDefaultRowHeightInPoints(20);
+    }
+
     private ExcelWriter createExcelWriter(InputStream stream) {
         ExcelWriter excelWriter = new ExcelWriter(stream);
         excelWriter.clearSheets();
 
-        createHeaderStyle(excelWriter);
-        createDataCenteredStyle(excelWriter);
+        createFontWithName(DEFAULT_FONT, excelWriter, 11, false, BLACK);
+
+        createDefaultStyle (excelWriter);
+        createHeaderStyle  (excelWriter);
         createGreenRowStyle(excelWriter);
 
         return excelWriter;
     }
 
-    private void createGreenRowStyle(ExcelWriter excelWriter) {
-        CellStyle cellStyle = excelWriter.createCellStyle(SheetContext.STYLE_GREEN);
-        cellStyle.setFillBackgroundColor(IndexedColors.GREEN.getIndex());
+    private Font createFontWithName(String name, ExcelWriter excelWriter, int fontSize, boolean bold, IndexedColors color) {
+        return excelWriter.createFont(name, "宋体", fontSize, bold, color);
     }
 
-    private void createDataCenteredStyle(ExcelWriter excelWriter) {
-        CellStyle style = excelWriter.createCellStyle(SheetContext.STYLE_CENTERED);
-        style.setAlignment(HorizontalAlignment.CENTER);
+    private void resetStyle(ExcelWriter excelWriter, CellStyle cellStyle) {
+        cellStyle.setFont(excelWriter.getFont(DEFAULT_FONT));
+        cellStyle.setAlignment(HorizontalAlignment.CENTER);
+        cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+    }
+
+    private void createDefaultStyle(ExcelWriter excelWriter) {
+        Workbook workbook = excelWriter.getWorkbook();
+        CellStyle cellStyle = workbook.getCellStyleAt(0);
+        resetStyle(excelWriter, cellStyle);
+    }
+
+    private void createGreenRowStyle(ExcelWriter excelWriter) {
+        CellStyle cellStyle = excelWriter.createCellStyle(ExcelCellStyles.Green.name());
+        resetStyle(excelWriter, cellStyle);
+        cellStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+        cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
     }
 
     private void createHeaderStyle(ExcelWriter excelWriter) {
-        CellStyle headerStyle = excelWriter.createCellStyle(SheetContext.STYLE_HEADER);
-        headerStyle.setAlignment(HorizontalAlignment.CENTER);
-        headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-
-        Font font = excelWriter.createFont();
-        font.setBold(true);
-        headerStyle.setFont(font);
+        CellStyle cellStyle = excelWriter.createCellStyle(ExcelCellStyles.Header.name());
+        resetStyle(excelWriter, cellStyle);
+        cellStyle.setFont(createFontWithName("header", excelWriter, 11, true, BLACK));
     }
 
     /**

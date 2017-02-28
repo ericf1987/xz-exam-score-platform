@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
+import com.hyd.dao.DAOException;
 import com.xz.ajiaedu.common.concurrent.Executors;
 import com.xz.scorep.executor.aggregate.AggragateOrder;
 import com.xz.scorep.executor.aggregate.Aggregator;
@@ -47,12 +48,13 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             // 累加分数
             List<ExamQuest> examQuests = questService.queryQuests(projectId, subjectId);
             final AtomicInteger counter = new AtomicInteger(0);
-            Runnable whenFinished = () -> LOG.info(
+
+            Runnable accumulateTip = () -> LOG.info(
                     "项目 {} 的科目 {} 总分合计已完成 {}/{}", projectId, subjectId, counter.incrementAndGet(), examQuests.size());
 
             examQuests.forEach(
                     examQuest -> executor.submit(
-                            () -> accumulateScore(projectDao, tableName, examQuest, whenFinished)));
+                            () -> accumulateScore(projectDao, tableName, examQuest, accumulateTip)));
         });
 
 
@@ -60,17 +62,21 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         executor.awaitTermination(1, TimeUnit.DAYS);
     }
 
-    private void accumulateScore(DAO projectDao, String tableName, ExamQuest examQuest, Runnable whenFinished) {
-        String questId = examQuest.getId();
+    private void accumulateScore(DAO projectDao, String tableName, ExamQuest examQuest, Runnable tip) {
+        try {
+            String questId = examQuest.getId();
 
-        String combineSql = "update " + tableName + " p \n" +
-                "  left join score_" + questId + " q on p.student_id=q.student_id\n" +
-                "  set p.score=p.score+q.score";
+            String combineSql = "update " + tableName + " p \n" +
+                    "  left join `score_" + questId + "` q on p.student_id=q.student_id\n" +
+                    "  set p.score=p.score+ifnull(q.score,0)";
 
-        projectDao.execute(combineSql);
+            projectDao.execute(combineSql);
 
-        if (whenFinished != null) {
-            whenFinished.run();
+            if (tip != null) {
+                tip.run();
+            }
+        } catch (DAOException e) {
+            LOG.error("统计科目成绩失败", e);
         }
     }
 }

@@ -30,9 +30,8 @@ public class ScoreSegmentsAggregator extends Aggregator {
     private static final String PROVINCE_PROJECT_SEGMENT = "select " +
             "    a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
-            "    @times := cast(score/@step as SIGNED),\n" +
-            "    @minscore := @step*@times as minscore,\n" +
-            "    @maxscore := @minscore+@step as maxscore\n" +
+            "    @minscore := 50 * FLOOR((score - 0.5) / 50) as minscore,\n" +
+            "    @maxscore := @minscore + @step as maxscore\n" +
             "  from\n" +
             "    score_project, \n" +
             "    (select @step := {{step}}) x\n" +
@@ -42,9 +41,8 @@ public class ScoreSegmentsAggregator extends Aggregator {
     private static final String SCHOOL_PROJECT_SEGMENT = "select school_id, a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
             "    school.id as school_id,\n" +
-            "    @times := cast(score/@step as SIGNED),\n" +
-            "    @minscore := @step*@times as minscore,\n" +
-            "    @maxscore := @minscore+@step as maxscore\n" +
+            "    @minscore := 50 * FLOOR((score - 0.5) / 50) as minscore,\n" +
+            "    @maxscore := @minscore + @step as maxscore\n" +
             "  from score_project, student, class, school,\n" +
             "    (select @step := {{step}}) x\n" +
             "  where\n" +
@@ -57,9 +55,8 @@ public class ScoreSegmentsAggregator extends Aggregator {
     private static final String PROVINCE_SUBJECT_SEGMENT = "select a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
             "    student_id, score,\n" +
-            "    @times := cast(score/@step as SIGNED),\n" +
-            "    @minscore := @step*@times as minscore,\n" +
-            "    @maxscore := @minscore+@step as maxscore\n" +
+            "    @minscore := 50 * FLOOR((score - 0.5) / 50) as minscore,\n" +
+            "    @maxscore := @minscore + @step as maxscore\n" +
             "  from score_subject_{{subject}},\n" +
             "    (select @step := {{step}}) x\n" +
             "  order by score\n" +
@@ -68,9 +65,8 @@ public class ScoreSegmentsAggregator extends Aggregator {
     private static final String SCHOOL_SUBJECT_SEGMENT = "select school_id, a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
             "    school.id as school_id,\n" +
-            "    @times := cast(score/@step as SIGNED),\n" +
-            "    @minscore := @step*@times as minscore,\n" +
-            "    @maxscore := @minscore+@step as maxscore\n" +
+            "    @minscore := 50 * FLOOR((score - 0.5) / 50) as minscore,\n" +
+            "    @maxscore := @minscore + @step as maxscore\n" +
             "  from score_subject_{{subject}}, student, class, school,\n" +
             "    (select @step := {{step}}) x\n" +
             "  where\n" +

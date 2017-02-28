@@ -29,7 +29,7 @@
         <h2.version>1.4.192</h2.version>
         <jedis.version>2.9.0</jedis.version>
         <ajiaedu.common.version>3.0-SNAPSHOT</ajiaedu.common.version>
-        <hydrogen.dao.version>2.4.0-SNAPSHOT</hydrogen.dao.version>
+        <hydrogen.dao.version>2.5.0-SNAPSHOT</hydrogen.dao.version>
         <poi.version>3.15</poi.version>
     </properties>
 

@@ -1,7 +1,10 @@
 package com.xz.scorep.executor.db;
 
 import com.hyd.dao.DAO;
+import com.hyd.dao.DAOException;
 import com.xz.ajiaedu.common.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +20,8 @@ import java.util.concurrent.TimeUnit;
  * @author yidin
  */
 public class MultipleBatchExecutor {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MultipleBatchExecutor.class);
 
     private static final int DEFAULT_BATCH_SIZE = 500;
 
@@ -64,7 +69,13 @@ public class MultipleBatchExecutor {
         List<Object> rows = tableRowListMap.get(table);
 
         if (rows != null && !rows.isEmpty()) {
-            this.pool.submit(() -> dao.insert(rows, table));
+            this.pool.submit(() -> {
+                try {
+                    dao.insert(rows, table);
+                } catch (DAOException e) {
+                    LOG.error("保存分数失败", e);
+                }
+            });
             tableRowListMap.put(table, new ArrayList<>());
         }
     }

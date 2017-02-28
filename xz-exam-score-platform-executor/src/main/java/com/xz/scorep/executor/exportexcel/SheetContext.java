@@ -7,6 +7,7 @@ import com.xz.scorep.executor.table.Table;
 import com.xz.scorep.executor.table.TableRow;
 import com.xz.scorep.executor.utils.Direction;
 import com.xz.scorep.executor.utils.Position;
+import org.apache.poi.ss.usermodel.CellStyle;
 
 import java.util.HashMap;
 import java.util.List;
@@ -131,23 +132,31 @@ public class SheetContext {
         int[] rowCounter = {this.startRow};
         table.getRows().forEach(tableRow -> {
             writeRow(excelWriter, table, tableRow, rowCounter[0]);
-            String tableKeyValue = String.valueOf(tableRow.get(table.getKey()));
-            if (rowStyles.containsKey(tableKeyValue)) {
-                String styleName = rowStyles.get(tableKeyValue);
-                excelWriter.setRowStyle(rowCounter[0], styleName);
-            }
             rowCounter[0]++;
         });
     }
 
     private void writeRow(ExcelWriter excelWriter, Table table, TableRow tableRow, int rowIndex) {
+        CellStyle defaultStyle = excelWriter.getWorkbook().getCellStyleAt(0);
+
         tableRow.entrySet().forEach(entry -> {
             int columnIndex = table.getColumnIndex(entry.getKey());
             if (columnIndex > -1) {
                 excelWriter.set(rowIndex, columnIndex, entry.getValue());
 
+                // 设置缺省样式
+                excelWriter.getOrCreateCell(rowIndex, columnIndex).setCellStyle(defaultStyle);
+
+                // 检查并设置列样式
                 if (columnStyles.containsKey(columnIndex)) {
                     String styleName = columnStyles.get(columnIndex);
+                    excelWriter.setCellStyle(rowIndex, columnIndex, styleName);
+                }
+
+                // 检查并设置行样式（将覆盖列样式）
+                String tableKeyValue = String.valueOf(tableRow.get(table.getKey()));
+                if (rowStyles.containsKey(tableKeyValue)) {
+                    String styleName = rowStyles.get(tableKeyValue);
                     excelWriter.setCellStyle(rowIndex, columnIndex, styleName);
                 }
             }
