@@ -27,11 +27,14 @@ public class ScoreSegmentsAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(ScoreSegmentsAggregator.class);
 
+    public static final String SEGMENT_SELECTION = "" +
+            "    @minscore := greatest(0, @step * FLOOR((score - 0.5) / @step)) as minscore,\n" +
+            "    @maxscore := @minscore + @step as maxscore\n";
+
     private static final String PROVINCE_PROJECT_SEGMENT = "select " +
             "    a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
-            "    @minscore := 50 * FLOOR((score - 0.5) / 50) as minscore,\n" +
-            "    @maxscore := @minscore + @step as maxscore\n" +
+            SEGMENT_SELECTION +
             "  from\n" +
             "    score_project, \n" +
             "    (select @step := {{step}}) x\n" +
@@ -41,8 +44,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
     private static final String SCHOOL_PROJECT_SEGMENT = "select school_id, a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
             "    school.id as school_id,\n" +
-            "    @minscore := 50 * FLOOR((score - 0.5) / 50) as minscore,\n" +
-            "    @maxscore := @minscore + @step as maxscore\n" +
+            SEGMENT_SELECTION +
             "  from score_project, student, class, school,\n" +
             "    (select @step := {{step}}) x\n" +
             "  where\n" +
@@ -55,8 +57,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
     private static final String PROVINCE_SUBJECT_SEGMENT = "select a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
             "    student_id, score,\n" +
-            "    @minscore := 50 * FLOOR((score - 0.5) / 50) as minscore,\n" +
-            "    @maxscore := @minscore + @step as maxscore\n" +
+            SEGMENT_SELECTION +
             "  from score_subject_{{subject}},\n" +
             "    (select @step := {{step}}) x\n" +
             "  order by score\n" +
@@ -65,8 +66,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
     private static final String SCHOOL_SUBJECT_SEGMENT = "select school_id, a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
             "    school.id as school_id,\n" +
-            "    @minscore := 50 * FLOOR((score - 0.5) / 50) as minscore,\n" +
-            "    @maxscore := @minscore + @step as maxscore\n" +
+            SEGMENT_SELECTION +
             "  from score_subject_{{subject}}, student, class, school,\n" +
             "    (select @step := {{step}}) x\n" +
             "  where\n" +
@@ -86,7 +86,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
         projectDao.execute("truncate table segments");
         LOG.info("成绩分段统计结果已清空。");
 
-        aggrTotalScoreSegments  (projectId, projectDao);
+        aggrTotalScoreSegments(projectId, projectDao);
         aggrSubjectScoreSegments(projectId, projectDao);
     }
 

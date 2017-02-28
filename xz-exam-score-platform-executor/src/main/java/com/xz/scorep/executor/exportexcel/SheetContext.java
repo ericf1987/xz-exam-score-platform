@@ -2,6 +2,7 @@ package com.xz.scorep.executor.exportexcel;
 
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.excel.ExcelWriter;
+import com.xz.ajiaedu.common.lang.Context;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.table.Table;
 import com.xz.scorep.executor.table.TableRow;
@@ -18,12 +19,6 @@ import java.util.Map;
  */
 public class SheetContext {
 
-    public static final String STYLE_HEADER = "header";         // 表头单元格样式
-
-    public static final String STYLE_CENTERED = "centered";     // 数据单元格居中样式
-
-    public static final String STYLE_GREEN = "green";
-
     private ExamProject project;
 
     private ExcelWriter excelWriter;
@@ -37,6 +32,16 @@ public class SheetContext {
     private Map<Integer, String> columnStyles = new HashMap<>();
 
     private Map<String, String> rowStyles = new HashMap<>();
+
+    private Context properties = new Context();
+
+    public Context getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Context properties) {
+        this.properties = properties;
+    }
 
     public Table getTable() {
         return table;
