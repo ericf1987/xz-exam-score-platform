@@ -9,6 +9,8 @@ import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.ajiaedu.common.score.ScorePattern;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.db.MultipleBatchExecutor;
+import com.xz.scorep.executor.project.AbsentService;
+import com.xz.scorep.executor.project.CheatService;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,10 @@ public class ImportScoreHelper {
 
     private MultipleBatchExecutor scoreBatchExecutor;
 
+    private AbsentService absentService;
+
+    private CheatService cheatService;
+
     private Counter counter = new Counter(5000,
             count -> LOG.info("已导入成绩 {} 条", count));
 
@@ -47,6 +53,14 @@ public class ImportScoreHelper {
         this.scoreBatchExecutor = new MultipleBatchExecutor(projectDao, 100);
 
         prepare();
+    }
+
+    public void setAbsentService(AbsentService absentService) {
+        this.absentService = absentService;
+    }
+
+    public void setCheatService(CheatService cheatService) {
+        this.cheatService = cheatService;
     }
 
     private void prepare() {
@@ -59,6 +73,10 @@ public class ImportScoreHelper {
     }
 
     public void importScore() {
+
+        if (absentService == null || cheatService == null) {
+            throw new IllegalStateException("请先设置 absentService 和 cheatService");
+        }
 
         Document projectDoc = findProject();
         Document subjectCodes = projectDoc.get("subjectcodes", Document.class);
@@ -86,24 +104,36 @@ public class ImportScoreHelper {
         MongoDatabase subjectDb = mongoClient.getDatabase(subjectDbName);
 
         subjectDb.getCollection("students").find(doc())
-                .forEach((Consumer<Document>) doc -> importStudentScore(doc, subjectId));
+                .forEach((Consumer<Document>) doc -> importStudentScore(projectId, doc, subjectId));
     }
 
     // 导入单个考生的单科成绩
     private void importStudentScore(
-            Document studentScoreDoc, String subjectId) {
+            String projectId, Document studentScoreDoc, String subjectId) {
 
+        String studentId = studentScoreDoc.getString("studentId");
         boolean cheat = studentScoreDoc.getBoolean("isCheating", false);
         boolean absent = studentScoreDoc.getBoolean("isAbsent", false);
 
-        importStudentSubjectiveScore(subjectId, cheat, absent, studentScoreDoc);
-        importStudentObjectiveScore(subjectId, cheat, absent, studentScoreDoc);
+        if (cheat) {
+            cheatService.saveCheat(projectId, studentId, subjectId);
+        }
+
+        if (absent) {
+            absentService.saveAbsent(projectId, studentId, subjectId);
+        }
+
+        // 仅当考生当科没有缺考和作弊时才会导入成绩，这样统计时就能体现正确人数
+        if (!cheat && !absent) {
+            importStudentSubjectiveScore(subjectId, studentScoreDoc);
+            importStudentObjectiveScore(subjectId, studentScoreDoc);
+        }
     }
 
     // 导入单个考生的单科主观题成绩
     @SuppressWarnings("unchecked")
     private void importStudentSubjectiveScore(
-            String subjectId, boolean cheat, boolean absent, Document studentScoreDoc) {
+            String subjectId, Document studentScoreDoc) {
 
         String studentId = studentScoreDoc.getString("studentId");
         List<Document> subjectiveList = (List<Document>) studentScoreDoc.get("subjectiveList");
@@ -115,7 +145,7 @@ public class ImportScoreHelper {
             double fullScore = Double.parseDouble(scoreDoc.get("fullScore").toString());
 
             ExamQuest quest = getQuest(subjectId, questNo);
-            score = calculateSbjScore(quest, fullScore, score, cheat, absent, effective);
+            score = calculateSbjScore(quest, fullScore, score, effective);
 
             ScoreValue scoreValue = new ScoreValue(score, score == fullScore);
             saveScore(studentId, quest, scoreValue, false);
@@ -123,16 +153,14 @@ public class ImportScoreHelper {
     }
 
     private double calculateSbjScore(
-            ExamQuest quest, double fullScore, double score, boolean cheat, boolean absent, boolean effective) {
+            ExamQuest quest, double fullScore, double score, boolean effective) {
 
         boolean giveFullScore = quest.isGiveFullScore();
 
-        // 缺考、作弊和未选择，都得 0 分；
+        // 未选择该题得 0 分；
         // 否则如果强制给分，则得满分；
         // 否则得分为老师的给分。
-        if (absent || cheat) {
-            score = 0;
-        } else if (!effective) {
+        if (!effective) {
             score = 0;
         } else if (giveFullScore) {
             score = fullScore;
@@ -143,7 +171,7 @@ public class ImportScoreHelper {
     // 导入单个考生的单科客观题成绩
     @SuppressWarnings("unchecked")
     private void importStudentObjectiveScore(
-            String subjectId, boolean cheat, boolean absent, Document studentScoreDoc) {
+            String subjectId, Document studentScoreDoc) {
 
         String projectId = getProjectId();
         String studentId = studentScoreDoc.getString("studentId");
@@ -155,13 +183,13 @@ public class ImportScoreHelper {
             ExamQuest quest = getQuest(subjectId, questNo);
 
             // 客观题必须要有作答，如未作答也应该是 “*”
-            if (!absent && !cheat && StringUtil.isBlank(studentAnswer)) {
+            if (StringUtil.isBlank(studentAnswer)) {
                 saveScore(studentId, quest, new ScoreValue(0, false), true);
 
             } else {
                 boolean giveFullScore = quest.isGiveFullScore();
                 ScoreValue scoreValue = calculateObjScore(
-                        quest, studentAnswer, giveFullScore, cheat, absent);
+                        quest, studentAnswer, giveFullScore);
 
                 saveScore(studentId, quest, scoreValue, false);
             }
@@ -187,22 +215,14 @@ public class ImportScoreHelper {
      * @param quest         客观题题目
      * @param studentAnswer 考生作答
      * @param giveFullScore 是否强制给分（缺考作弊除外）
-     * @param cheat         是否作弊
-     * @param absent        是否缺考
-     *
      * @return 得分
      */
     private static ScoreValue calculateObjScore(
-            ExamQuest quest, String studentAnswer, boolean giveFullScore, boolean cheat, boolean absent) {
+            ExamQuest quest, String studentAnswer, boolean giveFullScore) {
 
         double fullScore = quest.getFullScore();
 
-        // 缺考作弊不给分
-        if (absent || cheat) {
-            return new ScoreValue(0, false);
-        }
-
-        // 强制给分（缺考作弊除外，所以放在后面）
+        // 强制给分
         if (giveFullScore) {
             return new ScoreValue(fullScore, true);
         }

@@ -67,6 +67,12 @@ public class ImportProjectService {
     private ScoreService scoreService;
 
     @Autowired
+    private AbsentService absentService;
+
+    @Autowired
+    private CheatService cheatService;
+
+    @Autowired
     private DAOFactory daoFactory;
 
     public void importProject(ImportProjectParameters parameters) {
@@ -129,6 +135,8 @@ public class ImportProjectService {
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
         ImportScoreHelper helper = new ImportScoreHelper(context, mongoClient, projectDao);
+        helper.setAbsentService(absentService);
+        helper.setCheatService(cheatService);
         helper.importScore();
     }
 
