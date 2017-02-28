@@ -77,6 +77,15 @@ public class ProjectService {
                 "range_type varchar(20),range_id VARCHAR(40),target_type VARCHAR(20),target_id VARCHAR(40)," +
                 "score_level varchar(20),student_count int,student_rate decimal(5,2))");
         dao.execute("create index idxslm on scorelevelmap(range_type,range_id,target_type,target_id)");
+
+        dao.execute("create table rank_province(student_id varchar(40) not null,subject_id varchar(10) not null,rank int)");
+        dao.execute("create index idxrps on rank_province(subject_id)");
+
+        dao.execute("create table rank_school(student_id varchar(40) not null,subject_id varchar(10) not null,rank int)");
+        dao.execute("create index idxrss on rank_school(subject_id)");
+
+        dao.execute("create table rank_class(student_id varchar(40) not null,subject_id varchar(10) not null,rank int)");
+        dao.execute("create index idxrcs on rank_class(subject_id)");
     }
 
     private void createInitialTables(String projectId) {

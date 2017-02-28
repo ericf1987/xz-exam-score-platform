@@ -10,7 +10,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @TestPropertySource("/application-test.properties")
 public abstract class BaseTest {
 
-    public static final String PROJECT_ID = "fake_project";
+    public static final String PROJECT_ID = "430300-9cef9f2059ce4a36a40a7a60b07c7e00";
 
     public static final String SCHOOL_ID = "324e11fa_b825_4695_9ba2_ae0d6312f99d";
 
