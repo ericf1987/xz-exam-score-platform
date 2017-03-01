@@ -2,6 +2,7 @@ package com.xz.scorep.executor.exportexcel.impl.subject;
 
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.NaturalOrderComparator;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.aggritems.StudentQuery;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.Range;
@@ -83,11 +84,21 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
     private void fillStudentQuestScore(SheetContext sheetContext, AtomicInteger colIndex, ExamQuest quest) {
         String projectId = sheetContext.getProjectId();
         Range range = sheetContext.getSheetTask().getRange();
+        String scoreColName = "score_" + quest.getId();
 
         sheetContext.headerPut(quest.getQuestNo());
         sheetContext.headerMove(Direction.RIGHT);
-        sheetContext.columnSet(colIndex.incrementAndGet(), "score_" + quest.getId());
+        sheetContext.columnSet(colIndex.incrementAndGet(), scoreColName);
+
         List<Row> rows = studentQuery.listStudentQuestScore(projectId, quest.getId(), range);
+        if (quest.isObjective()) {
+            rows.forEach(row -> {
+                String answer = row.getString("objective_answer");
+                String score = StringUtil.removeEnd(row.getString(scoreColName), ".0");
+                row.put(scoreColName, score + "[" + answer + "]");
+            });
+        }
+
         sheetContext.rowAdd(rows);
     }
 

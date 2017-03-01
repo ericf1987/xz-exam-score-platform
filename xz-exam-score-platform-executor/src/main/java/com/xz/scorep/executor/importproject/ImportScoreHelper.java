@@ -204,6 +204,10 @@ public class ImportScoreHelper {
         scoreMap.put("is_right", Boolean.toString(scoreValue.isRight()));
         scoreMap.put("missing", Boolean.toString(missing));
 
+        if (quest.isObjective()) {
+            scoreMap.put("objective_answer", scoreValue.getAnswer());
+        }
+
         String tableName = "score_" + quest.getId();
         counter.incre();
         scoreBatchExecutor.push(tableName, scoreMap);
@@ -215,6 +219,7 @@ public class ImportScoreHelper {
      * @param quest         客观题题目
      * @param studentAnswer 考生作答
      * @param giveFullScore 是否强制给分（缺考作弊除外）
+     *
      * @return 得分
      */
     private static ScoreValue calculateObjScore(
@@ -232,7 +237,7 @@ public class ImportScoreHelper {
         ScorePattern scorePattern = new ScorePattern(questAnswer, fullScore);
 
         double score = scorePattern.getScore(studentAnswer);
-        return new ScoreValue(score, score == fullScore);
+        return new ScoreValue(score, studentAnswer, score == fullScore);
     }
 
     private String getProjectId() {
@@ -260,6 +265,8 @@ public class ImportScoreHelper {
 
         private double score;
 
+        private String answer;      // 客观题专用
+
         private boolean right;
 
         public ScoreValue() {
@@ -268,6 +275,20 @@ public class ImportScoreHelper {
         public ScoreValue(double score, boolean right) {
             this.score = score;
             this.right = right;
+        }
+
+        public ScoreValue(double score, String answer, boolean right) {
+            this.score = score;
+            this.answer = answer;
+            this.right = right;
+        }
+
+        public String getAnswer() {
+            return answer;
+        }
+
+        public void setAnswer(String answer) {
+            this.answer = answer;
         }
 
         public double getScore() {

@@ -2,12 +2,12 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.DAOException;
-import com.xz.ajiaedu.common.concurrent.Executors;
 import com.xz.scorep.executor.aggregate.AggragateOrder;
 import com.xz.scorep.executor.aggregate.Aggregator;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
+import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
@@ -34,8 +33,11 @@ public class StudentSubjectScoreAggregator extends Aggregator {
     public void aggregate(String projectId) throws Exception {
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        ThreadPoolExecutor executor = Executors.newBlockingThreadPoolExecutor(20, 20, 500);
+        ThreadPools.createAndRunThreadPool(20, 1,
+                (pool) -> accumulateSubjectScores(projectId, projectDao, pool));
+    }
 
+    private void accumulateSubjectScores(String projectId, DAO projectDao, ThreadPoolExecutor executor) {
         subjectService.listSubjects(projectId).forEach(subject -> {
             String subjectId = subject.getId();
             String tableName = "score_subject_" + subjectId;
@@ -54,15 +56,11 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
             examQuests.forEach(
                     examQuest -> executor.submit(
-                            () -> accumulateScore(projectDao, tableName, examQuest, accumulateTip)));
+                            () -> accumulateQuestScores(projectDao, tableName, examQuest, accumulateTip)));
         });
-
-
-        executor.shutdown();
-        executor.awaitTermination(1, TimeUnit.DAYS);
     }
 
-    private void accumulateScore(DAO projectDao, String tableName, ExamQuest examQuest, Runnable tip) {
+    private void accumulateQuestScores(DAO projectDao, String tableName, ExamQuest examQuest, Runnable tip) {
         try {
             String questId = examQuest.getId();
 

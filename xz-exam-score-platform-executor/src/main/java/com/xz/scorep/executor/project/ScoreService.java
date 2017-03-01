@@ -27,12 +27,6 @@ public class ScoreService {
     @Autowired
     private DAOFactory daoFactory;
 
-    @Autowired
-    private QuestService questService;
-
-    @Autowired
-    private SubjectService subjectService;
-
     private Map<String, MultipleBatchExecutor> batchExecutorMap = new HashMap<>();
 
     private String getTableName(String questId) {

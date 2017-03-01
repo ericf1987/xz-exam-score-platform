@@ -109,7 +109,7 @@ public class StudentQuery {
 
     public List<Row> listStudentQuestScore(String projectId, String questId, Range range) {
         String tableName = "score_" + questId;
-        String sql = "select student_id, score as `score_" + questId + "` " +
+        String sql = "select student_id, objective_answer, score as `score_" + questId + "` " +
                 "from `" + tableName + "` score, student s " +
                 "where score.student_id=s.id AND " + buildRangeCondition(range, "s.{{type}}='{{id}}'");
 

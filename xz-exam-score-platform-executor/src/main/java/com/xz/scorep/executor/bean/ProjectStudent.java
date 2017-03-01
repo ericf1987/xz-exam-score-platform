@@ -51,6 +51,8 @@ public class ProjectStudent {
         this.id = jsonObject.getString("id");
         this.name = jsonObject.getString("name");
         this.classId = jsonObject.getString("class");
+        this.examNo = jsonObject.getString("examNo");
+        this.schoolExamNo = jsonObject.getString("customExamNo");
     }
 
     public String getExamNo() {

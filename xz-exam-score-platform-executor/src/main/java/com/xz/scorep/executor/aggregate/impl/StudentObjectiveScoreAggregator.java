@@ -2,6 +2,7 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.DAOException;
+import com.xz.scorep.executor.aggregate.AggragateOrder;
 import com.xz.scorep.executor.aggregate.Aggregator;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.ExamSubject;
@@ -22,6 +23,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * 主客观题分数统计
  */
 @Component
+@AggragateOrder(5)
 public class StudentObjectiveScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentObjectiveScoreAggregator.class);
