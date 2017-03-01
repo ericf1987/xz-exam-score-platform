@@ -19,6 +19,7 @@ public class ScoreService {
     private static final String SCORE_TABLE_COLUMNS = "(" +
             "  student_id varchar(36) primary key, " +
             "  score decimal(4,1) not null, " +
+            "  objective_answer varchar(5), " +
             "  is_right varchar(5) not null, " +
             "  missing varchar(5) not null default 'false'" +
             ")";

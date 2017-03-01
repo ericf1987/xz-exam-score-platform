@@ -46,9 +46,8 @@ public class RankAggregator extends Aggregator {
             "    @rank := IF(@prev = @curr, @rank, @rank+@step) as `rank`,\n" +
             "    @step := IF(@prev = @curr, (@step+1), 1) as step\n" +
             "  from \n" +
-            "    {{score_table}},\n" +
+            "    (select * from {{score_table}} {{range_template}}) score,\n" +
             "    (select @curr := null, @prev := null, @rank := 0, @step := 1) tmp1\n" +
-            "  {{range_template}}\n" +
             "  order by score desc\n" +
             ") tmp2";
 
@@ -152,12 +151,25 @@ public class RankAggregator extends Aggregator {
                     .replace("{{range_template}}", rangeTemplate));
 
             subjectIdList.forEach(subjectId ->
-                    submitExecution(pool, classCounter, projectDao, INSERT_TEMPLATE
-                            .replace("{{score_table}}", "score_subject_" + subjectId)
-                            .replace("{{rank_table}}", "rank_class")
-                            .replace("{{subject}}", subjectId)
-                            .replace("{{range_template}}", rangeTemplate)));
+                    submitExecution(pool, projectDao, rangeTemplate, subjectId, classCounter));
         });
+    }
+
+    private void submitExecution(
+            ThreadPoolExecutor pool, DAO projectDao, String rangeTemplate, String subjectId, AsyncCounter counter) {
+
+        pool.submit(() -> {
+            aggregateClassSubjectRank(projectDao, rangeTemplate, subjectId);
+            counter.count();
+        });
+    }
+
+    protected void aggregateClassSubjectRank(DAO projectDao, String rangeTemplate, String subjectId) {
+        projectDao.execute(INSERT_TEMPLATE
+                .replace("{{score_table}}", "score_subject_" + subjectId)
+                .replace("{{rank_table}}", "rank_class")
+                .replace("{{subject}}", subjectId)
+                .replace("{{range_template}}", rangeTemplate));
     }
 
     private void submitExecution(ExecutorService pool, AsyncCounter counter, final DAO projectDao, final String sql) {

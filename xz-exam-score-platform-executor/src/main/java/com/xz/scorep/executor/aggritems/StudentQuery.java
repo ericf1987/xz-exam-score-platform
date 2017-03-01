@@ -15,6 +15,36 @@ import java.util.stream.Collectors;
 @Component
 public class StudentQuery {
 
+    public static final String RANGE_CLASS_TEMPLATE = "s.class_id='{{class}}' AND";
+
+    public static final String RANGE_SCHOOL_TEMPLATE = "s.school_id='{{school}}' AND";
+
+    public static final String SUBJECT_SCORE_RANK_TEMPLATE = "select \n" +
+            "  s.id as student_id,\n" +
+            "  ss.score as total_{{subject}},\n" +
+            "  sbj.score as subjective_{{subject}},\n" +
+            "  obj.score as objective_{{subject}},\n" +
+            "  rc.`rank` as rank_class_{{subject}},\n" +
+            "  rs.`rank` as rank_school_{{subject}},\n" +
+            "  rp.`rank` as rank_province_{{subject}}\n" +
+            "from \n" +
+            "  student s, \n" +
+            "  score_subject_{{subject}} ss, \n" +
+            "  score_subjective_{{subject}} sbj,\n" +
+            "  score_objective_{{subject}} obj,\n" +
+            "  rank_class rc,\n" +
+            "  rank_school rs,\n" +
+            "  rank_province rp\n" +
+            "where \n" +
+            "  {{range}}" +
+            "  s.id=ss.student_id AND\n" +
+            "  s.id=sbj.student_id AND\n" +
+            "  s.id=obj.student_id AND\n" +
+            "  s.id=rc.student_id AND rc.subject_id='{{subject}}' AND\n" +
+            "  s.id=rs.student_id AND rs.subject_id='{{subject}}' AND\n" +
+            "  s.id=rp.student_id AND rp.subject_id='{{subject}}'\n" +
+            "order by ss.score desc";
+
     @Autowired
     private DAOFactory daoFactory;
 
@@ -36,6 +66,7 @@ public class StudentQuery {
         ));
     }
 
+    // 查询考生基本信息
     public List<Row> listStudentInfo(String projectId, Range range) {
 
         String sql = "select " +
@@ -50,7 +81,7 @@ public class StudentQuery {
                 "  student, class, school " +
                 "where " +
                 "  student.class_id=class.id and" +
-                "  class.school_id=school.id";
+                "  class.school_id=school.id ";
 
         List<Object> params = new ArrayList<>();
 
@@ -64,4 +95,37 @@ public class StudentQuery {
 
         return daoFactory.getProjectDao(projectId).query(new Command(sql, params));
     }
+
+    public List<Row> listStudentSubjectInfo(String projectId, String subjectId, Range range) {
+
+        String rangeCondition = buildRangeCondition(range, "s.{{type}}='{{id}}' AND");
+
+        String query = SUBJECT_SCORE_RANK_TEMPLATE
+                .replace("{{subject}}", subjectId)
+                .replace("{{range}}", rangeCondition);
+
+        return daoFactory.getProjectDao(projectId).query(query);
+    }
+
+    public List<Row> listStudentQuestScore(String projectId, String questId, Range range) {
+        String tableName = "score_" + questId;
+        String sql = "select student_id, score as `score_" + questId + "` " +
+                "from `" + tableName + "` score, student s " +
+                "where score.student_id=s.id AND " + buildRangeCondition(range, "s.{{type}}='{{id}}'");
+
+        return daoFactory.getProjectDao(projectId).query(sql);
+    }
+
+    private String buildRangeCondition(Range range, String template) {
+        String type = range.getType().toLowerCase() + "_id";
+        String id = range.getId();
+
+        if (range.match(Range.SCHOOL) || range.match(Range.CLASS)) {
+            return template.replace("{{type}}", type).replace("{{id}}", id);
+        } else {
+            return "";
+        }
+    }
+
+
 }

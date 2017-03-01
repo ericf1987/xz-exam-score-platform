@@ -42,7 +42,7 @@
                     <iterate type="range:school">
                         <dir name="{{school}}">
                             <dir name="01 分数排名、得分明细表">
-                                <report name="_全校分数排名、得分明细表({{subject}})" class=".subject.SubjectSchoolDetailReport"/>
+                                <report name="_全校分数排名、得分明细表（{{subject}}）" class=".subject.SubjectSchoolDetailReport"/>
                                 <iterate type="range:class">
                                     <report name="{{class}}分数排名、得分明细表({{subject}})"
                                             class=".subject.SubjectClassDetailReport"/>

@@ -4,25 +4,21 @@ import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
 import com.xz.scorep.executor.exportexcel.ReportGenerator;
 import com.xz.scorep.executor.exportexcel.SheetTask;
+import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
 
-/**
- * (description)
- * created at 2017/3/1
- *
- * @author yidin
- */
+@Component
 public class SubjectSchoolDetailReport extends ReportGenerator {
 
     @Override
     protected List<SheetTask> getSheetTasks(String projectId, Range range, Target target) {
-        String schoolId = range.getId();
-        String schoolName = range.getName();
-        String subjectId = String.valueOf(target.getId());
-        String subjectName = target.getName();
 
-        return Collections.emptyList();
+        SheetTask sheetTask = new SheetTask("成绩排名", SubjectSchoolDetailSheet0.class);
+        sheetTask.setRange(range);
+        sheetTask.setTarget(target);
+
+        return Collections.singletonList(sheetTask);
     }
 }

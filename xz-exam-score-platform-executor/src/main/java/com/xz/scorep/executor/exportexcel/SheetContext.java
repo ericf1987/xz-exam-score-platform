@@ -185,6 +185,6 @@ public class SheetContext {
     }
 
     public void freeze(int rowIndex, int colIndex) {
-        excelWriter.getCurrentSheet().createFreezePane(rowIndex, colIndex);
+        excelWriter.getCurrentSheet().createFreezePane(colIndex, rowIndex);
     }
 }

@@ -38,7 +38,7 @@ public abstract class TotalDistributionSheet extends SheetGenerator {
         sheetContext.headerPut("学校名称", 2, 1);
         sheetContext.headerMove(Direction.RIGHT);
 
-        sheetContext.columnWidth(1, 20);   // 学校名称字段约 22 个字符宽
+        sheetContext.columnWidth(1, 20);   // 学校名称字段约 20 个字符宽
 
         sheetContext.tableSetKey("school_id");
         sheetContext.columnSet(0, "subject_name");
