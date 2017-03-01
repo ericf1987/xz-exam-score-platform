@@ -33,31 +33,101 @@ public class Target {
 
     public static final String QUEST_ABILITY_LEVEL = "questAbilityLevel";
 
-    public static Target project(String project) { return new Target(Target.PROJECT, project); }
-    public static Target subject(String subject) { return new Target(Target.SUBJECT, subject); }
-    public static Target subjectObjective(SubjectObjective subjectObjective) { return new Target(Target.SUBJECT_OBJECTIVE, subjectObjective); }
-    public static Target subjectCombination(String subjectCombinationId) { return new Target(Target.SUBJECT_COMBINATION, subjectCombinationId); }
-    public static Target quest(String quest) { return new Target(Target.QUEST, quest); }
-    public static Target questType(String questType) { return new Target(Target.QUEST_TYPE, questType); }
-    public static Target point(String point) { return new Target(Target.POINT, point); }
-    public static Target pointLevel(String point, String level) { return new Target(POINT_LEVEL, new PointLevel(point, level)); }
-    public static Target subjectLevel(String subject, String level) { return new Target(SUBJECT_LEVEL, new SubjectLevel(subject, level)); }
-    public static Target subjectLevel(SubjectLevel subjectLevel) { return new Target(SUBJECT_LEVEL, subjectLevel); }
-    public static Target pointLevel(PointLevel pointLevel) { return new Target(POINT_LEVEL, pointLevel); }
-    public static Target questAbilityLevel(String questAbilityLevel) {return new Target(QUEST_ABILITY_LEVEL, questAbilityLevel);}
+    public static Target project(String project) {
+        return new Target(Target.PROJECT, project);
+    }
 
-    public static Target project(String project, String name) { return new Target(Target.PROJECT, project, name); }
-    public static Target subject(String subject, String name) { return new Target(Target.SUBJECT, subject, name); }
-    public static Target subjectObjective(SubjectObjective subjectObjective, String name) { return new Target(Target.SUBJECT_OBJECTIVE, subjectObjective, name); }
-    public static Target subjectCombination(String subjectCombinationId, String name) { return new Target(Target.SUBJECT_COMBINATION, subjectCombinationId, name); }
-    public static Target quest(String quest, String name) { return new Target(Target.QUEST, quest, name); }
-    public static Target questType(String questType, String name) { return new Target(Target.QUEST_TYPE, questType, name); }
-    public static Target point(String point, String name) { return new Target(Target.POINT, point, name); }
-    public static Target pointLevel(String point, String level, String name) { return new Target(POINT_LEVEL, new PointLevel(point, level), name); }
-    public static Target subjectLevel(String subject, String level, String name) { return new Target(SUBJECT_LEVEL, new SubjectLevel(subject, level), name); }
-    public static Target subjectLevel(SubjectLevel subjectLevel, String name) { return new Target(SUBJECT_LEVEL, subjectLevel, name); }
-    public static Target pointLevel(PointLevel pointLevel, String name) { return new Target(POINT_LEVEL, pointLevel, name); }
-    public static Target questAbilityLevel(String questAbilityLevel, String name) {return new Target(QUEST_ABILITY_LEVEL, questAbilityLevel, name);}
+    public static Target subject(String subject) {
+        return new Target(Target.SUBJECT, subject);
+    }
+
+    public static Target subjectObjective(SubjectObjective subjectObjective) {
+        return new Target(Target.SUBJECT_OBJECTIVE, subjectObjective);
+    }
+
+    public static Target subjectCombination(String subjectCombinationId) {
+        return new Target(Target.SUBJECT_COMBINATION, subjectCombinationId);
+    }
+
+    public static Target quest(String quest) {
+        return new Target(Target.QUEST, quest);
+    }
+
+    public static Target questType(String questType) {
+        return new Target(Target.QUEST_TYPE, questType);
+    }
+
+    public static Target point(String point) {
+        return new Target(Target.POINT, point);
+    }
+
+    public static Target pointLevel(String point, String level) {
+        return new Target(POINT_LEVEL, new PointLevel(point, level));
+    }
+
+    public static Target subjectLevel(String subject, String level) {
+        return new Target(SUBJECT_LEVEL, new SubjectLevel(subject, level));
+    }
+
+    public static Target subjectLevel(SubjectLevel subjectLevel) {
+        return new Target(SUBJECT_LEVEL, subjectLevel);
+    }
+
+    public static Target pointLevel(PointLevel pointLevel) {
+        return new Target(POINT_LEVEL, pointLevel);
+    }
+
+    public static Target questAbilityLevel(String questAbilityLevel) {
+        return new Target(QUEST_ABILITY_LEVEL, questAbilityLevel);
+    }
+
+    public static Target project(String project, String name) {
+        return new Target(Target.PROJECT, project, name);
+    }
+
+    public static Target subject(String subject, String name) {
+        return new Target(Target.SUBJECT, subject, name);
+    }
+
+    public static Target subjectObjective(SubjectObjective subjectObjective, String name) {
+        return new Target(Target.SUBJECT_OBJECTIVE, subjectObjective, name);
+    }
+
+    public static Target subjectCombination(String subjectCombinationId, String name) {
+        return new Target(Target.SUBJECT_COMBINATION, subjectCombinationId, name);
+    }
+
+    public static Target quest(String quest, String name) {
+        return new Target(Target.QUEST, quest, name);
+    }
+
+    public static Target questType(String questType, String name) {
+        return new Target(Target.QUEST_TYPE, questType, name);
+    }
+
+    public static Target point(String point, String name) {
+        return new Target(Target.POINT, point, name);
+    }
+
+    public static Target pointLevel(String point, String level, String name) {
+        return new Target(POINT_LEVEL, new PointLevel(point, level), name);
+    }
+
+    public static Target subjectLevel(String subject, String level, String name) {
+        return new Target(SUBJECT_LEVEL, new SubjectLevel(subject, level), name);
+    }
+
+    public static Target subjectLevel(SubjectLevel subjectLevel, String name) {
+        return new Target(SUBJECT_LEVEL, subjectLevel, name);
+    }
+
+    public static Target pointLevel(PointLevel pointLevel, String name) {
+        return new Target(POINT_LEVEL, pointLevel, name);
+    }
+
+    public static Target questAbilityLevel(String questAbilityLevel, String name) {
+        return new Target(QUEST_ABILITY_LEVEL, questAbilityLevel, name);
+    }
 
     private String type;
 
