@@ -135,4 +135,8 @@ public class ProjectService {
     public String getProjectProvince(String projectId) {
         return "430000";
     }
+
+    public void updateProjectFullScore(String projectId, double fullScore) {
+        daoFactory.getManagerDao().execute("update project set full_score=? where id=?", fullScore, projectId);
+    }
 }

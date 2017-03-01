@@ -9,6 +9,7 @@ import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.appauth.AppAuthClient;
 import com.xz.ajiaedu.common.json.JSONUtils;
 import com.xz.ajiaedu.common.lang.Context;
+import com.xz.ajiaedu.common.lang.DoubleValue;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.ExamQuest;
@@ -140,17 +141,22 @@ public class ImportProjectService {
         helper.importScore();
     }
 
+    // 导入考试科目，并计算考试项目总分
     private void importSubjects(Context context) {
         String projectId = context.getString(PROJECT_ID_KEY);
+        DoubleValue projectFullScore = DoubleValue.of(0);
         Result result = appAuthClient.callApi("QuerySubjectListByProjectId",
                 new Param().setParameter("projectId", projectId));
 
         JSONArray subjects = result.get("result");
         JSONUtils.<JSONObject>forEach(subjects, subjectDoc -> {
             ExamSubject subject = new ExamSubject(subjectDoc);
+            projectFullScore.add(subject.getFullScore());
             subjectService.saveSubject(projectId, subject);
             subjectService.createSubjectScoreTable(projectId, subject.getId());
         });
+
+        projectService.updateProjectFullScore(projectId, projectFullScore.get());
     }
 
     private void importProjectInfo(Context context) {

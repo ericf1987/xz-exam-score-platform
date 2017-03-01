@@ -86,10 +86,13 @@ public class ScoreLevelRateAggregator extends Aggregator {
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
         JSONObject scoreLevels = JSON.parseObject(reportConfig.getScoreLevels());
 
+        LOG.info("开始统计四率...");
         daoFactory.getProjectDao(projectId).execute("truncate table scorelevelmap");
         LOG.info("scorelevelmap 内容已清除");
 
+        LOG.info("统计整体成绩四率...");
         aggregateProjectScoreLevels(projectId, scoreLevels);
+        LOG.info("统计科目成绩四率...");
         aggregateSubjectScoreLevels(projectId, scoreLevels);
     }
 
