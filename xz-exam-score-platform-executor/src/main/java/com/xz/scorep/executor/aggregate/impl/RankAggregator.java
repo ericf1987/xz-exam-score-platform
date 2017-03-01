@@ -34,7 +34,7 @@ public class RankAggregator extends Aggregator {
             ")";
 
     public static final String RANGE_SCHOOL_TEMPLATE = "where student_id in(" +
-            "    select student.id from student,class where student.class_id=class.id and class.school_id='{{school}}'\n" +
+            "    select student.id from student where student.school_id='{{school}}'\n" +
             ")";
 
     public static final String INSERT_TEMPLATE = "insert into {{rank_table}}\n" +

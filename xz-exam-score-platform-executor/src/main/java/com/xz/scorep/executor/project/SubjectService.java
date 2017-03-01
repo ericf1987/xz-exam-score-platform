@@ -58,14 +58,22 @@ public class SubjectService {
         projectDao.insert(subject, "subject");
     }
 
+    public void createSubjectScoreTables(String projectId) {
+        listSubjects(projectId).forEach(subject -> createSubjectScoreTable(projectId, subject.getId()));
+    }
+
     public void createSubjectScoreTable(String projectId, String subjectId) {
 
-        String tableName = "score_subject_" + subjectId;
-
-        String createSubjectTable = "create table " + tableName +
-                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)";
-
-        daoFactory.getProjectDao(projectId).execute(createSubjectTable);
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        projectDao.execute("create table if not exists " +
+                "score_subject_" + subjectId +
+                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)");
+        projectDao.execute("create table if not exists " +
+                "score_objective_" + subjectId +
+                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)");
+        projectDao.execute("create table if not exists " +
+                "score_subjective_" + subjectId +
+                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)");
     }
 
     public List<ExamSubject> listSubjects(String projectId) {
