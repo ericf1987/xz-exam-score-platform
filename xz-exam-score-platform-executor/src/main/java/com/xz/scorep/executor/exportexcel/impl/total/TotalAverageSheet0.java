@@ -6,8 +6,6 @@ import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.NumberUtil;
 import com.xz.ajiaedu.common.lang.Ranker;
-import com.xz.scorep.executor.aggritems.ScoreLevelRateQuery;
-import com.xz.scorep.executor.bean.ScoreLevel;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.ExcelCellStyles;
 import com.xz.scorep.executor.exportexcel.SheetContext;
@@ -32,6 +30,19 @@ public class TotalAverageSheet0 extends SheetGenerator {
     private static final String SUBJECT = "score_subject_";
 
     private static String SCHOOL_PROJECT_INFO = "SELECT\n" +
+            " a.school_id,\n" +
+            " a.school_name,\n" +
+            " a.student_count,\n" +
+            " a.max_score,\n" +
+            " a.min_score,\n" +
+            " a.average_score,\n" +
+            " CONCAT(IFNULL(xlnt.xlnt, '0.00'),'%') AS excellent,\n" +
+            " CONCAT(IFNULL(good.good, '0.00'),'%') AS good,\n" +
+            " CONCAT(IFNULL(pass.pass, '0.00'),'%') AS pass,\n" +
+            " CONCAT(IFNULL(fail.fail, '0.00'),'%') AS fail\n" +
+            " FROM\n" +
+            " (\n" +
+            " SELECT\n" +
             " school.id AS school_id,\n" +
             " school. NAME AS school_name,\n" +
             " COUNT(student.id) student_count,\n" +
@@ -46,7 +57,60 @@ public class TotalAverageSheet0 extends SheetGenerator {
             " school.id = student.school_id\n" +
             " AND student.id = score_project.student_id\n" +
             " GROUP BY\n" +
-            " school.id";
+            " school.id\n" +
+            " ) a\n" +
+            " LEFT JOIN (\n" +
+            " SELECT\n" +
+            " school.id,\n" +
+            " scorelevelmap.student_rate AS xlnt\n" +
+            " FROM\n" +
+            " school,\n" +
+            " scorelevelmap\n" +
+            " WHERE\n" +
+            " scorelevelmap.range_type = 'school'\n" +
+            " AND scorelevelmap.target_type = 'project'\n" +
+            " AND scorelevelmap.range_id = school.id\n" +
+            " AND scorelevelmap.score_level = 'XLNT'\n" +
+            " ) xlnt ON a.school_id = xlnt.id\n" +
+            " LEFT JOIN (\n" +
+            " SELECT\n" +
+            " school.id,\n" +
+            " scorelevelmap.student_rate AS good\n" +
+            " FROM\n" +
+            " school,\n" +
+            " scorelevelmap\n" +
+            " WHERE\n" +
+            " scorelevelmap.range_type = 'school'\n" +
+            " AND scorelevelmap.target_type = 'project'\n" +
+            " AND scorelevelmap.range_id = school.id\n" +
+            " AND scorelevelmap.score_level = 'GOOD'\n" +
+            " ) good ON good.id = a.school_id\n" +
+            " LEFT JOIN (\n" +
+            " SELECT\n" +
+            " school.id,\n" +
+            " scorelevelmap.student_rate AS pass\n" +
+            " FROM\n" +
+            " school,\n" +
+            " scorelevelmap\n" +
+            " WHERE\n" +
+            " scorelevelmap.range_type = 'school'\n" +
+            " AND scorelevelmap.target_type = 'project'\n" +
+            " AND scorelevelmap.range_id = school.id\n" +
+            " AND scorelevelmap.score_level = 'PASS'\n" +
+            " ) pass ON pass.id = a.school_id\n" +
+            " LEFT JOIN (\n" +
+            " SELECT\n" +
+            " school.id,\n" +
+            " scorelevelmap.student_rate AS fail\n" +
+            " FROM\n" +
+            " school,\n" +
+            " scorelevelmap\n" +
+            " WHERE\n" +
+            " scorelevelmap.range_type = 'school'\n" +
+            " AND scorelevelmap.target_type = 'project'\n" +
+            " AND scorelevelmap.range_id = school.id\n" +
+            " AND scorelevelmap.score_level = 'FAIL'\n" +
+            " ) fail ON fail.id = a.school_id";
 
 
     private static String ALL_SUBJECT_PASS_OR_FAIL = "select school.id AS school_id , COUNT(school.id) as count from " +
@@ -69,19 +133,22 @@ public class TotalAverageSheet0 extends SheetGenerator {
             ";\n";
 
 
-    private static String SCHOOL_OVER_AVERAGE_RATE = "select a.school_id, a.over_average_count,FORMAT(a.over_average_count/b.total_count,4) as over_average_rate, b.total_count from (\n" +
-            "  select student.school_id,count(1) as over_average_count \n" +
-            "  from score_project score, student\n" +
-            "  where score.student_id=student.id and score.score >= {{average_score}}\n" +
-            "  group by student.school_id\n" +
-            "  ) a,(\n" +
-            "  select student.school_id,count(1) as total_count \n" +
-            "  from score_project score, student\n" +
-            "  where score.student_id=student.id\n" +
-            "  group by student.school_id\n" +
-            "  ) b\n" +
-            "  where a.school_id=b.school_id\n" +
-            "  ;";
+    private static String SCHOOL_OVER_AVERAGE_RATE = "select student.school_id ,CONCAT(FORMAT(COUNT(student.id)/a.count,2),'%') as over_average from student\n" +
+            " LEFT JOIN score_project on student.id = score_project.student_id\n" +
+            " LEFT JOIN (SELECT\n" +
+            " school.id  as school_id,\n" +
+            " COUNT(student.id) as count,\n" +
+            " FORMAT(AVG(score_project.score),2) AS average_score\n" +
+            " FROM\n" +
+            " school,\n" +
+            " student,\n" +
+            " score_project\n" +
+            " WHERE\n" +
+            " school.id = student.school_id\n" +
+            " AND student.id = score_project.student_id\n" +
+            " GROUP BY\n" +
+            " school.id) a on a.school_id = student.school_id\n" +
+            " where score_project.score >= a.average_score GROUP BY student.school_id";
 
     private static final String[] TABLE_HEADER = {
             "学校名称", "实考人数", "最高分",
@@ -96,9 +163,6 @@ public class TotalAverageSheet0 extends SheetGenerator {
     @Autowired
     private ReportConfigService reportConfigService;
 
-    @Autowired
-    private ScoreLevelRateQuery scoreLevelRateQuery;
-
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {
         sheetContext.headerPut("联考学校分数统计分析（总分）", 1, 13);
@@ -109,7 +173,7 @@ public class TotalAverageSheet0 extends SheetGenerator {
             sheetContext.headerMove(Direction.RIGHT);
         }
 
-        sheetContext.columnWidth(0, 24);   // 学校名称字段约 20 个字符宽
+        sheetContext.columnWidth(0, 24);   // 学校名称字段约 24 个字符宽
 
         sheetContext.tableSetKey("school_id");
         sheetContext.columnSet(0, "school_name");   //学校名
@@ -141,31 +205,13 @@ public class TotalAverageSheet0 extends SheetGenerator {
         double goodScore = jsonObject.getDouble("Good") * fullScore;
         double passScore = jsonObject.getDouble("Pass") * fullScore;
 
-        //查学校参考人数、最高分、最低分、平均分
+        //查学校参考人数、最高分、最低分、平均分、学校四率
         List<Row> rows = dao.query(SCHOOL_PROJECT_INFO);
         sheetContext.rowAdd(rows);
 
-        for (Row row : rows) {
-            String schoolId = row.getString("school_id");
-            double averageScore = row.getDouble("average_score", 0);
-
-            Row result = scoreLevelRateQuery.getSchoolProjectSLR(projectId, schoolId);
-
-            sheetContext.tablePutValue(schoolId, "fail", result.getString(ScoreLevel.FAIL.name()) + "%");
-            sheetContext.tablePutValue(schoolId, "pass", result.getString(ScoreLevel.PASS.name()) + "%");
-            sheetContext.tablePutValue(schoolId, "good", result.getString(ScoreLevel.GOOD.name()) + "%");
-            sheetContext.tablePutValue(schoolId, "excellent", result.getString(ScoreLevel.XLNT.name()) + "%");
-
-            //超均率
-            List<Row> overAverageRows =
-                    dao.query(SCHOOL_OVER_AVERAGE_RATE.replace("{{average_score}}", String.valueOf(averageScore)));
-            overAverageRows.stream().filter(s -> s.getString("school_id").equals(schoolId))
-                    .forEach(s -> {
-                        String passRate = String.format("%.02f%%",
-                                NumberUtil.scale(s.getDouble("over_average_rate", 0), 2));
-                        sheetContext.tablePutValue(schoolId, "over_average", passRate);
-                    });
-        }
+        //超均率
+        List<Row> overAverageRows = dao.query(SCHOOL_OVER_AVERAGE_RATE);
+        sheetContext.rowAdd(overAverageRows);
 
         List<Row> subjects = dao.query("select id,full_score from subject");
 
@@ -186,8 +232,7 @@ public class TotalAverageSheet0 extends SheetGenerator {
                 .replace("{{table_name}}", table_name.toString())
                 .replace("{{sub}}", sub.toString())
                 .replace("{{passOrFail}}", passStr.toString());
-
-
+        System.out.println(passSql);
         String failSql = ALL_SUBJECT_PASS_OR_FAIL
                 .replace("{{table_name}}", table_name.toString())
                 .replace("{{sub}}", sub.toString())
@@ -200,9 +245,12 @@ public class TotalAverageSheet0 extends SheetGenerator {
         for (Row row : rows) {
             String schoolId = row.getString("school_id");
             double studentCount = row.getDouble("student_count", 1);
+            boolean passFlag = false;
+            boolean failFlag = false;
 
             for (Row passRow : passRows) {
                 if (passRow.getString("school_id").equals(schoolId)) {
+                    passFlag = true;
                     double count = passRow.getDouble("count", 0);
                     totalPass += count;
                     String passRate = String.format("%.02f%%",
@@ -212,6 +260,7 @@ public class TotalAverageSheet0 extends SheetGenerator {
             }
             for (Row failRow : failRows) {
                 if (failRow.getString("school_id").equals(schoolId)) {
+                    failFlag = true;
                     double count = failRow.getDouble("count", 0);
                     totalFail += count;
                     String failRate = String.format("%.02f%%",
@@ -219,10 +268,16 @@ public class TotalAverageSheet0 extends SheetGenerator {
                     sheetContext.tablePutValue(schoolId, "all_fail", failRate);
                 }
             }
+            if (!passFlag) {
+                sheetContext.tablePutValue(schoolId, "all_pass", "0.00%");
+            }
+            if (!failFlag) {
+                sheetContext.tablePutValue(schoolId, "all_fail", "0.00%");
+            }
         }
 
         //先按平均分排名,最后增加总计行
-        addAverageScoreRange(rows, sheetContext,"average_score", "average_range");
+        addAverageScoreRange(rows, sheetContext, "average_score", "average_range");
         sheetContext.rowSortBy("average_range");
 
         Row totalRow = new Row();
@@ -242,7 +297,6 @@ public class TotalAverageSheet0 extends SheetGenerator {
         sheetContext.rowStyle(TOTAL_SCHOOL_ID, ExcelCellStyles.Green.name());
 
         sheetContext.saveData();                      // 保存到 ExcelWriter
-//        sheetContext.freeze(2, 2);  // 在适当的位置冻结窗口
     }
 
     private void addAverageScoreRange(List<Row> rows, SheetContext sheetContext, String scoreColumnName, String rankColumnName) {
@@ -257,7 +311,7 @@ public class TotalAverageSheet0 extends SheetGenerator {
         rows.forEach(row -> {
             String schoolId = row.getString("school_id");
             int rank = ranker.getRank(schoolId, false);
-            sheetContext.tablePutValue(schoolId,rankColumnName,rank);
+            sheetContext.tablePutValue(schoolId, rankColumnName, rank);
 
         });
     }
