@@ -34,7 +34,7 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         generateSheet0(sheetContext, studentQuery, questService);
     }
 
-    static void generateSheet0(SheetContext sheetContext, StudentQuery studentQuery, QuestService questService) {
+    public static void generateSheet0(SheetContext sheetContext, StudentQuery studentQuery, QuestService questService) {
         SheetTask sheetTask = sheetContext.getSheetTask();
         Target target = sheetTask.getTarget();
         String subjectId = String.valueOf(target.getId());
