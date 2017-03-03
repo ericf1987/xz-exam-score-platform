@@ -13,6 +13,7 @@ import com.xz.scorep.executor.utils.Direction;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Author: luckylo
@@ -60,29 +61,27 @@ public abstract class TotalSchoolDetailSheet extends SheetGenerator {
         SheetContextHelper.fillStudentBasicInfo(sheetContext, studentQuery);
 
         DAO dao = daoFactory.getProjectDao(projectId);
-        String subjectId = getSubjectId(sheetContext);
 
-        if (subjectId.equals("000")) {
-            totalScoreRank(dao, sheetContext);
-            //按总分排序
-            sheetContext.rowSortBy("province_rank_000");
-        } 
+        AtomicInteger colIndex = new AtomicInteger(5);
 
-        sheetContext.freeze(2,4);
+        totalScoreRank(dao, sheetContext, colIndex);
+        //按总排名升序排
+        sheetContext.rowSortBy("province_rank_000");
+
+        sheetContext.freeze(2, 5);
         sheetContext.saveData();
     }
 
     //单科成绩排名
-    protected void generateEachSubjectSheet(SheetContext sheetContext){
+    protected void generateEachSubjectSheet(SheetContext sheetContext) {
         SubjectSchoolDetailSheet0.generateSheet0(sheetContext, studentQuery, questService);
-    } 
-    
-    private void totalScoreRank(DAO dao, SheetContext sheetContext) {
-        int columnIndex = 5;
+    }
+
+    private void totalScoreRank(DAO dao, SheetContext sheetContext, AtomicInteger colIndex) {
         String subjectId = getSubjectId(sheetContext);
         String schoolId = getSchoolId(sheetContext);
 
-        columnIndex = fillSubjectTableHeader("总分", sheetContext, subjectId, columnIndex);
+        fillSubjectTableHeader("总分", sheetContext, subjectId, colIndex);
 
         //学生总成绩排名...
         String totalSql = QUERY_STUDENT_RANK
@@ -97,7 +96,7 @@ public abstract class TotalSchoolDetailSheet extends SheetGenerator {
             String rowId = row.getString("id");
             String rowName = row.getString("name");
 
-            columnIndex = fillSubjectTableHeader(rowName, sheetContext, rowId, columnIndex);
+            fillSubjectTableHeader(rowName, sheetContext, rowId, colIndex);
             //学生单科成绩排名...
             String eachSql = QUERY_STUDENT_RANK
                     .replace("{{table}}", "score_subject_" + rowId)
@@ -108,31 +107,26 @@ public abstract class TotalSchoolDetailSheet extends SheetGenerator {
         }
     }
 
-    private int fillSubjectTableHeader(String cellName, SheetContext sheetContext, String subjectId, int columnIndex) {
+    private void fillSubjectTableHeader(String cellName, SheetContext sheetContext, String subjectId, AtomicInteger columnIndex) {
         sheetContext.headerPut(cellName, 1, 4);
         sheetContext.headerMove(Direction.DOWN);
 
         String text = subjectId.endsWith("000") ? "总得分" : "得分";
         sheetContext.headerPut(text, 1, 1);
-        sheetContext.columnSet(columnIndex, "total_score_" + subjectId);
+        sheetContext.columnSet(columnIndex.getAndIncrement(), "total_score_" + subjectId);
         sheetContext.headerMove(Direction.RIGHT);
-        columnIndex++;
 
         sheetContext.headerPut("班排名", 1, 1);
-        sheetContext.columnSet(columnIndex, "class_rank_" + subjectId);
+        sheetContext.columnSet(columnIndex.getAndIncrement(), "class_rank_" + subjectId);
         sheetContext.headerMove(Direction.RIGHT);
-        columnIndex++;
 
         sheetContext.headerPut("校排名", 1, 1);
-        sheetContext.columnSet(columnIndex, "school_rank_" + subjectId);
+        sheetContext.columnSet(columnIndex.getAndIncrement(), "school_rank_" + subjectId);
         sheetContext.headerMove(Direction.RIGHT);
-        columnIndex++;
 
         sheetContext.headerPut("总排名", 1, 1);
-        sheetContext.columnSet(columnIndex, "province_rank_" + subjectId);
+        sheetContext.columnSet(columnIndex.getAndIncrement(), "province_rank_" + subjectId);
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
-        columnIndex++;
-        return columnIndex;
     }
 
     protected abstract String getSubjectId(SheetContext sheetContext);
