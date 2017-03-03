@@ -5,7 +5,7 @@ import com.xz.scorep.executor.exportexcel.SheetContext;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TotalSchoolSegmentSheet1 extends TotalSchoolSegmentSheet {
+public class TotalDistributionSheet1 extends TotalDistributionSheet {
 
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {

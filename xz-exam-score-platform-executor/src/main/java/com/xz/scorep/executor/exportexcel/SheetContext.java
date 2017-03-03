@@ -190,7 +190,7 @@ public class SheetContext {
         excelWriter.getCurrentSheet().createFreezePane(colIndex, rowIndex);
     }
 
-    public void fillEmptyCells(Predicate<String> columnPicker, String emptyValue) {
+    public void fillEmptyCells(Predicate<String> columnPicker, Object emptyValue) {
         List<String> columns = CollectionUtils.filter(table.getColumnNames(), columnPicker::test);
         table.getRows().forEach(tableRow -> {
             for (String column : columns) {
