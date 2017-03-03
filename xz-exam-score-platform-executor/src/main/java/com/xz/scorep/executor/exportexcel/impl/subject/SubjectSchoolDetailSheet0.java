@@ -31,25 +31,40 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
 
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {
-        String projectId = sheetContext.getProjectId();
-        SheetTask sheetTask = sheetContext.getSheetTask();
-        Range range = sheetTask.getRange();
-        Target target = sheetTask.getTarget();
+        generateSheet0(sheetContext, studentQuery, questService);
+    }
 
+    static void generateSheet0(SheetContext sheetContext, StudentQuery studentQuery, QuestService questService) {
+        SheetTask sheetTask = sheetContext.getSheetTask();
+        Target target = sheetTask.getTarget();
         String subjectId = String.valueOf(target.getId());
-        String subjectName = target.getName();
 
         sheetContext.tableSetKey("student_id");
 
         //////////////////////////////////////////////////////////////
 
         // 填充考生基本信息
-        fillStudentBasicInfo(sheetContext, projectId, range);
+        fillStudentBasicInfo(sheetContext, studentQuery);
 
         // 填充科目成绩信息
-        fillStudentSubjectInfo(sheetContext, projectId, range, subjectId, subjectName);
+        fillStudentSubjectInfo(sheetContext, studentQuery);
 
         // 填充题目成绩信息
+        fillStudentScoreInfo(sheetContext, questService, studentQuery);
+
+        //////////////////////////////////////////////////////////////
+
+        sheetContext.rowSortBy("class_name", "rank_class_" + subjectId);
+        sheetContext.saveData();
+        sheetContext.freeze(2, 3);
+    }
+
+    private static void fillStudentScoreInfo(SheetContext sheetContext, QuestService questService, StudentQuery studentQuery) {
+        String projectId = sheetContext.getProjectId();
+        SheetTask sheetTask = sheetContext.getSheetTask();
+        Target target = sheetTask.getTarget();
+        String subjectId = String.valueOf(target.getId());
+
         Comparator<ExamQuest> questNoComparator = (q1, q2) -> new NaturalOrderComparator().compare(q1.getQuestNo(), q2.getQuestNo());
         List<ExamQuest> quests = questService.queryQuests(projectId, subjectId);
         AtomicInteger colIndex = new AtomicInteger(10);
@@ -62,26 +77,18 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         sheetContext.headerPut("客观题得分明细", 1, objectiveQuests.size());
         sheetContext.headerMove(Direction.DOWN);
         objectiveQuests.forEach(quest -> {
-            fillStudentQuestScore(sheetContext, colIndex, quest);
+            fillStudentQuestScore(sheetContext, colIndex, quest, studentQuery);
         });
 
         sheetContext.headerMove(Direction.UP);
         sheetContext.headerPut("主观题得分明细", 1, subjectiveQuests.size());
         sheetContext.headerMove(Direction.DOWN);
         subjectiveQuests.forEach(quest -> {
-            fillStudentQuestScore(sheetContext, colIndex, quest);
+            fillStudentQuestScore(sheetContext, colIndex, quest, studentQuery);
         });
-
-
-
-        //////////////////////////////////////////////////////////////
-
-        sheetContext.rowSortBy("class_name", "rank_class_" + subjectId);
-        sheetContext.saveData();
-        sheetContext.freeze(2, 3);
     }
 
-    private void fillStudentQuestScore(SheetContext sheetContext, AtomicInteger colIndex, ExamQuest quest) {
+    private static void fillStudentQuestScore(SheetContext sheetContext, AtomicInteger colIndex, ExamQuest quest, StudentQuery studentQuery) {
         String projectId = sheetContext.getProjectId();
         Range range = sheetContext.getSheetTask().getRange();
         String scoreColName = "score_" + quest.getId();
@@ -102,7 +109,14 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         sheetContext.rowAdd(rows);
     }
 
-    private void fillStudentSubjectInfo(SheetContext sheetContext, String projectId, Range range, String subjectId, String subjectName) {
+    private static void fillStudentSubjectInfo(SheetContext sheetContext, StudentQuery studentQuery) {
+        String projectId = sheetContext.getProjectId();
+        SheetTask sheetTask = sheetContext.getSheetTask();
+        Range range = sheetTask.getRange();
+        Target target = sheetTask.getTarget();
+        String subjectId = String.valueOf(target.getId());
+        String subjectName = target.getName();
+
         sheetContext.headerPut(subjectName, 1, 6);
         sheetContext.headerMove(Direction.DOWN);
         sheetContext.headerPut("得分");
@@ -128,7 +142,11 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         sheetContext.rowAdd(studentQuery.listStudentSubjectInfo(projectId, subjectId, range));
     }
 
-    private void fillStudentBasicInfo(SheetContext sheetContext, String projectId, Range range) {
+    private static void fillStudentBasicInfo(SheetContext sheetContext, StudentQuery studentQuery) {
+        String projectId = sheetContext.getProjectId();
+        SheetTask sheetTask = sheetContext.getSheetTask();
+        Range range = sheetTask.getRange();
+
         sheetContext.headerPut("学校名称", 2, 1);
         sheetContext.headerMove(Direction.RIGHT);
         sheetContext.headerPut("班级", 2, 1);
