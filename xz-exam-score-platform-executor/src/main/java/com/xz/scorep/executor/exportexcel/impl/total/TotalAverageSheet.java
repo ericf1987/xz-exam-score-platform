@@ -293,6 +293,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             index++;
         }
 
+        sheetContext.freeze(0,2);
         sheetContext.columnWidth(0, 20);   // 学校名称字段约 20 个字符宽
     }
 
