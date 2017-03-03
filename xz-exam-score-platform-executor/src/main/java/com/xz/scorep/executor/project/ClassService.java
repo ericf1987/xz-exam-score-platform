@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.project;
 
+import com.xz.ajiaedu.common.lang.NaturalOrderComparator;
 import com.xz.scorep.executor.bean.ProjectClass;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +27,12 @@ public class ClassService {
     }
 
     public List<ProjectClass> listClasses(String projectId, String schoolId) {
-        return daoFactory.getProjectDao(projectId).query(
+        List<ProjectClass> classes = daoFactory.getProjectDao(projectId).query(
                 ProjectClass.class, "select * from class where school_id=?", schoolId);
+
+        classes.sort((c1, c2) -> new NaturalOrderComparator().compare(c1.fixedName(), c2.fixedName()));
+
+        return classes;
     }
 
     public List<ProjectClass> listClasses(String projectId) {

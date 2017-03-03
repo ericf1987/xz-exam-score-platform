@@ -53,6 +53,10 @@ public class Table {
         }
     }
 
+    public List<String> getColumnNames() {
+        return new ArrayList<>(columnIndexes.keySet());
+    }
+
     public void setValue(String keyId, String propertyName, Object propertyValue) {
 
         for (TableRow row : rows) {

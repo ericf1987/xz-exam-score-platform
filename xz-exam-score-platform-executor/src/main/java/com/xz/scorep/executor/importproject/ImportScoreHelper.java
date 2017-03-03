@@ -173,14 +173,14 @@ public class ImportScoreHelper {
     private void importStudentObjectiveScore(
             String subjectId, Document studentScoreDoc) {
 
-        String projectId = getProjectId();
         String studentId = studentScoreDoc.getString("studentId");
         List<Document> objectiveList = (List<Document>) studentScoreDoc.get("objectiveList");
 
         for (Document scoreDoc : objectiveList) {
             String questNo = scoreDoc.getString("questionNo");
-            String studentAnswer = readStudentAnswer(scoreDoc);
             ExamQuest quest = getQuest(subjectId, questNo);
+
+            String studentAnswer = readStudentAnswer(quest, scoreDoc);
 
             // 客观题必须要有作答，如未作答也应该是 “*”
             if (StringUtil.isBlank(studentAnswer)) {
@@ -254,8 +254,15 @@ public class ImportScoreHelper {
 
     //////////////////////////////////////////////////////////////
 
-    private static String readStudentAnswer(Document scoreDoc) {
+    private static String readStudentAnswer(ExamQuest quest, Document scoreDoc) {
         String s = defaultString(scoreDoc.getString("answerContent"), "*");
+
+        // 单选题出现多个选择时，一律置为 "*"
+        // 旧版答题卡可能没有 multiChoice 属性，此时根据答案的长度来判断
+        if (!quest.isMultiChoice() && quest.getAnswer().length() == 1 && s.length() > 1) {
+            s = "*";
+        }
+
         char[] chars = s.toCharArray();
         Arrays.sort(chars);
         return new String(chars);

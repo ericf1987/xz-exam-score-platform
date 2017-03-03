@@ -2,6 +2,7 @@ package com.xz.scorep.executor.exportexcel;
 
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.excel.ExcelWriter;
+import com.xz.ajiaedu.common.lang.CollectionUtils;
 import com.xz.ajiaedu.common.lang.Context;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.table.Table;
@@ -13,6 +14,7 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * 生成 Sheet 的上下文，提供所有需要的方法
@@ -186,5 +188,16 @@ public class SheetContext {
 
     public void freeze(int rowIndex, int colIndex) {
         excelWriter.getCurrentSheet().createFreezePane(colIndex, rowIndex);
+    }
+
+    public void fillEmptyCells(Predicate<String> columnPicker, String emptyValue) {
+        List<String> columns = CollectionUtils.filter(table.getColumnNames(), columnPicker::test);
+        table.getRows().forEach(tableRow -> {
+            for (String column : columns) {
+                if (!tableRow.containsKey(column)) {
+                    tableRow.put(column, emptyValue);
+                }
+            }
+        });
     }
 }

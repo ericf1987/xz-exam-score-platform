@@ -22,6 +22,13 @@ public class SheetTask extends Context {
         this.generatorClass = generatorClass;
     }
 
+    public SheetTask(String title, Class<? extends SheetGenerator> generatorClass, Range range, Target target) {
+        this.title = title;
+        this.generatorClass = generatorClass;
+        this.range = range;
+        this.target = target;
+    }
+
     public Range getRange() {
         return range;
     }

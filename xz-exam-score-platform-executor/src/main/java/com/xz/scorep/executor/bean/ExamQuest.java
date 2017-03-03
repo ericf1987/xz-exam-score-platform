@@ -23,6 +23,8 @@ public class ExamQuest {
 
     private boolean giveFullScore;      // 是否不论考生选择什么一律给满分（缺考和作弊除外）
 
+    private boolean multiChoice;        // 是否多选（仅对客观题有效）
+
     private String questNo;
 
     private double fullScore;
@@ -58,6 +60,7 @@ public class ExamQuest {
                 StringUtil.isOneOf(questType, "0", "1", "2");
 
         this.giveFullScore = jsonObject.getBooleanValue("awardScoreTag");
+        this.multiChoice = jsonObject.getBooleanValue("multiChoice");
 
         this.questNo = jsonObject.getString("paperQuestNum");
         this.fullScore = jsonObject.getDoubleValue("score");
@@ -66,6 +69,14 @@ public class ExamQuest {
 
         JSONArray items = jsonObject.getJSONArray("items");
         this.options = items == null? "": items.toJSONString();
+    }
+
+    public boolean isMultiChoice() {
+        return multiChoice;
+    }
+
+    public void setMultiChoice(boolean multiChoice) {
+        this.multiChoice = multiChoice;
     }
 
     public boolean isGiveFullScore() {
