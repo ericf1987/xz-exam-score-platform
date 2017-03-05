@@ -15,23 +15,46 @@ public class AsyncCounter {
 
     private static final Logger LOG = LoggerFactory.getLogger(AsyncCounter.class);
 
+    private final String tag;
+
     private final int total;
+
+    private int interval;
 
     private final AtomicInteger atomicInteger;
 
-    private final String tag;
-
-    public AsyncCounter(int total, String tag) {
+    public AsyncCounter(String tag, int total) {
         this.total = total;
-        this.atomicInteger = new AtomicInteger(0);
         this.tag = tag;
+        this.atomicInteger = new AtomicInteger(0);
+    }
+
+    public AsyncCounter(String tag, int total, int interval) {
+        this.tag = tag;
+        this.total = total;
+        this.interval = interval;
+        this.atomicInteger = new AtomicInteger(0);
+    }
+
+    public int getInterval() {
+        return interval;
+    }
+
+    public void setInterval(int interval) {
+        this.interval = interval;
     }
 
     public synchronized void count() {
         int value = atomicInteger.incrementAndGet();
-        LOG.info(tag + "已完成 " + value + "/" + total);
+
+        if (interval <= 1 || value % interval == 0) {
+            LOG.info(tag + "已完成 " + value + "/" + total);
+        }
 
         if (value >= total) {
+            if (interval > 1) {
+                LOG.info(tag + "已完成 " + value + "/" + total);
+            }
             LOG.info(tag + "全部完成。");
         }
     }

@@ -1,24 +1,19 @@
 package com.xz.scorep.executor.exportexcel;
 
 import com.xz.ajiaedu.common.cryption.MD5;
-import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.ajiaedu.common.xml.XmlNode;
 import com.xz.ajiaedu.common.xml.XmlNodeReader;
-import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.config.ExcelConfig;
-import com.xz.scorep.executor.project.ProjectService;
-import com.xz.scorep.executor.project.RangeService;
+import com.xz.scorep.executor.utils.AsyncCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +31,8 @@ public class ExcelReportManager implements ApplicationContextAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExcelReportManager.class);
 
+    public static final int QUEUE_SIZE = 1;
+
     private ThreadPoolExecutor executionPool;
 
     private XmlNode reportConfig;
@@ -43,17 +40,20 @@ public class ExcelReportManager implements ApplicationContextAware {
     private ApplicationContext applicationContext;
 
     @Autowired
+    private ExcelConfigParser excelConfigParser;
+
+    @Autowired
     private ExcelConfig excelConfig;
 
-    @Autowired
-    private RangeService rangeService;
-
-    @Autowired
-    private ProjectService projectService;
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     @PostConstruct
     public void init() {
-        this.executionPool = newBlockingThreadPoolExecutor(excelConfig.getPoolSize(), excelConfig.getPoolSize(), 100);
+        int poolSize = excelConfig.getPoolSize();
+        this.executionPool = newBlockingThreadPoolExecutor(poolSize, poolSize, QUEUE_SIZE);
         this.reportConfig = XmlNodeReader.read(getClass().getResourceAsStream("/report/config/report-config.xml"));
         if (StringUtil.isEmpty(excelConfig.getSavePath())) {
             throw new IllegalStateException("报表输出路径为空");
@@ -65,22 +65,26 @@ public class ExcelReportManager implements ApplicationContextAware {
      *
      * @param projectId 项目ID
      */
-    public void generateReports(final String projectId, boolean async) {
+    void generateReports(final String projectId, boolean async) {
 
+        int poolSize = excelConfig.getPoolSize();
         List<ReportTask> reportTasks = createReportGenerators(projectId);
-        ThreadPoolExecutor pool = async ? executionPool : newBlockingThreadPoolExecutor(10, 10, 100);
+        AsyncCounter counter = new AsyncCounter("生成报表", reportTasks.size(), 100);
+        ThreadPoolExecutor pool = async ? executionPool : newBlockingThreadPoolExecutor(poolSize, poolSize, QUEUE_SIZE);
 
         for (final ReportTask reportTask : reportTasks) {
             Runnable runnable = () -> {
                 try {
-                    String filePath = reportTask.getCategory() + "/" + reportTask.getFilePathWithRange() + ".xlsx";
+                    String filePath = reportTask.getCategory() + "/" + reportTask.getFileName();
                     String saveFilePath = getSaveFilePath(projectId, excelConfig.getSavePath(), filePath);
 
-                    LOG.info("开始生成报表 " + reportTask + ", 路径：" + saveFilePath);
-                    reportTask.getReportGenerator().generate(projectId, reportTask.getRange(), reportTask.getTarget(), saveFilePath);
+                    ReportGenerator reportGenerator = applicationContext.getBean(reportTask.getGeneratorClass());
+                    reportGenerator.generate(projectId, reportTask.getRange(), reportTask.getTarget(), saveFilePath);
 
                 } catch (Exception e) {
                     LOG.error("生成报表失败", e);
+                } finally {
+                    counter.count();
                 }
             };
 
@@ -105,86 +109,7 @@ public class ExcelReportManager implements ApplicationContextAware {
     }
 
     public List<ReportTask> createReportGenerators(String projectId) {
-
-        List<XmlNode> reportSets = reportConfig.getChildren(xmlNode ->
-                xmlNode.getTagName().equals("report-set") && xmlNode.getString("id").equals(projectId));
-
-        if (reportSets.isEmpty()) {
-            reportSets = reportConfig.getChildren(xmlNode ->
-                    xmlNode.getTagName().equals("report-set") && xmlNode.getString("id").equals("default"));
-        }
-
-        XmlNode reportSet = reportSets.get(0);
-        List<ReportTask> reportTasks = new ArrayList<>();
-
-        try {
-            String province = projectService.getProjectProvince(projectId);
-            Context context = new Context().put("projectId", projectId);
-            iterateReportSet(context, reportSet, "", reportTasks, Range.province(province));
-        } catch (Exception e) {
-            throw new ExcelReportException(e);
-        }
-        return reportTasks;
-    }
-
-    protected void iterateReportSet(
-            Context context, XmlNode xmlNode, String category, List<ReportTask> reportTasks, Range range) throws Exception {
-
-        String projectId = context.get("projectId");
-        String nodeName = xmlNode.getString("name");
-        String nodeRange = xmlNode.getString("range");
-
-        if (xmlNode.getTagName().equals("report-category")) {
-            if (nodeRange != null && !(nodeRange.equals("province"))) {
-                List<Range> rangeList = rangeService.queryRanges(projectId, nodeRange);
-                for (Range _r : rangeList) {
-                    for (XmlNode child : xmlNode.getChildren()) {
-                        String parsedNodeName = nodeName.replace("{{name}}", _r.getName());
-                        iterateReportSet(context, child, category + "/" + parsedNodeName, reportTasks, _r);
-                    }
-                }
-            } else {
-                for (XmlNode child : xmlNode.getChildren()) {
-                    context.put("category", category + "/" + nodeName);
-                    iterateReportSet(context, child, category + "/" + nodeName, reportTasks, range);
-                }
-            }
-
-
-        } else if (xmlNode.getTagName().equals("report")) {
-            String filename = nodeName;
-            String reportClassNameSuffix = xmlNode.getString("class");
-            String reportClassNamePrefix = context.get("basePackage");
-            String reportClassName = reportClassNamePrefix + reportClassNameSuffix;
-
-            ReportGenerator reportGenerator = getReportGenerator(category, reportClassName);
-            if (reportGenerator != null) {
-                reportTasks.add(createReportTasks(category, filename, reportGenerator, range));
-            }
-
-        } else {  // reportSet
-
-            String basePackage = xmlNode.getString("base");
-            for (XmlNode child : xmlNode.getChildren()) {
-                context.put("basePackage", basePackage);
-                iterateReportSet(context, child, category, reportTasks, range);
-            }
-
-        }
-    }
-
-    private ReportGenerator getReportGenerator(String category, String reportClassName) {
-        try {
-            return (ReportGenerator) this.applicationContext.getBean(Class.forName(reportClassName));
-        } catch (ClassNotFoundException e) {
-            LOG.error("Report class missing: " + category + "|" + reportClassName);
-            return null;
-        }
-    }
-
-    private ReportTask createReportTasks(
-            String category, String filename, ReportGenerator reportGenerator, Range range) {
-        return new ReportTask(reportGenerator, category, filename, range, null);
+        return excelConfigParser.parse(projectId, this.reportConfig);
     }
 
     /**
@@ -201,10 +126,5 @@ public class ExcelReportManager implements ApplicationContextAware {
 
         return StringUtil.joinPaths(savePath,
                 md5.substring(0, 2), md5.substring(2, 4), projectId, filePath);
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
     }
 }

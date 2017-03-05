@@ -61,7 +61,7 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
     private void startAggregation(String projectId, ThreadPoolExecutor pool) {
         List<ExamQuest> examQuests = questService.queryQuests(projectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
-        AsyncCounter counter = new AsyncCounter(examQuests.size(), "统计科目主客观题得分");
+        AsyncCounter counter = new AsyncCounter("统计科目主客观题得分", examQuests.size());
 
         examQuests.forEach(examQuest -> {
             boolean objective = examQuest.isObjective();

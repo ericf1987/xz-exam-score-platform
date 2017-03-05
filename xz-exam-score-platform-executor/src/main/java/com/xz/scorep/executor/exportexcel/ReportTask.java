@@ -12,7 +12,7 @@ import com.xz.scorep.executor.bean.Target;
  */
 public class ReportTask {
 
-    private ReportGenerator reportGenerator;
+    private Class<? extends ReportGenerator> generatorClass;
 
     private String category;
 
@@ -22,8 +22,8 @@ public class ReportTask {
 
     private Target target;
 
-    public ReportTask(ReportGenerator reportGenerator, String category, String filename, Range range, Target target) {
-        this.reportGenerator = reportGenerator;
+    public ReportTask(Class<? extends ReportGenerator> generatorClass, String category, String filename, Range range, Target target) {
+        this.generatorClass = generatorClass;
         this.category = category;
         this.filename = filename;
         this.range = range;
@@ -38,12 +38,12 @@ public class ReportTask {
         this.range = range;
     }
 
-    public ReportGenerator getReportGenerator() {
-        return reportGenerator;
+    public Class<? extends ReportGenerator> getGeneratorClass() {
+        return generatorClass;
     }
 
-    public void setReportGenerator(ReportGenerator reportGenerator) {
-        this.reportGenerator = reportGenerator;
+    public void setGeneratorClass(Class<? extends ReportGenerator> generatorClass) {
+        this.generatorClass = generatorClass;
     }
 
     public String getCategory() {
@@ -54,7 +54,7 @@ public class ReportTask {
         this.category = category;
     }
 
-    public String getFilePathWithRange() {
+    public String getFileName() {
         return filename;
     }
 
@@ -73,7 +73,7 @@ public class ReportTask {
     @Override
     public String toString() {
         return "ReportTask{" +
-                "reportGenerator=" + reportGenerator +
+                "generatorClass=" + generatorClass +
                 ", category='" + category + '\'' +
                 ", filename='" + filename + '\'' +
                 ", range=" + range +

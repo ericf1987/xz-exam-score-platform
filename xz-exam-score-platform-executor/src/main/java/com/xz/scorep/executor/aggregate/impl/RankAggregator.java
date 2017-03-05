@@ -91,7 +91,7 @@ public class RankAggregator extends Aggregator {
 
         ////////////////////////////////////////////////////////////// 整体排名
 
-        AsyncCounter provinceCounter = new AsyncCounter(subjectIdList.size() + 1, "考试整体排名");
+        AsyncCounter provinceCounter = new AsyncCounter("考试整体排名", subjectIdList.size() + 1);
 
         submitExecution(pool, provinceCounter, projectDao, INSERT_TEMPLATE
                 .replace("{{score_table}}", "score_project")
@@ -112,7 +112,7 @@ public class RankAggregator extends Aggregator {
                 .stream().map(ProjectSchool::getId).collect(Collectors.toList());
 
         int schoolTotal = schoolIds.size() * (subjectIdList.size() + 1);
-        AsyncCounter schoolCounter = new AsyncCounter(schoolTotal, "考试学校排名");
+        AsyncCounter schoolCounter = new AsyncCounter("考试学校排名", schoolTotal);
 
         schoolIds.forEach(schoolId -> {
 
@@ -138,7 +138,7 @@ public class RankAggregator extends Aggregator {
                 .stream().map(ProjectClass::getId).collect(Collectors.toList());
 
         int classTotal = classIds.size() * (subjectIdList.size() + 1);
-        AsyncCounter classCounter = new AsyncCounter(classTotal, "考试班级排名");
+        AsyncCounter classCounter = new AsyncCounter("考试班级排名", classTotal);
 
         classIds.forEach(classId -> {
 
