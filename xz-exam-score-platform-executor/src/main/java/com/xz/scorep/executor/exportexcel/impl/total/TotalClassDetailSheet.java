@@ -9,7 +9,6 @@ import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.impl.subject.SheetContextHelper;
 import com.xz.scorep.executor.exportexcel.impl.subject.SubjectSchoolDetailSheet0;
 import com.xz.scorep.executor.project.QuestService;
-import com.xz.scorep.executor.utils.Direction;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -17,9 +16,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Author: luckylo
- * Date : 2017-03-03
+ * Date : 2017-03-06
  */
-public abstract class TotalSchoolDetailSheet extends SheetGenerator {
+public abstract class TotalClassDetailSheet extends SheetGenerator {
+
 
     public static String QUERY_STUDENT_RANK = "select \n" +
             "student.id as student_id," +
@@ -32,7 +32,8 @@ public abstract class TotalSchoolDetailSheet extends SheetGenerator {
             "{{table}},\n" +
             "rank_class,\n" +
             "rank_school,\n" +
-            "rank_province\n" +
+            "rank_province,\n" +
+            "class \n" +
             "where \n" +
             "student.id = {{table}}.student_id \n" +
             "and student.id = rank_class.student_id\n" +
@@ -41,25 +42,26 @@ public abstract class TotalSchoolDetailSheet extends SheetGenerator {
             "and rank_school.subject_id = '{{subjectId}}'\n" +
             "and student.id = rank_province.student_id\n" +
             "and rank_province.subject_id = '{{subjectId}}'\n" +
-            "and student.school_id ='{{schoolId}}'";
+            "and student.school_id = class.school_id\n" +
+            "and student.class_id = '{{classId}}'";
 
-    @Autowired
-    StudentQuery studentQuery;
 
     @Autowired
     DAOFactory daoFactory;
 
     @Autowired
+    StudentQuery studentQuery;
+
+    @Autowired
     QuestService questService;
 
-    //总成排名
-    protected void generateTotalScoreRankSheet(SheetContext sheetContext) {
-        String projectId = sheetContext.getProjectId();
 
+    protected void generateTotalSheet(SheetContext sheetContext) {
         sheetContext.tableSetKey("student_id");
-        //填充学生基本信息
+        //学生基本信息
         SheetContextHelper.fillStudentBasicInfo(sheetContext, studentQuery);
 
+        String projectId = sheetContext.getProjectId();
         DAO dao = daoFactory.getProjectDao(projectId);
 
         AtomicInteger colIndex = new AtomicInteger(5);
@@ -72,22 +74,15 @@ public abstract class TotalSchoolDetailSheet extends SheetGenerator {
         sheetContext.saveData();
     }
 
-    //单科成绩Sheet
-    protected void generateEachSubjectSheet(SheetContext sheetContext) {
-        SubjectSchoolDetailSheet0.generateSheet0(sheetContext, studentQuery, questService);
-    }
-
     private void totalScoreRank(DAO dao, SheetContext sheetContext, AtomicInteger colIndex) {
         String subjectId = getSubjectId(sheetContext);
-        String schoolId = getSchoolId(sheetContext);
-
-        fillSubjectTableHeader("总分", sheetContext, subjectId, colIndex);
-
+        String classId = getClassId(sheetContext);
+        TotalSchoolDetailSheet.fillSubjectTableHeader("总分", sheetContext, subjectId, colIndex);
         //学生总成绩排名...
         String totalSql = QUERY_STUDENT_RANK
                 .replace("{{table}}", "score_project")
                 .replace("{{subjectId}}", subjectId)
-                .replace("{{schoolId}}", schoolId);
+                .replace("{{classId}}",classId);
         List<Row> rows = dao.query(totalSql);
         sheetContext.rowAdd(rows);
 
@@ -96,42 +91,23 @@ public abstract class TotalSchoolDetailSheet extends SheetGenerator {
             String rowId = row.getString("id");
             String rowName = row.getString("name");
 
-            fillSubjectTableHeader(rowName, sheetContext, rowId, colIndex);
+            TotalSchoolDetailSheet.fillSubjectTableHeader(rowName, sheetContext, rowId, colIndex);
             //学生单科成绩排名...
             String eachSql = QUERY_STUDENT_RANK
                     .replace("{{table}}", "score_subject_" + rowId)
                     .replace("{{subjectId}}", rowId)
-                    .replace("{{schoolId}}", schoolId);
+                    .replace("{{classId}}", classId);
 
             sheetContext.rowAdd(dao.query(eachSql));
         }
     }
 
-    public static void fillSubjectTableHeader(String cellName, SheetContext sheetContext, String subjectId, AtomicInteger columnIndex) {
-        sheetContext.headerPut(cellName, 1, 4);
-        sheetContext.headerMove(Direction.DOWN);
 
-        String text = subjectId.equals("000") ? "总得分" : "得分";
-        sheetContext.headerPut(text, 1, 1);
-        sheetContext.columnSet(columnIndex.getAndIncrement(), "total_score_" + subjectId);
-        sheetContext.headerMove(Direction.RIGHT);
-
-        sheetContext.headerPut("班排名", 1, 1);
-        sheetContext.columnSet(columnIndex.getAndIncrement(), "class_rank_" + subjectId);
-        sheetContext.headerMove(Direction.RIGHT);
-
-        sheetContext.headerPut("校排名", 1, 1);
-        sheetContext.columnSet(columnIndex.getAndIncrement(), "school_rank_" + subjectId);
-        sheetContext.headerMove(Direction.RIGHT);
-
-        sheetContext.headerPut("总排名", 1, 1);
-        sheetContext.columnSet(columnIndex.getAndIncrement(), "province_rank_" + subjectId);
-        sheetContext.headerMove(Direction.RIGHT, Direction.UP);
+    protected void generateEachSubjectSheet(SheetContext sheetContext) {
+        SubjectSchoolDetailSheet0.generateSheet0(sheetContext, studentQuery, questService);
     }
 
     protected abstract String getSubjectId(SheetContext sheetContext);
 
-    protected abstract String getSchoolId(SheetContext sheetContext);
-
-    protected abstract String getSubjectName(SheetContext sheetContext);
+    protected abstract String getClassId(SheetContext sheetContext);
 }
