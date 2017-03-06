@@ -1,10 +1,13 @@
 package com.xz.scorep.executor.project;
 
+import com.hyd.simplecache.SimpleCache;
 import com.xz.scorep.executor.bean.ProjectSchool;
+import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -12,6 +15,9 @@ public class SchoolService {
 
     @Autowired
     private DAOFactory daoFactory;
+
+    @Autowired
+    CacheFactory cacheFactory;
 
     public void saveSchool(String projectId, ProjectSchool school) {
         String sql = "insert into school(id,name,area,city,province) values(?,?,?,?,?)";
@@ -25,11 +31,21 @@ public class SchoolService {
     }
 
     public ProjectSchool findSchool(String projectId, String schoolId) {
-        return daoFactory.getProjectDao(projectId).queryFirst(
-                ProjectSchool.class, "select * from school where id=?", schoolId);
+        SimpleCache cache = cacheFactory.getProjectCache(projectId);
+        String cacheKey = "school:" + schoolId;
+
+        return cache.get(cacheKey, () ->
+                daoFactory.getProjectDao(projectId).queryFirst(
+                        ProjectSchool.class, "select * from school where id=?", schoolId));
+
     }
 
     public List<ProjectSchool> listSchool(String projectId) {
-        return daoFactory.getProjectDao(projectId).query(ProjectSchool.class, "select * from school");
+        SimpleCache cache = cacheFactory.getProjectCache(projectId);
+        String cacheKey = "school_list";
+
+        return cache.get(cacheKey, () ->
+                new ArrayList<>(daoFactory.getProjectDao(projectId).query(
+                        ProjectSchool.class, "select * from school")));
     }
 }

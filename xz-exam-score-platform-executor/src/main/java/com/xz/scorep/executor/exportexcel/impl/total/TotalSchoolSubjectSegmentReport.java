@@ -20,6 +20,6 @@ public class TotalSchoolSubjectSegmentReport extends ReportGenerator {
         String subjectName = target.getName();
 
         return Collections.singletonList(
-                new SheetTask(subjectName, ScoreDistributionSheet.class, range, target));
+                new SheetTask(subjectName, TotalDistributionSheet.class, range, target));
     }
 }

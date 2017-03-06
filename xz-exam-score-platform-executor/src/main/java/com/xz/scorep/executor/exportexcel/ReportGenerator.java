@@ -61,8 +61,6 @@ public abstract class ReportGenerator {
         } catch (Throwable e) {
             LOG.error("生成报表失败", e);
         }
-
-        LOG.info("生成报表 " + this.getClass() + " 结束。");
     }
 
     private void initSheet(Sheet sheet) {

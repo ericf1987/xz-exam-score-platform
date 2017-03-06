@@ -69,7 +69,7 @@ public class ExcelReportManager implements ApplicationContextAware {
 
         int poolSize = excelConfig.getPoolSize();
         List<ReportTask> reportTasks = createReportGenerators(projectId);
-        AsyncCounter counter = new AsyncCounter("生成报表", reportTasks.size(), 100);
+        AsyncCounter counter = new AsyncCounter("生成报表", reportTasks.size(), 20);
         ThreadPoolExecutor pool = async ? executionPool : newBlockingThreadPoolExecutor(poolSize, poolSize, QUEUE_SIZE);
 
         for (final ReportTask reportTask : reportTasks) {
@@ -82,7 +82,7 @@ public class ExcelReportManager implements ApplicationContextAware {
                     reportGenerator.generate(projectId, reportTask.getRange(), reportTask.getTarget(), saveFilePath);
 
                 } catch (Exception e) {
-                    LOG.error("生成报表失败", e);
+                    LOG.error("生成报表失败: reportTask=" + reportTask, e);
                 } finally {
                     counter.count();
                 }

@@ -1,11 +1,14 @@
 package com.xz.scorep.executor.project;
 
 import com.hyd.dao.DAO;
+import com.hyd.simplecache.SimpleCache;
 import com.xz.scorep.executor.bean.ExamSubject;
+import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +46,9 @@ public class SubjectService {
     @Autowired
     private DAOFactory daoFactory;
 
+    @Autowired
+    private CacheFactory cacheFactory;
+
     public void clearSubjects(String projectId) {
         daoFactory.getProjectDao(projectId).execute("truncate table subject");
     }
@@ -77,7 +83,11 @@ public class SubjectService {
     }
 
     public List<ExamSubject> listSubjects(String projectId) {
-        return daoFactory.getProjectDao(projectId).query(ExamSubject.class, "select * from subject");
+        SimpleCache cache = cacheFactory.getProjectCache(projectId);
+        String cacheKey = "subjects:";
+        return cache.get(cacheKey, () ->
+                new ArrayList<>(daoFactory.getProjectDao(projectId)
+                        .query(ExamSubject.class, "select * from subject")));
     }
 
     public static String getSubjectName(String subjectId) {

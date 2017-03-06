@@ -1,18 +1,25 @@
 package com.xz.scorep.executor.project;
 
+import com.hyd.simplecache.SimpleCache;
 import com.xz.ajiaedu.common.lang.NaturalOrderComparator;
 import com.xz.scorep.executor.bean.ExamQuest;
+import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class QuestService {
 
     @Autowired
     private DAOFactory daoFactory;
+
+    @Autowired
+    private CacheFactory cacheFactory;
 
     public void clearQuests(String projectId) {
         daoFactory.getProjectDao(projectId).execute("truncate table quest");
@@ -27,22 +34,27 @@ public class QuestService {
     }
 
     public List<ExamQuest> queryQuests(String projectId) {
-        return fixQuestList(daoFactory.getProjectDao(projectId).query(ExamQuest.class, "select * from quest"));
+        SimpleCache cache = cacheFactory.getProjectCache(projectId);
+        String cacheKey = "quests:";
+
+        return cache.get(cacheKey, () ->
+                fixQuestList(daoFactory.getProjectDao(projectId).query(ExamQuest.class, "select * from quest")));
     }
 
     public List<ExamQuest> queryQuests(String projectId, String subjectId) {
-        return fixQuestList(daoFactory.getProjectDao(projectId).query(
-                ExamQuest.class, "select * from quest where exam_subject=?", subjectId));
+        return queryQuests(projectId).stream()
+                .filter(q -> q.getExamSubject().equals(subjectId))
+                .collect(Collectors.toList());
     }
 
     public List<ExamQuest> queryQuests(String projectId, String subjectId, boolean objective) {
-        return fixQuestList(daoFactory.getProjectDao(projectId).query(
-                ExamQuest.class, "select * from quest where exam_subject=? and objective=?",
-                subjectId, Boolean.toString(objective)));
+        return queryQuests(projectId).stream()
+                .filter(q -> q.getExamSubject().equals(subjectId) && q.isObjective() == objective)
+                .collect(Collectors.toList());
     }
 
-    private List<ExamQuest> fixQuestList(List<ExamQuest> list) {
+    private ArrayList<ExamQuest> fixQuestList(List<ExamQuest> list) {
         list.sort(NaturalOrderComparator.getComparator(ExamQuest::getQuestNo));
-        return list;
+        return new ArrayList<>(list);
     }
 }

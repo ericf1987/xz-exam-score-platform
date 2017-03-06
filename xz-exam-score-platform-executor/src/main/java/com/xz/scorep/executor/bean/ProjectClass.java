@@ -2,13 +2,15 @@ package com.xz.scorep.executor.bean;
 
 import com.alibaba.fastjson.JSONObject;
 
+import java.io.Serializable;
+
 /**
  * (description)
  * created at 2017/2/4
  *
  * @author yidin
  */
-public class ProjectClass {
+public class ProjectClass implements Serializable {
 
     private String id;
 

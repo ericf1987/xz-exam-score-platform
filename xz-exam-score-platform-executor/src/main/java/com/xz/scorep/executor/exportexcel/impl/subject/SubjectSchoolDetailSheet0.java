@@ -54,7 +54,7 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
 
         //////////////////////////////////////////////////////////////
 
-        sheetContext.rowSortBy("class_name", "rank_class_" + subjectId);
+        sheetContext.rowSortBy("rank_school_" + subjectId);
         sheetContext.saveData();
         sheetContext.freeze(2, 3);
     }

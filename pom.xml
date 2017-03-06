@@ -31,6 +31,8 @@
         <ajiaedu.common.version>3.0-SNAPSHOT</ajiaedu.common.version>
         <hydrogen.dao.version>2.5.0-SNAPSHOT</hydrogen.dao.version>
         <poi.version>3.15</poi.version>
+        <simple-cache.version>2.3.0-SNAPSHOT</simple-cache.version>
+        <ehcache-core.version>2.6.11</ehcache-core.version>
     </properties>
 
     <parent>
@@ -80,6 +82,19 @@
                 <artifactId>poi-ooxml-schemas</artifactId>
                 <version>${poi.version}</version>
             </dependency>
+
+            <!-- Cache -->
+            <dependency>
+                <groupId>com.hyd</groupId>
+                <artifactId>simple-cache</artifactId>
+                <version>${simple-cache.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.sf.ehcache</groupId>
+                <artifactId>ehcache-core</artifactId>
+                <version>${ehcache-core.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

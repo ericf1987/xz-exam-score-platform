@@ -5,6 +5,8 @@ import com.xz.scorep.executor.bean.ExamQuest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+
 /**
  * (description)
  * created at 2017/2/6
@@ -27,4 +29,12 @@ public class QuestServiceTest extends BaseTest {
         questService.saveQuest("project1", examQuest);
     }
 
+    @Test
+    public void testQueryQuest() throws Exception {
+        List<ExamQuest> examQuests;
+        examQuests = questService.queryQuests(PROJECT_ID, "001", true);
+        examQuests = questService.queryQuests(PROJECT_ID, "001", true);
+        examQuests = questService.queryQuests(PROJECT_ID, "001", true);
+        examQuests = questService.queryQuests(PROJECT_ID, "001", true);
+    }
 }

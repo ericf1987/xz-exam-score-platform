@@ -1,12 +1,14 @@
 package com.xz.scorep.executor.bean;
 
+import java.io.Serializable;
+
 /**
  * (description)
  * created at 2017/2/4
  *
  * @author yidin
  */
-public class ProjectSchool {
+public class ProjectSchool implements Serializable {
 
     private String id;
 

@@ -60,4 +60,14 @@ public class SheetTask extends Context {
     public void setGeneratorClass(Class<? extends SheetGenerator> generatorClass) {
         this.generatorClass = generatorClass;
     }
+
+    @Override
+    public String toString() {
+        return "SheetTask{" +
+                "title='" + title + '\'' +
+                ", generatorClass=" + generatorClass +
+                ", range=" + range +
+                ", target=" + target +
+                '}';
+    }
 }

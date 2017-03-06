@@ -15,11 +15,7 @@ import java.util.stream.Collectors;
 @Component
 public class StudentQuery {
 
-    public static final String RANGE_CLASS_TEMPLATE = "s.class_id='{{class}}' AND";
-
-    public static final String RANGE_SCHOOL_TEMPLATE = "s.school_id='{{school}}' AND";
-
-    public static final String SUBJECT_SCORE_RANK_TEMPLATE = "select \n" +
+    private static final String SUBJECT_SCORE_RANK_TEMPLATE = "select \n" +
             "  s.id as student_id,\n" +
             "  ss.score as total_{{subject}},\n" +
             "  sbj.score as subjective_{{subject}},\n" +

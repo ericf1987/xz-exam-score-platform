@@ -23,7 +23,7 @@ import java.util.List;
  * 填充各种 Range 和 Target 的分数分布表
  */
 @Component
-public class ScoreDistributionSheet extends SheetGenerator {
+public class TotalDistributionSheet extends SheetGenerator {
 
     private static final String ITEM_ID = "item_id";
 
@@ -35,6 +35,10 @@ public class ScoreDistributionSheet extends SheetGenerator {
         String projectId = sheetContext.getProjectId();
         SheetTask sheetTask = sheetContext.getSheetTask();
         DAO projectDao = this.getProjectDao(projectId);
+
+        if (sheetTask.getTarget() == null) {
+            throw new IllegalStateException("target is null: " + sheetTask);
+        }
 
         generateSheet0(sheetContext, projectDao, sheetTask.getRange(), sheetTask.getTarget());
     }

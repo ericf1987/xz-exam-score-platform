@@ -1,18 +1,24 @@
 package com.xz.scorep.executor.project;
 
-import com.xz.ajiaedu.common.lang.NaturalOrderComparator;
+import com.hyd.simplecache.SimpleCache;
 import com.xz.scorep.executor.bean.ProjectClass;
+import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ClassService {
 
     @Autowired
     private DAOFactory daoFactory;
+
+    @Autowired
+    private CacheFactory cacheFactory;
 
     public void saveClass(String projectId, ProjectClass projectClass) {
         daoFactory.getProjectDao(projectId).insert(projectClass, "class");
@@ -26,17 +32,18 @@ public class ClassService {
         daoFactory.getProjectDao(projectId).execute("truncate table class");
     }
 
-    public List<ProjectClass> listClasses(String projectId, String schoolId) {
-        List<ProjectClass> classes = daoFactory.getProjectDao(projectId).query(
-                ProjectClass.class, "select * from class where school_id=?", schoolId);
+    public List<ProjectClass> listClasses(String projectId) {
+        SimpleCache cache = cacheFactory.getProjectCache(projectId);
+        String cacheKey = "classes:";
 
-        classes.sort((c1, c2) -> new NaturalOrderComparator().compare(c1.fixedName(), c2.fixedName()));
-
-        return classes;
+        return cache.get(cacheKey, () ->
+                new ArrayList<>(daoFactory.getProjectDao(projectId)
+                        .query(ProjectClass.class, "select * from class")));
     }
 
-    public List<ProjectClass> listClasses(String projectId) {
-        return daoFactory.getProjectDao(projectId).query(
-                ProjectClass.class, "select * from class");
+    public List<ProjectClass> listClasses(String projectId, String schoolId) {
+        return listClasses(projectId).stream()
+                .filter(c -> c.getSchoolId().equals(schoolId))
+                .collect(Collectors.toList());
     }
 }

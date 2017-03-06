@@ -26,7 +26,10 @@ public abstract class SheetGenerator {
         sheetContext.setProject(project);
         sheetContext.setExcelWriter(excelWriter);
         sheetContext.setSheetTask(sheetTask);
+
+        long start = System.currentTimeMillis();
         generateSheet(sheetContext);
+        long duration = System.currentTimeMillis() - start;
     }
 
     protected abstract void generateSheet(SheetContext sheetContext) throws Exception;

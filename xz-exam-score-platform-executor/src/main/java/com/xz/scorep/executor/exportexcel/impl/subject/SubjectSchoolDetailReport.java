@@ -15,9 +15,8 @@ public class SubjectSchoolDetailReport extends ReportGenerator {
     @Override
     protected List<SheetTask> getSheetTasks(String projectId, Range range, Target target) {
 
-        SheetTask sheetTask = new SheetTask("成绩排名", SubjectSchoolDetailSheet0.class);
-        sheetTask.setRange(range);
-        sheetTask.setTarget(target);
+        SheetTask sheetTask = new SheetTask(
+                "成绩排名", SubjectSchoolDetailSheet0.class, range, target);
 
         return Collections.singletonList(sheetTask);
     }

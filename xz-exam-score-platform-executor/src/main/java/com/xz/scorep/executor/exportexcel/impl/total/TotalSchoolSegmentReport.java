@@ -18,6 +18,6 @@ public class TotalSchoolSegmentReport extends ReportGenerator {
     @Override
     protected List<SheetTask> getSheetTasks(String projectId, Range range, Target target) {
         return Collections.singletonList(new SheetTask(
-                "全部科目（总分）", ScoreDistributionSheet.class, range, target));
+                "全部科目（总分）", TotalDistributionSheet.class, range, Target.project(projectId)));
     }
 }

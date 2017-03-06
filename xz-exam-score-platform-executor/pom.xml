@@ -57,6 +57,15 @@
             <artifactId>mongo-java-driver</artifactId>
         </dependency>
 
+        <!-- Cache -->
+        <dependency>
+            <groupId>com.hyd</groupId>
+            <artifactId>simple-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.ehcache</groupId>
+            <artifactId>ehcache-core</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
