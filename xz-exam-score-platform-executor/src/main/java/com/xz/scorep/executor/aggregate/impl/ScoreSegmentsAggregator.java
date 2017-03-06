@@ -54,6 +54,18 @@ public class ScoreSegmentsAggregator extends Aggregator {
             "  order by score\n" +
             ") a group by school_id,minscore,maxscore";
 
+    private static final String CLASS_PROJECT_SEGMENT = "select class_id, a.minscore, a.maxscore, count(1) as `count` from (\n" +
+            "  select\n" +
+            "    class.id as class_id,\n" +
+            SEGMENT_SELECTION +
+            "  from score_project, student, class,\n" +
+            "    (select @step := {{step}}) x\n" +
+            "  where\n" +
+            "    score_project.student_id=student.id and\n" +
+            "    student.class_id=class.id\n" +
+            "  order by score\n" +
+            ") a group by class_id,minscore,maxscore";
+
     private static final String PROVINCE_SUBJECT_SEGMENT = "select a.minscore, a.maxscore, count(1) as `count` from (\n" +
             "  select\n" +
             "    student_id, score,\n" +
@@ -75,6 +87,18 @@ public class ScoreSegmentsAggregator extends Aggregator {
             "    class.school_id=school.id\n" +
             "  order by score\n" +
             ") a group by school_id,minscore,maxscore";
+
+    private static final String CLASS_SUBJECT_SEGMENT = "select class_id, a.minscore, a.maxscore, count(1) as `count` from (\n" +
+            "  select\n" +
+            "    class.id as class_id,\n" +
+            SEGMENT_SELECTION +
+            "  from score_subject_{{subject}}, student, class,\n" +
+            "    (select @step := {{step}}) x\n" +
+            "  where\n" +
+            "    score_subject_{{subject}}.student_id=student.id and\n" +
+            "    student.class_id=class.id\n" +
+            "  order by score\n" +
+            ") a group by class_id,minscore,maxscore";
 
     @Autowired
     private SubjectService subjectService;
@@ -125,6 +149,20 @@ public class ScoreSegmentsAggregator extends Aggregator {
 
         projectDao.insert(schoolSegmentRows, "segments");
         LOG.info("项目 {} 的科目 {} 学校科目成绩分段统计完成", projectId, subjectId);
+
+        //////////////////////////////////////////////////////////////
+
+        // 班级科目成绩分段
+        String classSql = CLASS_SUBJECT_SEGMENT.replace("{{step}}", "10").replace("{{subject}}", subjectId);
+        List<Map<String, Object>> classSegmentRows = new ArrayList<>();
+
+        projectDao.query(classSql).forEach(row -> {
+            String classId = row.getString("class_id");
+            classSegmentRows.add(createCountMap(row, Range.clazz(classId), Target.subject(subjectId)));
+        });
+
+        projectDao.insert(classSegmentRows, "segments");
+        LOG.info("项目 {} 的科目 {} 班级科目成绩分段统计完成", projectId, subjectId);
     }
 
     private void aggrTotalScoreSegments(String projectId, DAO projectDao) {
@@ -149,6 +187,19 @@ public class ScoreSegmentsAggregator extends Aggregator {
 
         projectDao.insert(schoolSegmentRows, "segments");
         LOG.info("项目 {} 的学校总分成绩分段统计完成", projectId);
+
+        //////////////////////////////////////////////////////////////
+
+        // 班级总分成绩分段
+        List<Map<String, Object>> classSegmentRows = new ArrayList<>();
+
+        projectDao.query(CLASS_PROJECT_SEGMENT.replace("{{step}}", "50")).forEach(row -> {
+            String classId = row.getString("class_id");
+            classSegmentRows.add(createCountMap(row, Range.clazz(classId), Target.project(projectId)));
+        });
+
+        projectDao.insert(classSegmentRows, "segments");
+        LOG.info("项目 {} 的班级总分成绩分段统计完成", projectId);
     }
 
     private Map<String, Object> createCountMap(

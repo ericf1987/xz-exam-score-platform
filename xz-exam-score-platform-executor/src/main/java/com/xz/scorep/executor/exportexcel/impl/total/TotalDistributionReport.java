@@ -26,13 +26,15 @@ public class TotalDistributionReport extends ReportGenerator {
         ArrayList<SheetTask> sheetTasks = new ArrayList<>();
 
         // 全部科目
-        sheetTasks.add(new SheetTask("全部科目(总分）", TotalDistributionSheet0.class));
+        sheetTasks.add(new SheetTask("全部科目(总分）",
+                ScoreDistributionSheet.class, Range.PROVINCE_RANGE, Target.project(projectId, "000")));
 
         // 每个科目
         List<SheetTask> subjectSheetTasks = subjectService.listSubjects(projectId)
                 .stream()
                 .map(subject -> {
-                    SheetTask sheetTask = new SheetTask(subject.getName(), TotalDistributionSheet1.class);
+                    SheetTask sheetTask = new SheetTask(subject.getName(), ScoreDistributionSheet.class);
+                    sheetTask.setRange(Range.PROVINCE_RANGE);
                     sheetTask.setTarget(Target.subject(subject.getId(), subject.getName()));
                     return sheetTask;
                 })

@@ -17,7 +17,7 @@ public class ScoreSegmentsAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        scoreSegmentsAggregator.aggregate("fake_project");
+        scoreSegmentsAggregator.aggregate(PROJECT_ID);
     }
 
 }
