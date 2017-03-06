@@ -12,8 +12,15 @@ public class CacheFactory {
 
     private Map<String, SimpleCache> cacheMap = new HashMap<>();
 
-    public synchronized SimpleCache getProjectCache(String projectId) {
-        return cacheMap.computeIfAbsent(projectId, k -> createProjectCache(projectId));
+    public SimpleCache getProjectCache(String projectId) {
+        SimpleCache result = cacheMap.get(projectId);
+        if (result != null) {
+            return result;
+        } else {
+            synchronized (cacheMap) {
+                return cacheMap.computeIfAbsent(projectId, k -> createProjectCache(projectId));
+            }
+        }
     }
 
     private SimpleCache createProjectCache(String projectId) {

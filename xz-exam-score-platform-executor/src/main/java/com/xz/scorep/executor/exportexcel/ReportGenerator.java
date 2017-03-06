@@ -25,7 +25,7 @@ public abstract class ReportGenerator {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
 
-    public static final String DEFAULT_FONT = "defaultFont";
+    private static final String DEFAULT_FONT = "defaultFont";
 
     @Autowired
     private SheetManager sheetManager;
@@ -47,8 +47,10 @@ public abstract class ReportGenerator {
             List<SheetTask> sheetTasks = getSheetTasks(projectId, range, target);
             InputStream stream = getClass().getResourceAsStream("report/templates/default.xlsx");
             ExcelWriter excelWriter = createExcelWriter(stream);
+            String className = this.getClass().getSimpleName();
 
             for (SheetTask sheetTask : sheetTasks) {
+                sheetTask.setReportName(className);
                 excelWriter.openOrCreateSheet(sheetTask.getTitle());
                 initSheet(excelWriter.getSheetByName(sheetTask.getTitle()));
                 SheetGenerator sheetGenerator = sheetManager.getSheetGenerator(sheetTask.getGeneratorClass());

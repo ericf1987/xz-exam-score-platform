@@ -4,6 +4,9 @@ import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.excel.ExcelWriter;
 import com.xz.ajiaedu.common.lang.Ranker;
 import com.xz.scorep.executor.bean.ExamProject;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -13,6 +16,11 @@ import java.util.List;
  * @author yiding_he
  */
 public abstract class SheetGenerator {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SheetGenerator.class);
+
+    private static final int SLOW = Integer.parseInt(
+            StringUtils.defaultString(System.getProperty("sheet.slow"), "2000"));
 
     /**
      * 生成 sheet
@@ -30,6 +38,11 @@ public abstract class SheetGenerator {
         long start = System.currentTimeMillis();
         generateSheet(sheetContext);
         long duration = System.currentTimeMillis() - start;
+
+        if (duration > SLOW) {
+            String className = this.getClass().getSimpleName();
+            LOG.info("报表 {" + sheetTask.getReportName() + ":" + className + "} 执行时间 " + duration + "ms");
+        }
     }
 
     protected abstract void generateSheet(SheetContext sheetContext) throws Exception;

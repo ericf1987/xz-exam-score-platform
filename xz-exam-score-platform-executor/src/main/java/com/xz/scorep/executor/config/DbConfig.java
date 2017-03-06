@@ -19,6 +19,16 @@ public class DbConfig {
 
     private String managerPass;
 
+    private int poolSize;
+
+    public int getPoolSize() {
+        return poolSize;
+    }
+
+    public void setPoolSize(int poolSize) {
+        this.poolSize = poolSize;
+    }
+
     public String getManagerUser() {
         return managerUser;
     }

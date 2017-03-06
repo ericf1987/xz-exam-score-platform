@@ -6,6 +6,8 @@ import com.xz.scorep.executor.bean.Target;
 
 public class SheetTask extends Context {
 
+    private String reportName;
+
     private String title;
 
     private Class<? extends SheetGenerator> generatorClass;
@@ -27,6 +29,14 @@ public class SheetTask extends Context {
         this.generatorClass = generatorClass;
         this.range = range;
         this.target = target;
+    }
+
+    public String getReportName() {
+        return reportName;
+    }
+
+    public void setReportName(String reportName) {
+        this.reportName = reportName;
     }
 
     public Range getRange() {

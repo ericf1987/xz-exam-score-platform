@@ -80,6 +80,7 @@ public class DAOFactory {
         dataSource.setUrl(dbConfig.getUrl(projectId));
         dataSource.setUsername(username);
         dataSource.setPassword(username);
+        dataSource.setMaxActive(dbConfig.getPoolSize());
         return dataSource;
     }
 
