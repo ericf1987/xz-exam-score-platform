@@ -174,4 +174,23 @@ public class ExamQuest {
     public void setOptions(String options) {
         this.options = options;
     }
+
+    @Override
+    public String toString() {
+        return "ExamQuest{" +
+                "id='" + id + '\'' +
+                ", examSubject='" + examSubject + '\'' +
+                ", questSubject='" + questSubject + '\'' +
+                ", questionTypeId='" + questionTypeId + '\'' +
+                ", questionTypeName='" + questionTypeName + '\'' +
+                ", objective=" + objective +
+                ", giveFullScore=" + giveFullScore +
+                ", multiChoice=" + multiChoice +
+                ", questNo='" + questNo + '\'' +
+                ", fullScore=" + fullScore +
+                ", answer='" + answer + '\'' +
+                ", scoreRule='" + scoreRule + '\'' +
+                ", options='" + options + '\'' +
+                '}';
+    }
 }

@@ -86,6 +86,12 @@ public class ProjectService {
 
         dao.execute("create table rank_class(student_id varchar(40) not null,subject_id varchar(10) not null,rank int)");
         dao.execute("create index idxrct on rank_class(student_id)");
+
+        dao.execute("create table objective_option_rate(" +
+                "quest_id varchar(40),`option` varchar(10)," +
+                "range_type varchar(10),range_id varchar(40)," +
+                "option_count int,option_rate decimal(7,4))");
+        dao.execute("create index idxoorqr on objective_option_rate(quest_id,range_type,range_id)");
     }
 
     private void createInitialTables(String projectId) {

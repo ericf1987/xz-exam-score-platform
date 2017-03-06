@@ -22,42 +22,16 @@ import java.util.*;
 @Component
 public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
 
-    public static final String PROVINCE_OPTION_RATE_TEMPLATE = "select " +
-            " a.*, a.`count`/b.total as province_rate from (\n" +
-            "  select objective_answer as `option`, count(1) as `count`\n" +
-            "  from `{{scoreTable}}` score\n" +
-            "  group by objective_answer\n" +
-            ") a, (\n" +
-            "  select count(1) as total from student\n" +
-            ") b";
+    private static final String TABLE_KEY = "quest_option";
 
-    public static final String SCHOOL_OPTION_RATE_TEMPLATE = "select " +
-            " a.*, a.`count`/b.total as school_rate from (\n" +
-            "  select objective_answer as `option`, count(1) as `count`\n" +
-            "  from `{{scoreTable}}` score, student\n" +
-            "  where score.student_id=student.id and student.school_id='{{schoolId}}'\n" +
-            "  group by objective_answer\n" +
-            ") a, (\n" +
-            "  select count(1) as total \n" +
-            "  from student\n" +
-            "  where student.school_id='{{schoolId}}'\n" +
-            ") b";
-
-    public static final String CLASS_OPTION_RATE_TEMPLATE = "select " +
-            " a.*, a.`count`/b.total as `rate` from (\n" +
-            "  select student.class_id, objective_answer as `option`, count(1) as `count`\n" +
-            "  from `{{scoreTable}}` score, student\n" +
-            "  where score.student_id=student.id and student.school_id='{{schoolId}}'\n" +
-            "  group by student.class_id, objective_answer\n" +
-            ") a, (\n" +
-            "  select student.class_id, count(1) as total \n" +
-            "  from student\n" +
-            "  where student.school_id='{{schoolId}}'\n" +
-            "  group by student.class_id\n" +
-            ") b\n" +
-            "where a.class_id=b.class_id";
-
-    public static final String TABLE_KEY = "quest_option";
+    private static final String QUERY_TEMPLATE = "select" +
+            "   a.quest_id, a.`option`, a.range_id," +
+            "   a.option_rate as {{rateAlias}}" +
+            " from objective_option_rate a, quest " +
+            " where " +
+            "   a.quest_id=quest.id and " +
+            "   quest.exam_subject=? and " +
+            "   a.range_type=?";
 
     @Autowired
     private ClassService classService;
@@ -137,32 +111,21 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        for (ExamQuest quest : objQuests) {
-            String scoreTableName = "score_" + quest.getId();
+        List<Row> provinceOptionRates = fixKey(projectDao.query(
+                QUERY_TEMPLATE.replace("{{rateAlias}}", "province_rate"),
+                subjectId, "province"));
+        sheetContext.rowAdd(provinceOptionRates);
 
-            ////////////////////////////////////////////////////////////// 全局选择率
+        List<Row> schoolOptionRates = fixKey(projectDao.query(
+                QUERY_TEMPLATE.replace("{{rateAlias}}", "school_rate"),
+                subjectId, "school"));
+        sheetContext.rowAdd(schoolOptionRates);
 
-            String totalOptionRateSql = PROVINCE_OPTION_RATE_TEMPLATE.replace("{{scoreTable}}", scoreTableName);
-            List<Row> totalOptionRates = fixKey(projectDao.query(totalOptionRateSql), quest);
-            sheetContext.rowAdd(totalOptionRates);
-
-            ////////////////////////////////////////////////////////////// 学校选择率
-
-            String schoolOptionRateSql = SCHOOL_OPTION_RATE_TEMPLATE
-                    .replace("{{scoreTable}}", scoreTableName)
-                    .replace("{{schoolId}}", schoolId);
-            List<Row> schoolOptionRates = fixKey(projectDao.query(schoolOptionRateSql), quest);
-            sheetContext.rowAdd(schoolOptionRates);
-
-
-            ////////////////////////////////////////////////////////////// 班级选择率
-
-            String classOptionRateSql = CLASS_OPTION_RATE_TEMPLATE
-                    .replace("{{scoreTable}}", scoreTableName)
-                    .replace("{{schoolId}}", schoolId);
-            List<Row> classOptionRates = fixClassRows(projectDao.query(classOptionRateSql), quest);
-            sheetContext.rowAdd(classOptionRates);
-        }
+        List<Row> classOptionRates = fixKey(projectDao.query(
+                QUERY_TEMPLATE.replace("{{rateAlias}}", "class_rate"),
+                subjectId, "class"
+        ));
+        sheetContext.rowAdd(fixClassRows(classOptionRates));
 
         sheetContext.fillEmptyCells(column -> column.contains("_rate"), "0%");
         sheetContext.rowSortBy("quest_no", "option_name");
@@ -179,28 +142,29 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
         }
     }
 
-    private List<Row> fixClassRows(List<Row> classRateRows, ExamQuest quest) {
+    private List<Row> fixClassRows(List<Row> classRateRows) {
         Map<String, Row> rowMap = new HashMap<>();
         for (Row row : classRateRows) {
-            String classId = row.getString("class_id");
-            String option = row.getString("option");
-            if (!rowMap.containsKey(option)) {
+            String classId = row.getString("range_id");
+            String rowKey = row.getString(TABLE_KEY);
+
+            if (!rowMap.containsKey(rowKey)) {
                 Row r = new Row();
-                r.put(TABLE_KEY, quest.getId() + ":" + option);
-                rowMap.put(option, r);
+                r.put(TABLE_KEY, rowKey);
+                rowMap.put(rowKey, r);
             }
 
-            Row mapRow = rowMap.get(option);
+            Row mapRow = rowMap.get(rowKey);
             String columnName = "class_rate_" + classId;
-            mapRow.put(columnName, NumberUtil.toPercent(row.getDouble("rate", 0)));
+            mapRow.put(columnName, row.getString("class_rate"));
         }
 
         return new ArrayList<>(rowMap.values());
     }
 
-    private List<Row> fixKey(List<Row> rows, ExamQuest quest) {
+    private List<Row> fixKey(List<Row> rows) {
         rows.forEach(row -> {
-            row.put(TABLE_KEY, quest.getId() + ":" + row.getString("option"));
+            row.put(TABLE_KEY, row.getString("quest_id") + ":" + row.getString("option"));
             row.keySet().forEach(key -> {
                 if (key.contains("_rate")) {
                     row.put(key, NumberUtil.toPercent(row.getDouble(key, 0)));

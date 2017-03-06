@@ -33,6 +33,11 @@ public class QuestService {
         daoFactory.getProjectDao(projectId).insert(examQuests, "quest");
     }
 
+    public ExamQuest findQuest(String projectId, String questId) {
+        return daoFactory.getProjectDao(projectId).queryFirst(
+                ExamQuest.class, "select * from quest where id=?", questId);
+    }
+
     public List<ExamQuest> queryQuests(String projectId) {
         SimpleCache cache = cacheFactory.getProjectCache(projectId);
         String cacheKey = "quests:";
@@ -44,6 +49,12 @@ public class QuestService {
     public List<ExamQuest> queryQuests(String projectId, String subjectId) {
         return queryQuests(projectId).stream()
                 .filter(q -> q.getExamSubject().equals(subjectId))
+                .collect(Collectors.toList());
+    }
+
+    public List<ExamQuest> queryQuests(String projectId, boolean objective) {
+        return queryQuests(projectId).stream()
+                .filter(q -> q.isObjective() == objective)
                 .collect(Collectors.toList());
     }
 
