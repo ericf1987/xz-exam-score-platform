@@ -74,7 +74,7 @@ public class ProjectService {
         dao.execute("create index idxavgqri on average_quest(range_id)");
 */
 
-        dao.execute("create table all_pass_or_fail (range_type varchar(20), range_id varchar(40),all_pass_count int(11),all_pass_rate decimal(5,4),all_fail_count int(11),all_fail_rate decimal(5,4))");
+        dao.execute("create table all_pass_or_fail (range_type varchar(20), range_id varchar(40),all_pass_count int(11),all_pass_rate decimal(5,2),all_fail_count int(11),all_fail_rate decimal(5,2))");
         dao.execute("create index idxapfri on all_pass_or_fail(range_id)");
 
         // 分数分段表

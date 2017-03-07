@@ -29,6 +29,9 @@ public abstract class TotalAverageSheet extends SheetGenerator {
 
     private static final String SUBJECT = "score_subject_";
 
+    private static final String PASS_OR_FAIL = "select range_id as school_id,concat(all_pass_rate,'%') as all_pass," +
+            " concat(all_fail_rate,'%') as all_fail,all_pass_count,all_fail_count from all_pass_or_fail where range_type = 'school'";
+
     private static String SCHOOL_PROJECT_OR_SUBJECT_INFO = "SELECT\n" +
             " a.school_id,a.school_name,a.student_count,a.max_score,\n" +
             " a.min_score,a.average_score,CONCAT(IFNULL(xlnt.xlnt, '0.00'),'%') AS excellent,\n" +
@@ -196,7 +199,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             //先按平均分排名,最后增加总计行
             accordingAverageSorting(sheetContext, rows);
 
-            double fullScore = getSubjectFullScore(dao, subjectId);
+            double fullScore = projectService.findProject(projectId).getFullScore();
             String projectTotalSql = getTotalScoreLevel(rows, fullScore, jsonObject, SUBJECT + subjectId);
 
             Row row = dao.queryFirst(projectTotalSql);
@@ -216,44 +219,16 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             sheetContext.rowAdd(overAverageRows);
 
             //全科及格率 、全科不及格率
-            List<Row> passRows = dao.query(getExecuteSql(dao, jsonObject, true));
-            List<Row> failRows = dao.query(getExecuteSql(dao, jsonObject, false));
 
-            double totalPass = 0;
-            double totalFail = 0;
-            for (Row row : rows) {
-                String schoolId = row.getString("school_id");
-                double studentCount = row.getDouble("student_count", 1);
-                boolean passFlag = false;
-                boolean failFlag = false;
+            List<Row> query = dao.query(PASS_OR_FAIL);
+            sheetContext.rowAdd(query);
 
-                for (Row passRow : passRows) {
-                    if (passRow.getString("school_id").equals(schoolId)) {
-                        passFlag = true;
-                        double count = passRow.getDouble("count", 0);
-                        totalPass += count;
-                        String passRate = String.format("%.02f%%",
-                                NumberUtil.scale(100.0 * count / studentCount, 2));
-                        sheetContext.tablePutValue(schoolId, "all_pass", passRate);
-                    }
-                }
-                for (Row failRow : failRows) {
-                    if (failRow.getString("school_id").equals(schoolId)) {
-                        failFlag = true;
-                        double count = failRow.getDouble("count", 0);
-                        totalFail += count;
-                        String failRate = String.format("%.02f%%",
-                                NumberUtil.scale(100.0 * count / studentCount, 2));
-                        sheetContext.tablePutValue(schoolId, "all_fail", failRate);
-                    }
-                }
-                if (!passFlag) {
-                    sheetContext.tablePutValue(schoolId, "all_pass", "0.00%");
-                }
-                if (!failFlag) {
-                    sheetContext.tablePutValue(schoolId, "all_fail", "0.00%");
-                }
-            }
+            int totalFail = query.stream()
+                    .mapToInt(row -> row.getInteger("all_fail_count", 0))
+                    .sum();
+            int totalPass = query.stream()
+                    .mapToInt(row->row.getInteger("all_pass_count",0))
+                    .sum();
 
             //先按平均分排名,最后增加总计行
             accordingAverageSorting(sheetContext, rows);
@@ -273,10 +248,6 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         sheetContext.saveData();// 保存到 ExcelWriter
     }
 
-    protected double getSubjectFullScore(DAO dao, String subjectId) {
-        Row row = dao.queryFirst("select full_score from subject where id = ?", subjectId);
-        return row.getDouble("full_score", 0);
-    }
 
     private void accordingAverageSorting(SheetContext sheetContext, List<Row> rows) {
         addAverageScoreRange(rows, sheetContext, "average_score", "average_range");
@@ -369,6 +340,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
     }
 
 
+
     protected abstract Map<String, String> getTableHeader();
 
     protected abstract String getTargetType(SheetContext sheetContext);
@@ -377,36 +349,6 @@ public abstract class TotalAverageSheet extends SheetGenerator {
 
     protected abstract String getSubjectId(SheetContext sheetContext);
 
-    public String getExecuteSql(DAO dao, JSONObject jsonObject, boolean pass) {
-        List<Row> subjects = dao.query("select id,full_score from subject");
-
-        StringBuffer table_name = new StringBuffer("");
-        StringBuffer sub = new StringBuffer("");
-        StringBuffer passStr = new StringBuffer("");
-        StringBuffer failStr = new StringBuffer("");
-
-        for (Row row : subjects) {
-            String id = row.getString("id");
-            double subjectScore = row.getDouble("full_score", 0) * jsonObject.getDouble("Pass");
-
-            table_name.append("," + SUBJECT + id);
-            sub.append("AND " + SUBJECT + id + ".student_id = " + "student.id ");
-            passStr.append(" AND " + SUBJECT + id + ".score >= " + subjectScore);
-            failStr.append(" AND " + SUBJECT + id + ".score < " + subjectScore);
-        }
-
-        if (pass) {
-            return ALL_SUBJECT_PASS_OR_FAIL
-                    .replace("{{table_name}}", table_name.toString())
-                    .replace("{{sub}}", sub.toString())
-                    .replace("{{passOrFail}}", passStr.toString());
-        } else {
-            return ALL_SUBJECT_PASS_OR_FAIL
-                    .replace("{{table_name}}", table_name.toString())
-                    .replace("{{sub}}", sub.toString())
-                    .replace("{{passOrFail}}", failStr.toString());
-        }
-    }
 
     private String getTotalScoreLevel(List<Row> rows, double fullScore, JSONObject jsonObject, String tableName) {
 
