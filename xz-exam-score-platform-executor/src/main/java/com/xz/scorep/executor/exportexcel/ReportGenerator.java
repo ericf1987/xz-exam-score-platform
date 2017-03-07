@@ -52,7 +52,7 @@ public abstract class ReportGenerator {
             for (SheetTask sheetTask : sheetTasks) {
                 sheetTask.setReportName(className);
                 excelWriter.openOrCreateSheet(sheetTask.getTitle());
-                initSheet(excelWriter.getSheetByName(sheetTask.getTitle()));
+                initSheet(excelWriter.getCurrentSheet());  // 当前的 sheet 一定是刚刚创建或打开的那个
                 SheetGenerator sheetGenerator = sheetManager.getSheetGenerator(sheetTask.getGeneratorClass());
                 if (sheetGenerator != null) {
                     sheetGenerator.generate(project, excelWriter, sheetTask);

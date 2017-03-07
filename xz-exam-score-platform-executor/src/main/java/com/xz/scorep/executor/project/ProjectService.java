@@ -57,39 +57,51 @@ public class ProjectService {
         LOG.info("数据库 " + projectId + " 已删除。");
     }
 
+    // 创建保存某些统计结果的表
     private void createAggrResultTables(String projectId) {
         DAO dao = daoFactory.getProjectDao(projectId);
+
+        // 考试项目总分表（科目总分表和题目得分表分别在 SubjectService 和 ScoreService）
         dao.execute("create table score_project(student_id VARCHAR(40) primary key,score decimal(5,1))");
 
+/*
+        // 平均分表（暂时无用）
         dao.execute("create table average_project(range_type varchar(20), range_id varchar(40), score decimal(4,1))");
         dao.execute("create index idxavgpri on average_project(range_id)");
         dao.execute("create table average_subject(range_type varchar(20), range_id varchar(40), subject_id varchar(20), score decimal(4,1))");
         dao.execute("create index idxavgsri on average_subject(range_id)");
         dao.execute("create table average_quest(range_type varchar(20), range_id varchar(40), quest_id varchar(40), score decimal(4,1))");
         dao.execute("create index idxavgqri on average_quest(range_id)");
+*/
 
         dao.execute("create table all_pass_or_fail (range_type varchar(20), range_id varchar(40),all_pass_count int(11),all_pass_rate decimal(5,4),all_fail_count int(11),all_fail_rate decimal(5,4))");
         dao.execute("create index idxapfri on all_pass_or_fail(range_id)");
 
+        // 分数分段表
         dao.execute("create table segments(" +
                 "range_type varchar(20),range_id VARCHAR(40),target_type VARCHAR(20),target_id VARCHAR(40)," +
                 "score_min decimal(5,1) not null,score_max decimal(5,1) not null,student_count int default 0 not null)");
         dao.execute("create index idxsgmtrt on segments(range_type,range_id,target_type,target_id)");
 
+        // 得分等级表
         dao.execute("create table scorelevelmap(" +
                 "range_type varchar(20),range_id VARCHAR(40),target_type VARCHAR(20),target_id VARCHAR(40)," +
                 "score_level varchar(20),student_count int,student_rate decimal(5,2))");
         dao.execute("create index idxslm on scorelevelmap(range_type,range_id,target_type,target_id)");
 
+        // 总体排名表
         dao.execute("create table rank_province(student_id varchar(40) not null,subject_id varchar(10) not null,rank int)");
         dao.execute("create index idxrpt on rank_province(student_id)");
 
+        // 学校排名表
         dao.execute("create table rank_school(student_id varchar(40) not null,subject_id varchar(10) not null,rank int)");
         dao.execute("create index idxrst on rank_school(student_id)");
 
+        // 班级排名表
         dao.execute("create table rank_class(student_id varchar(40) not null,subject_id varchar(10) not null,rank int)");
         dao.execute("create index idxrct on rank_class(student_id)");
 
+        // 客观题选项选择率
         dao.execute("create table objective_option_rate(" +
                 "quest_id varchar(40),`option` varchar(10)," +
                 "range_type varchar(10),range_id varchar(40)," +
@@ -97,6 +109,7 @@ public class ProjectService {
         dao.execute("create index idxoorqr on objective_option_rate(quest_id,range_type,range_id)");
     }
 
+    // 创建基础数据表
     private void createInitialTables(String projectId) {
         DAO dao = daoFactory.getProjectDao(projectId);
         dao.execute("create table school (id varchar(40) primary key, name varchar(50), area varchar(6), city varchar(6), province varchar(6))");
