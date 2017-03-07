@@ -68,6 +68,9 @@ public class ProjectService {
         dao.execute("create table average_quest(range_type varchar(20), range_id varchar(40), quest_id varchar(40), score decimal(4,1))");
         dao.execute("create index idxavgqri on average_quest(range_id)");
 
+        dao.execute("create table all_pass_or_fail (range_type varchar(20), range_id varchar(40),all_pass_count int(11),all_pass_rate decimal(5,4),all_fail_count int(11),all_fail_rate decimal(5,4))");
+        dao.execute("create index idxapfri on all_pass_or_fail(range_id)");
+
         dao.execute("create table segments(" +
                 "range_type varchar(20),range_id VARCHAR(40),target_type VARCHAR(20),target_id VARCHAR(40)," +
                 "score_min decimal(5,1) not null,score_max decimal(5,1) not null,student_count int default 0 not null)");
