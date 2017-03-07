@@ -10,6 +10,7 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.ExcelCellStyles;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
+import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.Direction;
@@ -155,6 +156,9 @@ public abstract class TotalAverageSheet extends SheetGenerator {
     @Autowired
     private ReportConfigService reportConfigService;
 
+    @Autowired
+    ProjectService projectService;
+
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {
         generateEachSheet(sheetContext);
@@ -254,7 +258,8 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             //先按平均分排名,最后增加总计行
             accordingAverageSorting(sheetContext, rows);
 
-            double fullScore = getProjectFullScore(projectId);
+
+            double fullScore = projectService.findProject(projectId).getFullScore();
             String projectTotalSql = getTotalScoreLevel(rows, fullScore, jsonObject, "score_project");
 
             Row row = dao.queryFirst(projectTotalSql);
@@ -401,13 +406,6 @@ public abstract class TotalAverageSheet extends SheetGenerator {
                     .replace("{{sub}}", sub.toString())
                     .replace("{{passOrFail}}", failStr.toString());
         }
-    }
-
-    public double getProjectFullScore(String projectId) {
-        DAO managerDao = daoFactory.getManagerDao();
-
-        Row projectScore = managerDao.queryFirst("select full_score from project where id = ?", projectId);
-        return projectScore.getDouble("full_score", 0);
     }
 
     private String getTotalScoreLevel(List<Row> rows, double fullScore, JSONObject jsonObject, String tableName) {
