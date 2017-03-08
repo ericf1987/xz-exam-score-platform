@@ -109,6 +109,7 @@ public abstract class ReportGenerator {
         CellStyle cellStyle = excelWriter.createCellStyle(ExcelCellStyles.Header.name());
         resetStyle(excelWriter, cellStyle);
         cellStyle.setFont(createFontWithName("header", excelWriter, 11, true, BLACK));
+        cellStyle.setWrapText(true);
     }
 
     /**
