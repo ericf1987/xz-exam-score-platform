@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.project;
 
 import com.hyd.dao.DAO;
+import com.hyd.dao.Row;
 import com.hyd.simplecache.SimpleCache;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.cache.CacheFactory;
@@ -92,5 +93,11 @@ public class SubjectService {
 
     public static String getSubjectName(String subjectId) {
         return SUBJECT_NAMES.get(subjectId);
+    }
+
+    public double getSubjectFullScore(String projectId, String subjectId) {
+        DAO dao = daoFactory.getProjectDao(projectId);
+        Row row = dao.queryFirst("select * from subject where id = ?", subjectId);
+        return row.getDouble("full_score", 0);
     }
 }

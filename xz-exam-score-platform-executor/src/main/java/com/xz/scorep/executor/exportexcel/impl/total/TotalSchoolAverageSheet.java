@@ -111,7 +111,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             " and student.school_id = '{{schoolId}}'";
 
 
-    public static final String QUERY_TOTAL_INFO ="select\n" +
+    public static final String QUERY_TOTAL_INFO = "select\n" +
             "a.subject,a.full_score,a.class_id,\n" +
             "a.school_name,a.class_name,a.count,\n" +
             "a.average_score,a.max_score,a.min_score,\n" +
@@ -256,34 +256,9 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
     }
 
 
-
     private void fillTableHeader(SheetContext sheetContext) {
-        sheetContext.headerMove(Direction.DOWN);
 
-        sheetContext.headerPut("科目", 2, 1);
-        sheetContext.columnSet(0, "subject");
-        sheetContext.headerMove(Direction.RIGHT);
-
-        sheetContext.headerPut("满分", 2, 1);
-        sheetContext.columnSet(1, "full_score");
-        sheetContext.headerMove(Direction.RIGHT);
-
-        sheetContext.headerPut("学校", 2, 1);
-        sheetContext.columnWidth(2, 20);
-        sheetContext.columnSet(2, "school_name");
-        sheetContext.headerMove(Direction.RIGHT);
-
-        sheetContext.headerPut("班级", 2, 1);
-        sheetContext.columnSet(3, "class_name");
-        sheetContext.headerMove(Direction.RIGHT);
-
-        sheetContext.headerPut("总人数", 2, 1);
-        sheetContext.columnSet(4, "count");
-        sheetContext.headerMove(Direction.RIGHT);
-
-        sheetContext.headerPut("平均分", 2, 1);
-        sheetContext.columnSet(5, "average_score");
-        sheetContext.headerMove(Direction.RIGHT);
+        commonTableHeader(sheetContext);
 
         sheetContext.headerPut("最高分", 2, 1);
         sheetContext.columnSet(6, "max_score");
@@ -350,6 +325,36 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
         sheetContext.headerPut("比率", 1, 1);
         sheetContext.columnSet(19, "all_fail_rate");
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
+    }
+
+    //学校平均分三率  和科目平均分三率公共表头
+    public static void commonTableHeader(SheetContext sheetContext) {
+        sheetContext.headerMove(Direction.DOWN);
+
+        sheetContext.headerPut("科目", 2, 1);
+        sheetContext.columnSet(0, "subject");
+        sheetContext.headerMove(Direction.RIGHT);
+
+        sheetContext.headerPut("满分", 2, 1);
+        sheetContext.columnSet(1, "full_score");
+        sheetContext.headerMove(Direction.RIGHT);
+
+        sheetContext.headerPut("学校", 2, 1);
+        sheetContext.columnWidth(2, 20);
+        sheetContext.columnSet(2, "school_name");
+        sheetContext.headerMove(Direction.RIGHT);
+
+        sheetContext.headerPut("班级", 2, 1);
+        sheetContext.columnSet(3, "class_name");
+        sheetContext.headerMove(Direction.RIGHT);
+
+        sheetContext.headerPut("总人数", 2, 1);
+        sheetContext.columnSet(4, "count");
+        sheetContext.headerMove(Direction.RIGHT);
+
+        sheetContext.headerPut("平均分", 2, 1);
+        sheetContext.columnSet(5, "average_score");
+        sheetContext.headerMove(Direction.RIGHT);
     }
 
 }
