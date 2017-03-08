@@ -1,14 +1,12 @@
 package com.xz.scorep.executor.exportexcel.impl.total;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.scorep.executor.db.DAOFactory;
+import com.xz.scorep.executor.exportexcel.ExcelCellStyles;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.project.ProjectService;
-import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.Direction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,13 +28,13 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             "a.average_score,a.max_score,\n" +
             "a.min_score,\n" +
             "IFNULL(xlnt.xlnt_count,0) as xlnt_count,\n" +
-            "IFNULL(xlnt.xlnt_rate,0) as xlnt_rate,\n" +
+            "concat(IFNULL(xlnt.xlnt_rate,0),'%') as xlnt_rate,\n" +
             "IFNULL(good.good_count,0) as good_count,\n" +
-            "IFNULL(good.good_rate,0) as good_rate,\n" +
+            "concat(IFNULL(good.good_rate,0),'%') as good_rate,\n" +
             "IFNULL(pass.pass_count,0) as pass_count,\n" +
-            "IFNULL(pass.pass_rate,0) as pass_rate,\n" +
+            "concat(IFNULL(pass.pass_rate,0),'%') as pass_rate,\n" +
             "IFNULL(fail.fail_count,0) as fail_count,\n" +
-            "IFNULL(fail.fail_rate,0) as fail_rate\n" +
+            "concat(IFNULL(fail.fail_rate,0),'%') as fail_rate\n" +
             "from (\n" +
             "select '总分' as subject,\n" +
             "'{{fullScore}}' as full_score,\n" +
@@ -112,6 +110,108 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             " where student.class_id = all_pass_or_fail.range_id\n" +
             " and student.school_id = '{{schoolId}}'";
 
+
+    public static final String QUERY_TOTAL_INFO ="select\n" +
+            "a.subject,a.full_score,a.class_id,\n" +
+            "a.school_name,a.class_name,a.count,\n" +
+            "a.average_score,a.max_score,a.min_score,\n" +
+            "IFNULL(xlnt.xlnt_count,0) as xlnt_count,\n" +
+            "concat(IFNULL(xlnt.xlnt_rate,0),'%') as xlnt_rate,\n" +
+            "IFNULL(good.good_count,0) as good_count,\n" +
+            "concat(IFNULL(good.good_rate,0),'%') as good_rate,\n" +
+            "IFNULL(pass.pass_count,0) as pass_count,\n" +
+            "concat(IFNULL(pass.pass_rate,0),'%') as pass_rate,\n" +
+            "IFNULL(fail.fail_count,0) as fail_count,\n" +
+            "concat(IFNULL(fail.fail_rate,0),'%') as fail_rate,\n" +
+            "IFNULL(total.all_pass_count,0) as all_pass_count,\n" +
+            "concat(IFNULL(total.all_pass_rate,0),'%') as all_pass_rate,\n" +
+            "IFNULL(total.all_fail_count,0) as all_fail_count,\n" +
+            "concat(IFNULL(total.all_fail_rate,0),'%') as all_fail_rate\n" +
+            "FROM\n" +
+            "(\n" +
+            "select \n" +
+            "'总分' as subject, '{{fullScore}}' as full_score,\n" +
+            "'total' as class_id,school.name as school_name,\n" +
+            "'全体' as class_name,COUNT(student.id) as count,\n" +
+            "FORMAT(AVG(score_project.score),2) as average_score,\n" +
+            "MAX(score_project.score) as max_score,\n" +
+            "MIN(score_project.score) as min_score\n" +
+            "from school,student,score_project\n" +
+            "where \n" +
+            "student.school_id = school.id\n" +
+            "and student.id = score_project.student_id\n" +
+            "and school.id = '{{schoolId}}'\n" +
+            ") a\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select \n" +
+            "'total' as class_id,\n" +
+            "scorelevelmap.student_count as xlnt_count,\n" +
+            "scorelevelmap.student_rate as xlnt_rate\n" +
+            "from school,scorelevelmap\n" +
+            "WHERE\n" +
+            "scorelevelmap.score_level = 'XLNT'\n" +
+            "AND scorelevelmap.range_id = school.id\n" +
+            "and scorelevelmap.target_type ='Project'\n" +
+            "and scorelevelmap.range_type = 'School'\n" +
+            "and scorelevelmap.range_id = '{{schoolId}}'\n" +
+            ") xlnt on a.class_id = xlnt.class_id\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select \n" +
+            "'total' as class_id,\n" +
+            "scorelevelmap.student_count as good_count,\n" +
+            "scorelevelmap.student_rate as good_rate\n" +
+            "from school,scorelevelmap\n" +
+            "WHERE\n" +
+            "scorelevelmap.score_level = 'GOOD'\n" +
+            "AND scorelevelmap.range_id = school.id\n" +
+            "and scorelevelmap.target_type ='Project'\n" +
+            "and scorelevelmap.range_type = 'School'\n" +
+            "and scorelevelmap.range_id = '{{schoolId}}'\n" +
+            ") good on a.class_id = good.class_id\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select \n" +
+            "'total' as class_id,\n" +
+            "scorelevelmap.student_count as pass_count,\n" +
+            "scorelevelmap.student_rate as pass_rate\n" +
+            "from school,scorelevelmap\n" +
+            "WHERE\n" +
+            "scorelevelmap.score_level = 'PASS'\n" +
+            "AND scorelevelmap.range_id = school.id\n" +
+            "and scorelevelmap.target_type ='Project'\n" +
+            "and scorelevelmap.range_type = 'School'\n" +
+            "and scorelevelmap.range_id = '{{schoolId}}'\n" +
+            ") pass on a.class_id = pass.class_id\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select \n" +
+            "'total' as class_id,\n" +
+            "scorelevelmap.student_count as fail_count,\n" +
+            "scorelevelmap.student_rate as fail_rate\n" +
+            "from school,scorelevelmap\n" +
+            "WHERE\n" +
+            "scorelevelmap.score_level = 'FAIL'\n" +
+            "AND scorelevelmap.range_id = school.id\n" +
+            "and scorelevelmap.target_type ='Project'\n" +
+            "and scorelevelmap.range_type = 'School'\n" +
+            "and scorelevelmap.range_id = '{{schoolId}}'\n" +
+            ") fail on a.class_id = fail.class_id\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select \n" +
+            "'total' as class_id,\n" +
+            "all_pass_or_fail.all_pass_count as all_pass_count,\n" +
+            "all_pass_or_fail.all_pass_rate as all_pass_rate,\n" +
+            "all_pass_or_fail.all_fail_count as all_fail_count,\n" +
+            "all_pass_or_fail.all_fail_rate as all_fail_rate\n" +
+            "from school,all_pass_or_fail\n" +
+            "where \n" +
+            "school.id = all_pass_or_fail.range_id\n" +
+            "and school.id = '{{schoolId}}'\n" +
+            ") total on total.class_id = a.class_id";
+
     @Autowired
     DAOFactory daoFactory;
 
@@ -144,30 +244,18 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
         sheetContext.rowAdd(dao.query(QUERY_CLASS_PASS_FAIL.replace("{{schoolId}}", schoolId)));
         sheetContext.rowSortBy("class_name");
 
-        Row row = createTotalRow();
-        sheetContext.rowAdd(row);
+        //总计栏一把查
+        String totalSql = QUERY_TOTAL_INFO
+                .replace("{{schoolId}}", schoolId)
+                .replace("{{fullScore}}", fullScore);
+        sheetContext.rowAdd(dao.queryFirst(totalSql));
 
+        sheetContext.rowStyle("total", ExcelCellStyles.Green.name());
         sheetContext.freeze(3, 3);
         sheetContext.saveData();
     }
 
-    private Row createTotalRow() {
-        Row row = new Row();
-        row.put("","");
-        row.put("","");
-        row.put("","");
-        row.put("","");
-        row.put("","");
-        row.put("","");
-        row.put("","");
-        row.put("","");
-        row.put("","");
-        row.put("","");
-        row.put("","");
-        row.put("","");
-        row.put("","");
-        return row;
-    }
+
 
     private void fillTableHeader(SheetContext sheetContext) {
         sheetContext.headerMove(Direction.DOWN);

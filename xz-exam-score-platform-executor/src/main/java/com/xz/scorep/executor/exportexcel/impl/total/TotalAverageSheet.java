@@ -115,11 +115,6 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             " ) fail ON fail.id = a.school_id";
 
 
-    private static String ALL_SUBJECT_PASS_OR_FAIL = "select school.id AS school_id , COUNT(school.id) as count from " +
-            "school,student {{table_name}} where " +
-            "student.school_id = school.id {{sub}} {{passOrFail}} GROUP BY school.id";
-
-
     private static String TOTAL_SCORE_LEVEL = "select \n" +
             "  @total := (select count(1) from {{table}}) as total, \n" +
             "  @average  := (select count(1) from {{table}} where score >= {{average_score}})as average_count, \n" +
