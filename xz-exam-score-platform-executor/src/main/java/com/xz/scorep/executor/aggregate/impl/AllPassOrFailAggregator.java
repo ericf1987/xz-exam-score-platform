@@ -92,47 +92,18 @@ public class AllPassOrFailAggregator extends Aggregator {
 
         List<Row> result = projectDao.query(sql);
 
-        List<Row> schoolCount = projectDao.query(SCHOOL_COUNT);
-        LOG.info("统计学校全科及格率、全科不及格率...");
-
         List<Row> insertRows = new ArrayList<>();
-        for (Row row : schoolCount) {
-            String schoolId = row.getString("id");
-            int count = row.getInteger("count", 0);
-            CounterMap<String> passCounterMap = new CounterMap<>();
-            CounterMap<String> failCounterMap = new CounterMap<>();
+        LOG.info("开始统计学校全科及格率、全科不及格率...");
+        aggregatorSchoolPassFailRate(projectDao, score, result, insertRows);
+        LOG.info("统计学校全科及格率、全科不及格率完成...");
+        insertRows.clear();
 
-            result.stream()
-                    .filter(s -> s.getString("school_id").equals(schoolId))
-                    .forEach(s -> {
-                        boolean all_pass = true;
-                        boolean all_fail = false;
-                        for (Map.Entry<String, Double> entry : score.entrySet()) {
-                            if (s.getDouble(entry.getKey(), 0) < entry.getValue()) {
-                                all_pass = false;
-                            }
-                            if (s.getDouble(entry.getKey(), 0) > entry.getValue()) {
-                                all_fail = true;
-                            }
-                        }
-                        if (all_pass) {
-                            passCounterMap.incre(schoolId);
-                        }
-                        if (!all_fail) {
-                            failCounterMap.incre(schoolId);
-                        }
-                    });
-            Row schoolRow = new Row();
-            schoolRow.put("range_type", Range.SCHOOL);
-            schoolRow.put("range_id", schoolId);
-            schoolRow.put("all_pass_count", passCounterMap.getCount(schoolId));
-            schoolRow.put("all_pass_rate", getPercent(passCounterMap.getCount(schoolId), count));
-            schoolRow.put("all_fail_count", failCounterMap.getCount(schoolId));
-            schoolRow.put("all_fail_rate", getPercent(failCounterMap.getCount(schoolId), count));
-            insertRows.add(schoolRow);
-        }
+        LOG.info("开始统计班级全科及格率、全科不及格率...");
+        aggregatorClassPassFailRate(projectDao, score, result, insertRows);
+        LOG.info("统计班级全科及格率、全科不及格率完成...");
+    }
 
-        LOG.info("统计班级全科及格率、全科不及格率...");
+    private void aggregatorClassPassFailRate(DAO projectDao, Map<String, Double> score, List<Row> result, List<Row> insertRows) {
         List<Row> classCount = projectDao.query(CLASS_COUNT);
         for (Row row : classCount) {
             String classId = row.getString("id");
@@ -142,24 +113,7 @@ public class AllPassOrFailAggregator extends Aggregator {
 
             result.stream()
                     .filter(s -> s.getString("class_id").equals(classId))
-                    .forEach(s -> {
-                        boolean all_pass = true;
-                        boolean all_fail = false;
-                        for (Map.Entry<String, Double> entry : score.entrySet()) {
-                            if (s.getDouble(entry.getKey(), 0) < entry.getValue()) {
-                                all_pass = false;
-                            }
-                            if (s.getDouble(entry.getKey(), 0) > entry.getValue()) {
-                                all_fail = true;
-                            }
-                        }
-                        if (all_pass) {
-                            passCounterMap.incre(classId);
-                        }
-                        if (!all_fail) {
-                            failCounterMap.incre(classId);
-                        }
-                    });
+                    .forEach(s -> checkStudentIsPassOrFail(score, classId, passCounterMap, failCounterMap, s));
             Row classRow = new Row();
             classRow.put("range_type", Range.CLASS);
             classRow.put("range_id", classId);
@@ -172,11 +126,53 @@ public class AllPassOrFailAggregator extends Aggregator {
         }
 
         projectDao.insert(insertRows, "all_pass_or_fail");
+    }
 
+    private void aggregatorSchoolPassFailRate(DAO projectDao, Map<String, Double> score, List<Row> result, List<Row> insertRows) {
+        List<Row> schoolCount = projectDao.query(SCHOOL_COUNT);
+        for (Row row : schoolCount) {
+            String schoolId = row.getString("id");
+            int count = row.getInteger("count", 0);
+            CounterMap<String> passCounterMap = new CounterMap<>();
+            CounterMap<String> failCounterMap = new CounterMap<>();
+
+            result.stream()
+                    .filter(s -> s.getString("school_id").equals(schoolId))
+                    .forEach(s -> checkStudentIsPassOrFail(score, schoolId, passCounterMap, failCounterMap, s));
+            Row schoolRow = new Row();
+            schoolRow.put("range_type", Range.SCHOOL);
+            schoolRow.put("range_id", schoolId);
+            schoolRow.put("all_pass_count", passCounterMap.getCount(schoolId));
+            schoolRow.put("all_pass_rate", getPercent(passCounterMap.getCount(schoolId), count));
+            schoolRow.put("all_fail_count", failCounterMap.getCount(schoolId));
+            schoolRow.put("all_fail_rate", getPercent(failCounterMap.getCount(schoolId), count));
+            insertRows.add(schoolRow);
+        }
+
+        projectDao.insert(insertRows, "all_pass_or_fail");
+    }
+
+    private void checkStudentIsPassOrFail(Map<String, Double> score, String id, CounterMap<String> passCounterMap,
+                                          CounterMap<String> failCounterMap, Row row) {
+        boolean all_pass = true;
+        boolean all_fail = false;
+        for (Map.Entry<String, Double> entry : score.entrySet()) {
+            if (row.getDouble(entry.getKey(), 0) < entry.getValue()) {
+                all_pass = false;
+            }
+            if (row.getDouble(entry.getKey(), 0) > entry.getValue()) {
+                all_fail = true;
+            }
+        }
+        if (all_pass) {
+            passCounterMap.incre(id);
+        }
+        if (!all_fail) {
+            failCounterMap.incre(id);
+        }
     }
 
     private double getPercent(int count, int totalCount) {
-
         return totalCount == 0 ? 0 : ((double) count / totalCount * 100);
     }
 
