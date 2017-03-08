@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 /**
  * Author: luckylo
  * Date : 2017-03-06
+ * 班级分数排名、得分明细表(全科)
  */
 @Component
 public class TotalClassDetailReport extends ReportGenerator {
@@ -25,10 +26,7 @@ public class TotalClassDetailReport extends ReportGenerator {
     @Override
     protected List<SheetTask> getSheetTasks(String projectId, Range range, Target target) {
         List<SheetTask> sheetTasks = new ArrayList<>();
-        SheetTask task = new SheetTask("总成绩排名", TotalClassDetailSheet0.class);
-        task.setRange(range);
-        task.setTarget(target);
-
+        SheetTask task = new SheetTask("总成绩排名", TotalClassDetailSheet0.class,range,target);
         sheetTasks.add(task);
 
         //每个科目

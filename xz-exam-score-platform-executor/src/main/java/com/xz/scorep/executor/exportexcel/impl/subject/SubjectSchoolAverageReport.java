@@ -13,6 +13,7 @@ import java.util.List;
 /**
  * Author: luckylo
  * Date : 2017-03-08
+ * 平均分及三率统计（班级）
  */
 @Component
 public class SubjectSchoolAverageReport extends ReportGenerator {

@@ -17,6 +17,7 @@ import java.util.List;
 /**
  * Author: luckylo
  * Date : 2017-03-06
+ * 平均分及三率统计（总分）
  */
 @Component
 public class TotalSchoolAverageSheet extends SheetGenerator {

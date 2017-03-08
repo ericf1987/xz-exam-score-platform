@@ -14,6 +14,7 @@ import java.util.List;
 /**
  * Author: luckylo
  * Date : 2017-03-08
+ * 主、客观题分析（班级）
  */
 @Component
 public class SubjectSchoolObjectiveReport extends ReportGenerator {

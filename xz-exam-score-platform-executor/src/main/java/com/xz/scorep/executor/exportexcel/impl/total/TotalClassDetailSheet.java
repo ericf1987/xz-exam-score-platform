@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Author: luckylo
  * Date : 2017-03-06
+ * 班级分数排名、得分明细表(全科)
  */
 public abstract class TotalClassDetailSheet extends SheetGenerator {
 

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 /**
  * Author: luckylo
  * Date : 2017-03-03
+ * 全校分数排名、得分明细表(全科)
  */
 @Component
 public class TotalSchoolDetailSheet0 extends TotalSchoolDetailSheet {
