@@ -12,14 +12,14 @@ import java.util.List;
 /**
  * Author: luckylo
  * Date : 2017-03-06
+ * 平均分及三率统计（总分）
  */
 @Component
 public class TotalSchoolAverageReport extends ReportGenerator {
     @Override
     protected List<SheetTask> getSheetTasks(String projectId, Range range, Target target) {
         List<SheetTask> sheetTasks = new ArrayList<>();
-        SheetTask task = new SheetTask("平均分及三率",TotalSchoolAverageSheet.class);
-        task.setRange(range);
+        SheetTask task = new SheetTask("平均分及三率",TotalSchoolAverageSheet.class,range,target);
         sheetTasks.add(task);
         return sheetTasks;
     }

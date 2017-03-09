@@ -22,6 +22,7 @@ import java.util.Map;
 /**
  * Author: luckylo
  * Date : 2017-03-02
+ * 联考学校平均分统计分析
  */
 
 public abstract class TotalAverageSheet extends SheetGenerator {

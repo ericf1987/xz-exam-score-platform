@@ -10,6 +10,7 @@ import java.util.Map;
 /**
  * Author: luckylo
  * Date : 2017-02-27
+ * 联考学校平均分全部科目
  */
 @Component
 public class TotalAverageSheet0 extends TotalAverageSheet {

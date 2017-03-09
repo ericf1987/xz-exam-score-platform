@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 /**
  * Author: luckylo
  * Date : 2017-02-27
+ * 联考学校平均分统计分析z
  */
 @Component
 public class TotalAverageReport extends ReportGenerator {
@@ -33,7 +34,7 @@ public class TotalAverageReport extends ReportGenerator {
         //每个科目
         List<SheetTask> subjectSheetTasks = subjectService.listSubjects(projectId)
                 .stream()
-                .map(subject->{
+                .map(subject -> {
                     SheetTask sheetTask = new SheetTask(subject.getName(), TotalAverageSheet1.class);
                     sheetTask.setTarget(Target.subject(subject.getId(), subject.getName()));
                     return sheetTask;

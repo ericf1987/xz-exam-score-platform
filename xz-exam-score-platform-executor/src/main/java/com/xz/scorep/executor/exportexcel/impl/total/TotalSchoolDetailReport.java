@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 /**
  * Author: luckylo
  * Date : 2017-03-03
+ * 全校分数排名、得分明细表(全科)
  */
 @Component
 public class TotalSchoolDetailReport extends ReportGenerator {
