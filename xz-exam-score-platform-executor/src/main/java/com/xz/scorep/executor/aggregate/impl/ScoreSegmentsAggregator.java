@@ -3,6 +3,8 @@ package com.xz.scorep.executor.aggregate.impl;
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.scorep.executor.aggregate.AggragateOrder;
+import com.xz.scorep.executor.aggregate.AggregateType;
+import com.xz.scorep.executor.aggregate.AggregateTypes;
 import com.xz.scorep.executor.aggregate.Aggregator;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
@@ -22,6 +24,7 @@ import java.util.Map;
  * 统计分数分段
  */
 @AggragateOrder(3)
+@AggregateTypes(AggregateType.Basic)
 @Component
 public class ScoreSegmentsAggregator extends Aggregator {
 

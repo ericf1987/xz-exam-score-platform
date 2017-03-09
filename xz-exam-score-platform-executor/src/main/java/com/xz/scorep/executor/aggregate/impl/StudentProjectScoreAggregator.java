@@ -2,6 +2,8 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.xz.scorep.executor.aggregate.AggragateOrder;
+import com.xz.scorep.executor.aggregate.AggregateType;
+import com.xz.scorep.executor.aggregate.AggregateTypes;
 import com.xz.scorep.executor.aggregate.Aggregator;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.project.SubjectService;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 
 @Component
 @AggragateOrder(1)
+@AggregateTypes({AggregateType.Basic, AggregateType.Quick})
 public class StudentProjectScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentProjectScoreAggregator.class);

@@ -3,6 +3,8 @@ package com.xz.scorep.executor.aggregate.impl;
 import com.hyd.dao.DAO;
 import com.hyd.dao.DAOException;
 import com.xz.scorep.executor.aggregate.AggragateOrder;
+import com.xz.scorep.executor.aggregate.AggregateType;
+import com.xz.scorep.executor.aggregate.AggregateTypes;
 import com.xz.scorep.executor.aggregate.Aggregator;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.project.QuestService;
@@ -19,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 @AggragateOrder(0)
+@AggregateTypes({AggregateType.Basic, AggregateType.Quick})
 public class StudentSubjectScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentSubjectScoreAggregator.class);

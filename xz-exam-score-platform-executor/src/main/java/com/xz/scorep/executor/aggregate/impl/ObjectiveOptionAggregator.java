@@ -3,6 +3,8 @@ package com.xz.scorep.executor.aggregate.impl;
 import com.hyd.dao.DAO;
 import com.hyd.dao.DAOException;
 import com.xz.scorep.executor.aggregate.AggragateOrder;
+import com.xz.scorep.executor.aggregate.AggregateType;
+import com.xz.scorep.executor.aggregate.AggregateTypes;
 import com.xz.scorep.executor.aggregate.Aggregator;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.Range;
@@ -19,12 +21,12 @@ import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * (description)
- * created at 2017/3/6
+ * 统计客观题选项选择率
  *
  * @author yidin
  */
 @Component
+@AggregateTypes(AggregateType.Basic)
 @AggragateOrder(6)
 public class ObjectiveOptionAggregator extends Aggregator {
 

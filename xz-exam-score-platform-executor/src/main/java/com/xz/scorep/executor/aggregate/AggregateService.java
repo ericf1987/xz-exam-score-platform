@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 @Service
 public class AggregateService {
@@ -30,6 +31,28 @@ public class AggregateService {
     }
 
     /**
+     * 执行所有统计项（异步）
+     *
+     * @param projectId     项目ID
+     * @param aggregateType 统计类型
+     */
+    public void runAggregateAsync(final String projectId, AggregateType aggregateType) {
+        Runnable runnable = () -> runAggregate(projectId, aggregateType);
+        executorService.submit(runnable);
+    }
+
+    /**
+     * 执行一类特定的统计项
+     *
+     * @param projectId     项目ID
+     * @param aggregateType 统计类别
+     */
+    public void runAggregate(String projectId, AggregateType aggregateType) {
+        runAggregate(projectId, aggregator ->
+                aggregateType == AggregateType.Complete || aggregator.isOfType(aggregateType));
+    }
+
+    /**
      * 执行一个特定的统计项
      *
      * @param projectId 项目ID
@@ -41,26 +64,21 @@ public class AggregateService {
     }
 
     /**
-     * 执行所有统计项（异步）
-     *
-     * @param projectId 项目ID
-     */
-    public void runAggregateAsync(final String projectId) {
-        Aggregation aggregation = new Aggregation(projectId);
-
-        Runnable runnable = () -> {
-            runAggregate(projectId);
-        };
-
-        executorService.submit(runnable);
-    }
-
-    /**
      * 执行所有的统计项
      *
      * @param projectId 项目ID
      */
     public void runAggregate(final String projectId) {
+        Predicate<Aggregator> allAggregators = aggregator -> true;
+        runAggregate(projectId, allAggregators);
+    }
+
+    /**
+     * 执行满足条件的统计项
+     *
+     * @param projectId 项目ID
+     */
+    public void runAggregate(final String projectId, Predicate<Aggregator> condition) {
 
         Aggregation aggregation = new Aggregation(projectId);
 
@@ -70,6 +88,7 @@ public class AggregateService {
             aggregationService.insertAggregation(aggregation);
 
             List<Aggregator> aggregators = new ArrayList<>(this.aggregatorMap.values());
+            aggregators.removeIf(condition.negate());
             aggregators.sort(Comparator.comparingInt(Aggregator::getAggregateOrder));
 
             for (Aggregator aggregator : aggregators) {
@@ -88,6 +107,7 @@ public class AggregateService {
         }
     }
 
+    // 执行单个统计项
     private void runAggregate(Aggregation aggregation, Aggregator aggregator) {
         if (aggregator != null) {
 

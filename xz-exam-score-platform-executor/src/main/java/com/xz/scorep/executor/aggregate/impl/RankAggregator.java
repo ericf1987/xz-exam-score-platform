@@ -3,6 +3,8 @@ package com.xz.scorep.executor.aggregate.impl;
 import com.hyd.dao.DAO;
 import com.hyd.dao.DAOException;
 import com.xz.scorep.executor.aggregate.AggragateOrder;
+import com.xz.scorep.executor.aggregate.AggregateType;
+import com.xz.scorep.executor.aggregate.AggregateTypes;
 import com.xz.scorep.executor.aggregate.Aggregator;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.ProjectClass;
@@ -23,6 +25,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
+/**
+ * 统计排名
+ */
+@AggregateTypes(AggregateType.Basic)
 @AggragateOrder(4)
 @Component
 public class RankAggregator extends Aggregator {

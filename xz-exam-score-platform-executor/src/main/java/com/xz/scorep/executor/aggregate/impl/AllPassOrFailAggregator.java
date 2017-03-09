@@ -5,8 +5,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.CounterMap;
-import com.xz.ajiaedu.common.lang.NumberUtil;
 import com.xz.scorep.executor.aggregate.AggragateOrder;
+import com.xz.scorep.executor.aggregate.AggregateType;
+import com.xz.scorep.executor.aggregate.AggregateTypes;
 import com.xz.scorep.executor.aggregate.Aggregator;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.db.DAOFactory;
@@ -25,10 +26,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Author: luckylo
- * Date : 2017-03-07
+ * 统计全科及格率和全科不及格率
+ *
+ * @author luckylo
  */
 @AggragateOrder(7)
+@AggregateTypes(AggregateType.Basic)
 @Component
 public class AllPassOrFailAggregator extends Aggregator {
 

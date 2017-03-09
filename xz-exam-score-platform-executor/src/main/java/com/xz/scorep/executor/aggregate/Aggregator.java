@@ -4,6 +4,7 @@ import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
+import java.util.Arrays;
 
 /**
  * (description)
@@ -36,6 +37,15 @@ public abstract class Aggregator {
             return 0;
         } else {
             return this.getClass().getAnnotation(AggragateOrder.class).value();
+        }
+    }
+
+    public boolean isOfType(AggregateType aggregateType) {
+        if (!this.getClass().isAnnotationPresent(AggregateTypes.class)) {
+            return false;
+        } else {
+            AggregateTypes types = this.getClass().getAnnotation(AggregateTypes.class);
+            return Arrays.asList(types.value()).contains(aggregateType);
         }
     }
 }
