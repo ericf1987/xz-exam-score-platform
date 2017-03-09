@@ -35,7 +35,11 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             "IFNULL(pass.pass_count,0) as pass_count,\n" +
             "concat(IFNULL(pass.pass_rate,0),'%') as pass_rate,\n" +
             "IFNULL(fail.fail_count,0) as fail_count,\n" +
-            "concat(IFNULL(fail.fail_rate,0),'%') as fail_rate\n" +
+            "concat(IFNULL(fail.fail_rate,0),'%') as fail_rate,\n" +
+            "total.all_pass_count\n," +
+            "total.all_pass_rate\n," +
+            "total.all_fail_count\n," +
+            "total.all_fail_rate\n" +
             "from (\n" +
             "select '总分' as subject,\n" +
             "'{{fullScore}}' as full_score,\n" +
@@ -103,13 +107,14 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             "and scorelevelmap.target_type ='Project'\n" +
             "and class.school_id = '{{schoolId}}'\n" +
             "and scorelevelmap.score_level='FAIL'\n" +
-            ") fail on fail.class_id = a.class_id\n";
-
-    public static final String QUERY_CLASS_PASS_FAIL = "select DISTINCT range_id as class_id ,all_pass_count," +
-            " concat(all_pass_rate,'%') as all_pass_rate,all_fail_count," +
-            " concat(all_fail_rate,'%') as all_fail_rate from all_pass_or_fail,student\n" +
+            ") fail on fail.class_id = a.class_id\n" +
+            "LEFT JOIN(\n" +
+            "select DISTINCT range_id as class_id ,all_pass_count,\n" +
+            "concat(all_pass_rate,'%') as all_pass_rate,all_fail_count,\n" +
+            "concat(all_fail_rate,'%') as all_fail_rate from all_pass_or_fail,student\n" +
             " where student.class_id = all_pass_or_fail.range_id\n" +
-            " and student.school_id = '{{schoolId}}'";
+            "and student.school_id = '{{schoolId}}'" +
+            ") total on total.class_id = a.class_id";
 
 
     public static final String QUERY_TOTAL_INFO = "select\n" +
@@ -235,17 +240,17 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
 
         String fullScore = String.valueOf(projectService.findProject(projectId).getFullScore());
 
-        //平均分、最高分、最低分、优率、良率、及格率、不及格率
-        String sql = QUERY_CLASS_BASE_INFO
+        //平均分、最高分、最低分、优率、良率、及格率、不及格率、全科及格率、全科不及格率
+        String classSql = QUERY_CLASS_BASE_INFO
                 .replace("{{fullScore}}", fullScore)
                 .replace("{{schoolId}}", schoolId);
         DAO dao = daoFactory.getProjectDao(projectId);
-        List<Row> rows = dao.query(sql);
+        List<Row> rows = dao.query(classSql);
         sheetContext.rowAdd(rows);
-        sheetContext.rowAdd(dao.query(QUERY_CLASS_PASS_FAIL.replace("{{schoolId}}", schoolId)));
+
         sheetContext.rowSortBy("class_name");
 
-        //总计栏一把查
+        //总计栏
         String totalSql = QUERY_TOTAL_INFO
                 .replace("{{schoolId}}", schoolId)
                 .replace("{{fullScore}}", fullScore);
