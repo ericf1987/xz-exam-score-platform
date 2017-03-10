@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 /**
  * Author: luckylo
  * Date : 2017-02-27
- * 联考学校平均分统计分析z
+ * 联考学校平均分统计分析
  */
 @Component
 public class TotalAverageReport extends ReportGenerator {

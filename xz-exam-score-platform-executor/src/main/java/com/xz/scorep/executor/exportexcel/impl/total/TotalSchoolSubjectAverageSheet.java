@@ -10,6 +10,7 @@ import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetTask;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.Direction;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -238,7 +239,7 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
 
         String sql = QUERY_CLASS_ROWS
                 .replace("{{subjectName}}",subjectName)
-                .replace("{{fullScore}}",String.valueOf(fullScore))
+                .replace("{{fullScore}}", StringUtils.removeEnd(String.valueOf(fullScore),".0"))
                 .replace("{{subjectId}}",subjectId)
                 .replace("{{schoolId}}",schoolId);
         List<Row> rows = dao.query(sql);
@@ -247,7 +248,7 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
 
         String totalSql = QUERY_TOTAL_ROW
                 .replace("{{subjectName}}",subjectName)
-                .replace("{{fullScore}}",String.valueOf(fullScore))
+                .replace("{{fullScore}}",StringUtils.removeEnd(String.valueOf(fullScore),".0"))
                 .replace("{{subjectId}}",subjectId)
                 .replace("{{schoolId}}",schoolId);
         sheetContext.rowAdd(dao.queryFirst(totalSql));

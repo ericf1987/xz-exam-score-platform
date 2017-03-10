@@ -9,6 +9,7 @@ import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.Direction;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -242,7 +243,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
 
         //平均分、最高分、最低分、优率、良率、及格率、不及格率、全科及格率、全科不及格率
         String classSql = QUERY_CLASS_BASE_INFO
-                .replace("{{fullScore}}", fullScore)
+                .replace("{{fullScore}}", StringUtils.removeEnd(fullScore,".0"))
                 .replace("{{schoolId}}", schoolId);
         DAO dao = daoFactory.getProjectDao(projectId);
         List<Row> rows = dao.query(classSql);
@@ -253,7 +254,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
         //总计栏
         String totalSql = QUERY_TOTAL_INFO
                 .replace("{{schoolId}}", schoolId)
-                .replace("{{fullScore}}", fullScore);
+                .replace("{{fullScore}}", StringUtils.removeEnd(fullScore,".0"));
         sheetContext.rowAdd(dao.queryFirst(totalSql));
 
         sheetContext.rowStyle("total", ExcelCellStyles.Green.name());
