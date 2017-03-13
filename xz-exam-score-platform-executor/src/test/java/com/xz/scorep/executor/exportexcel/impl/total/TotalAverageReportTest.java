@@ -11,8 +11,7 @@ import static org.junit.Assert.*;
 
 /**
  * Author: luckylo
- * Date : 2017-03-01
- */
+ * Date : 2017-03-01 */
 public class TotalAverageReportTest extends BaseTest {
 
     @Autowired

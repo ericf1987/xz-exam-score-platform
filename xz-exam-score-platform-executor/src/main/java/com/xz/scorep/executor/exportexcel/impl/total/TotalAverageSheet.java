@@ -26,14 +26,13 @@ import java.util.Map;
  */
 
 public abstract class TotalAverageSheet extends SheetGenerator {
-    private static final String TOTAL_SCHOOL_ID = "t";
 
     private static final String SUBJECT = "score_subject_";
 
     private static final String PASS_OR_FAIL = "select range_id as school_id,concat(all_pass_rate,'%') as all_pass," +
             " concat(all_fail_rate,'%') as all_fail,all_pass_count,all_fail_count from all_pass_or_fail where range_type = 'school'";
 
-    private static String SCHOOL_PROJECT_OR_SUBJECT_INFO = "SELECT\n" +
+    private static final String SCHOOL_PROJECT_OR_SUBJECT_INFO = "SELECT\n" +
             " a.school_id,a.school_name,a.student_count,a.max_score,\n" +
             " a.min_score,a.average_score,CONCAT(IFNULL(xlnt.xlnt, '0.00'),'%') AS excellent,\n" +
             " CONCAT(IFNULL(good.good, '0.00'),'%') AS good,\n" +
@@ -116,22 +115,114 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             " ) fail ON fail.id = a.school_id";
 
 
-    private static String TOTAL_SCORE_LEVEL = "select \n" +
-            "  @total := (select count(1) from {{table}}) as total, \n" +
-            "  @average  := (select count(1) from {{table}} where score >= {{average_score}})as average_count, \n" +
-            "  FORMAT(@average / @total,4) as average_rate, \n" +
-            "  @fail  :=(select count(1) from {{table}} where score < {{fail_score}}) as fail_count, \n" +
-            "  FORMAT(@fail / @total,4) as fail_rate, \n" +
-            "  @pass  := (select count(1) from {{table}} where score >= {{fail_score}} and score < {{good_score}}) as pass_count, \n" +
-            "  FORMAT(@pass / @total,4) as pass_rate, \n" +
-            "  @good  := (select count(1) from {{table}} where score >= {{good_score}} and score < {{excellent_score}}) as good_count, \n" +
-            "  FORMAT(@good / @total,4) as good_rate, \n" +
-            "  @xlnt  := (select count(1) from {{table}} where score >= {{excellent_score}}) as xlnt_count, \n" +
-            "  FORMAT(@xlnt / @total,4) as xlnt_rate \n" +
-            ";\n";
+    private static final String TOTAL_SCORE_INFO = "select \n" +
+            "a.school_id,a.school_name,a.student_count,\n" +
+            "a.max_score,a.min_score,a.average_score,\n" +
+            "a.average_range,\n" +
+            "xlnt.excellent,good.good,pass.pass,fail.fail,\n" +
+            "pass_fail.all_pass,pass_fail.all_fail\n" +
+            "FROM\n" +
+            "(\n" +
+            "select\n" +
+            "'total' as school_id,'总体'as school_name, \n" +
+            "COUNT(student.id) as student_count,max(score_project.score) as max_score,\n" +
+            "MIN(score_project.score) as min_score,format(AVG(score_project.score),2) as average_score,\n" +
+            "'--' as average_range\n" +
+            "from student,score_project\n" +
+            "where  student.id = score_project.student_id\n" +
+            ") a\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select 'total' as school_id ,concat(IFNULL(scorelevelmap.student_rate,'0.00'),'%') as excellent from scorelevelmap\n" +
+            "where scorelevelmap.range_type ='Province'\n" +
+            "and scorelevelmap.target_id = '{{projectId}}'\n" +
+            "and scorelevelmap.score_level = 'XLNT'\n" +
+            ") xlnt on xlnt.school_id = a.school_id\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select 'total' as school_id,concat(IFNULL(scorelevelmap.student_rate,'0.00'),'%') as good from scorelevelmap\n" +
+            "where scorelevelmap.range_type ='Province'\n" +
+            "and scorelevelmap.target_id = '{{projectId}}'\n" +
+            "and scorelevelmap.score_level = 'GOOD'\n" +
+            ") good on good.school_id = a.school_id\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select 'total' as school_id,concat(IFNULL(scorelevelmap.student_rate,'0.00'),'%') as pass from scorelevelmap\n" +
+            "where scorelevelmap.range_type ='Province'\n" +
+            "and scorelevelmap.target_id = '{{projectId}}'\n" +
+            "and scorelevelmap.score_level = 'PASS'\n" +
+            ") pass on pass.school_id = a.school_id\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select 'total' as school_id,concat(IFNULL(scorelevelmap.student_rate,'0.00'),'%') as fail from scorelevelmap\n" +
+            "where scorelevelmap.range_type ='Province'\n" +
+            "and scorelevelmap.target_id = '{{projectId}}'\n" +
+            "and scorelevelmap.score_level = 'FAIL'\n" +
+            ") fail on fail.school_id = a.school_id\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select 'total' as school_id,\n" +
+            "concat(IFNULL(all_pass_or_fail.all_pass_rate,'0.00'),'%') as all_pass,\n" +
+            "concat(IFNULL(all_pass_or_fail.all_fail_rate,'0.00'),'%') as all_fail\n" +
+            "from all_pass_or_fail\n" +
+            "where \n" +
+            "all_pass_or_fail.range_id = '{{projectId}}'\n" +
+            ") pass_fail on pass_fail.school_id = a.school_id \n";
 
 
-    private static String SCHOOL_PROJECT_OVER_AVERAGE_RATE = "select student.school_id ,CONCAT(FORMAT(COUNT(student.id)/a.count,2),'%') as over_average from student\n" +
+    private static final String SUBJECT_TOTAL_ROW = "select \n" +
+            "a.school_id,a.school_name,a.student_count,\n" +
+            "a.max_score,a.min_score,a.average_score,\n" +
+            "a.average_range,xlnt.excellent,good.good,\n" +
+            "pass.pass,fail.fail\n" +
+            "FROM\n" +
+            "(\n" +
+            "select \n" +
+            "'total' as school_id, '总体' as school_name,COUNT(student.id) as student_count,\n" +
+            "max(score_subject_{{subjectId}}.score) as max_score,MIN(score_subject_{{subjectId}}.score) as min_score,\n" +
+            "FORMAT(avg(score_subject_{{subjectId}}.score),2) as average_score,'--' as average_range\n" +
+            "from student,score_subject_{{subjectId}}\n" +
+            "WHERE\n" +
+            "student.id = score_subject_{{subjectId}}.student_id\n" +
+            ") a \n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select 'total' as school_id,concat(IFNULL(scorelevelmap.student_rate,'0.00'),'%') as excellent\n" +
+            "from scorelevelmap\n" +
+            "where\n" +
+            "scorelevelmap.range_type ='Province'\n" +
+            "AND scorelevelmap.target_id ='{{subjectId}}'\n" +
+            "and scorelevelmap.score_level = 'XLNT'\n" +
+            ") xlnt on xlnt.school_id = a.school_id\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select 'total' as school_id,concat(IFNULL(scorelevelmap.student_rate,'0.00'),'%') as good\n" +
+            "from scorelevelmap\n" +
+            "where\n" +
+            "scorelevelmap.range_type ='Province'\n" +
+            "AND scorelevelmap.target_id ='{{subjectId}}'\n" +
+            "and scorelevelmap.score_level = 'GOOD'\n" +
+            ") good on good.school_id = a.school_id\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select 'total' as school_id,concat(IFNULL(scorelevelmap.student_rate,'0.00'),'%') as pass\n" +
+            "from scorelevelmap\n" +
+            "where\n" +
+            "scorelevelmap.range_type ='Province'\n" +
+            "AND scorelevelmap.target_id ='{{subjectId}}'\n" +
+            "and scorelevelmap.score_level = 'PASS'\n" +
+            ") pass on pass.school_id = a.school_id\n" +
+            "LEFT JOIN\n" +
+            "(\n" +
+            "select 'total' as school_id,concat(IFNULL(scorelevelmap.student_rate,'0.00'),'%') as fail\n" +
+            "from scorelevelmap\n" +
+            "where\n" +
+            "scorelevelmap.range_type ='Province'\n" +
+            "AND scorelevelmap.target_id ='{{subjectId}}'\n" +
+            "and scorelevelmap.score_level = 'FAIL'\n" +
+            ") fail on fail.school_id = a.school_id\n";
+
+    private static final String SCHOOL_PROJECT_OVER_AVERAGE_RATE = "select student.school_id ,CONCAT(FORMAT((COUNT(student.id)/a.count) *100,2),'%') as over_average from student\n" +
             " LEFT JOIN {{table}} on student.id = {{table}}.student_id\n" +
             " LEFT JOIN (SELECT\n" +
             " school.id  as school_id,\n" +
@@ -148,7 +239,12 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             " school.id) a on a.school_id = student.school_id\n" +
             " where {{table}}.score >= a.average_score GROUP BY student.school_id";
 
+    private static final String TOTAL_OVER_AVERAGE_RATE = "SELECT\n" +
+            "@total :=(select COUNT(1) from {{table}}),\n" +
+            "@over := (select count(1) from {{table}} where score > {{averageScore}}),\n" +
+            "@over /@total as over_average\n";
 
+    private static final String NOTE = "注：三率占比说明：优 {{xlnt}}，良{{good}}，及格{{pass}}";
     @Autowired
     private DAOFactory daoFactory;
 
@@ -170,78 +266,117 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         String projectId = sheetContext.getProjectId();
         DAO dao = daoFactory.getProjectDao(projectId);
 
-        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
-        JSONObject jsonObject = JSONArray.parseObject(reportConfig.getScoreLevels());
-
-        Row totalRow = new Row();       //总计行
-        totalRow.put("school_id", TOTAL_SCHOOL_ID);
-        totalRow.put("school_name", "总体");
-
         if (tableHeader.get("all_pass") == null) {//单科
             String subjectId = getSubjectId(sheetContext);
             //查每个学校每科的人数、最高分、最低分、平均分、四率
-            String sql = SCHOOL_PROJECT_OR_SUBJECT_INFO
-                    .replace("{{table}}", SUBJECT + subjectId)
-                    .replace("{{targetType}}", getTargetType(sheetContext))
-                    .replace("{{targetId}}", subjectId);
-            List<Row> rows = dao.query(sql);
-            sheetContext.rowAdd(rows);
-
-            //超均率
-            List<Row> overAverageRows = dao.query(
-                    SCHOOL_PROJECT_OVER_AVERAGE_RATE.replace("{{table}}", SUBJECT + subjectId));
-            sheetContext.rowAdd(overAverageRows);
+            List<Row> rows = putSchoolSubjectInfo(sheetContext, dao, subjectId);
 
             //先按平均分排名,最后增加总计行
             accordingAverageSorting(sheetContext, rows);
 
-            double fullScore = projectService.findProject(projectId).getFullScore();
-            String projectTotalSql = getTotalScoreLevel(rows, fullScore, jsonObject, SUBJECT + subjectId);
+            //每一科目的总计栏
+            Row totalRow = getSchoolSubjectTotalRow(dao, subjectId);
+            sheetContext.rowAdd(totalRow);
 
-            Row row = dao.queryFirst(projectTotalSql);
-            addTotalRowContent(rows, row, 0, 0, totalRow,false);   //填充总计行
         } else {//全科
-            //查学校参考人数、最高分、最低分、平均分、四率
-            String sql = SCHOOL_PROJECT_OR_SUBJECT_INFO
-                    .replace("{{table}}", "score_project")
-                    .replace("{{targetType}}", getTargetType(sheetContext))
-                    .replace("{{targetId}}", projectId);
-
-            List<Row> rows = dao.query(sql);
-            sheetContext.rowAdd(rows);
-
-            //超均率
-            List<Row> overAverageRows = dao.query(SCHOOL_PROJECT_OVER_AVERAGE_RATE.replace("{{table}}", "score_project"));
-            sheetContext.rowAdd(overAverageRows);
-
-            //全科及格率 、全科不及格率
-
-            List<Row> query = dao.query(PASS_OR_FAIL);
-            sheetContext.rowAdd(query);
-
-            int totalFail = query.stream()
-                    .mapToInt(row -> row.getInteger("all_fail_count", 0))
-                    .sum();
-            int totalPass = query.stream()
-                    .mapToInt(row->row.getInteger("all_pass_count",0))
-                    .sum();
+            List<Row> rows = putSchoolProjectInfo(sheetContext, projectId, dao);
 
             //先按平均分排名,最后增加总计行
             accordingAverageSorting(sheetContext, rows);
+            Row total = getSchoolProjectTotalRow(projectId, dao);
 
-
-            double fullScore = projectService.findProject(projectId).getFullScore();
-            String projectTotalSql = getTotalScoreLevel(rows, fullScore, jsonObject, "score_project");
-
-            Row row = dao.queryFirst(projectTotalSql);
-            addTotalRowContent(rows, row, totalFail, totalPass, totalRow,true);   //填充总计行
-
+            sheetContext.rowAdd(total);
         }
 
+        sheetContext.rowStyle("total", ExcelCellStyles.Green.name());
+        //添加注释
+        putNoteRow(sheetContext, projectId);
 
-        sheetContext.rowAdd(totalRow);
-        sheetContext.rowStyle(TOTAL_SCHOOL_ID, ExcelCellStyles.Green.name());
+        sheetContext.freeze(1, 2);
         sheetContext.saveData();// 保存到 ExcelWriter
+    }
+
+    private Row getSchoolProjectTotalRow(String projectId, DAO dao) {
+        //总计栏
+        Row total = dao.queryFirst(TOTAL_SCORE_INFO.replace("{{projectId}}", projectId));
+
+        double averageScore = total.getDouble("average_score", 0);
+        String averageRateSql = TOTAL_OVER_AVERAGE_RATE
+                .replace("{{table}}", "score_project")
+                .replace("{{averageScore}}", String.valueOf(averageScore));
+        Row overAverageRate = dao.queryFirst(averageRateSql);
+
+        String overRate = String.format("%.02f%%",
+                NumberUtil.scale(100.0 * overAverageRate.getDouble("over_average", 0), 2));
+        total.put("over_average", overRate);
+        return total;
+    }
+
+    private List<Row> putSchoolProjectInfo(SheetContext sheetContext, String projectId, DAO dao) {
+        //查学校参考人数、最高分、最低分、平均分、四率
+        String sql = SCHOOL_PROJECT_OR_SUBJECT_INFO
+                .replace("{{table}}", "score_project")
+                .replace("{{targetType}}", getTargetType(sheetContext))
+                .replace("{{targetId}}", projectId);
+
+        List<Row> rows = dao.query(sql);
+        sheetContext.rowAdd(rows);
+
+        //超均率
+        List<Row> schoolOverAverageRows = dao.query(SCHOOL_PROJECT_OVER_AVERAGE_RATE.replace("{{table}}", "score_project"));
+        sheetContext.rowAdd(schoolOverAverageRows);
+
+        //全科及格率 、全科不及格率
+        sheetContext.rowAdd(dao.query(PASS_OR_FAIL));
+        return rows;
+    }
+
+    private Row getSchoolSubjectTotalRow(DAO dao, String subjectId) {
+        Row totalRow = dao.queryFirst(SUBJECT_TOTAL_ROW.replace("{{subjectId}}", subjectId));
+
+        double averageScore = totalRow.getDouble("average_score", 0);
+
+        String totalOverAverageRateSql = TOTAL_OVER_AVERAGE_RATE
+                .replace("{{table}}", SUBJECT + subjectId)
+                .replace("{{averageScore}}", String.valueOf(averageScore));
+
+        Row totalOverAverageRate = dao.queryFirst(totalOverAverageRateSql);
+        String overRate = String.format("%.02f%%",
+                NumberUtil.scale(100.0 * totalOverAverageRate.getDouble("over_average", 0), 2));
+        totalRow.put("over_average", overRate);
+        return totalRow;
+    }
+
+    private List<Row> putSchoolSubjectInfo(SheetContext sheetContext, DAO dao, String subjectId) {
+        String sql = SCHOOL_PROJECT_OR_SUBJECT_INFO
+                .replace("{{table}}", SUBJECT + subjectId)
+                .replace("{{targetType}}", getTargetType(sheetContext))
+                .replace("{{targetId}}", subjectId);
+        List<Row> rows = dao.query(sql);
+        sheetContext.rowAdd(rows);
+
+        //超均率
+        List<Row> schoolSubjectOverAverageRows = dao.query(
+                SCHOOL_PROJECT_OVER_AVERAGE_RATE.replace("{{table}}", SUBJECT + subjectId));
+        sheetContext.rowAdd(schoolSubjectOverAverageRows);
+        return rows;
+    }
+
+    private void putNoteRow(SheetContext sheetContext, String projectId) {
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
+        JSONObject jsonObject = JSONArray.parseObject(reportConfig.getScoreLevels());
+
+        String xlnt = jsonObject.getDouble("Excellent") * 100 + "%";
+        String good = jsonObject.getDouble("Good") * 100 + "%";
+        String pass = jsonObject.getDouble("Pass") * 100 + "%";
+        String text = NOTE
+                .replace("{{xlnt}}", xlnt)
+                .replace("{{good}}", good)
+                .replace("{{pass}}", pass);
+        Row noteRow = new Row();
+        noteRow.put("school_id", "note");
+        noteRow.put("school_name", text);
+        sheetContext.rowAdd(noteRow);
     }
 
 
@@ -265,8 +400,8 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             index++;
         }
 
-        sheetContext.freeze(0,2);
         sheetContext.columnWidth(0, 20);   // 学校名称字段约 20 个字符宽
+        sheetContext.headerMove(Direction.DOWN);
     }
 
 
@@ -282,59 +417,10 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         rows.forEach(row -> {
             String schoolId = row.getString("school_id");
             int rank = ranker.getRank(schoolId, false);
-            sheetContext.tablePutValue(schoolId, rankColumnName, rank);
+            sheetContext.tablePutValue(schoolId, rankColumnName, rank+1);
 
         });
     }
-
-
-    private void addTotalRowContent(List<Row> rows,
-                 Row total, double totalFail, double totalPass,
-                 Row totalRow,boolean allSubjects) {
-
-        int studentCount = rows.stream()
-                .mapToInt(row -> row.getInteger("student_count", 0))
-                .sum();
-        double maxScore = rows.stream()
-                .mapToDouble(row -> row.getDouble("max_score", 0))
-                .summaryStatistics()
-                .getMax();
-        double minScore = rows.stream()
-                .mapToDouble(row -> row.getDouble("min_score", 0))
-                .summaryStatistics()
-                .getMin();
-        double averageScore = rows.stream()
-                .mapToDouble(row -> row.getDouble("average_score", 0))
-                .sum() / rows.size();
-        //学生总数   最高分   最低分  平均分
-        totalRow.put("student_count", studentCount);
-        totalRow.put("max_score", maxScore);
-        totalRow.put("min_score", minScore);
-        totalRow.put("average_score", NumberUtil.scale(averageScore, 2));
-        totalRow.put("average_range", "--");
-
-        totalRow.put("excellent", String.format("%.02f%%",
-                NumberUtil.scale(total.getDouble("xlnt_rate", 0) * 100, 2)));
-        totalRow.put("good", String.format("%.02f%%",
-                NumberUtil.scale(total.getDouble("good_rate", 0) * 100, 2)));
-        totalRow.put("pass", String.format("%.02f%%",
-                NumberUtil.scale(total.getDouble("pass_rate", 0) * 100, 2)));
-        totalRow.put("fail", String.format("%.02f%%",
-                NumberUtil.scale(total.getDouble("fail_rate", 0) * 100, 2)));
-        totalRow.put("over_average", String.format("%.02f%%",
-                NumberUtil.scale(total.getDouble("average_rate", 0) * 100, 2)));
-
-        if (allSubjects){
-            String passRate = String.format("%.02f%%",
-                    NumberUtil.scale(100.0 * totalPass / studentCount, 2));
-            String failRate = String.format("%.02f%%",
-                    NumberUtil.scale(100.0 * totalFail / studentCount, 2));
-            totalRow.put("all_pass", passRate);
-            totalRow.put("all_fail", failRate);
-        }
-
-    }
-
 
 
     protected abstract Map<String, String> getTableHeader();
@@ -345,22 +431,4 @@ public abstract class TotalAverageSheet extends SheetGenerator {
 
     protected abstract String getSubjectId(SheetContext sheetContext);
 
-
-    private String getTotalScoreLevel(List<Row> rows, double fullScore, JSONObject jsonObject, String tableName) {
-
-        double excellentScore = jsonObject.getDouble("Excellent") * fullScore;
-        double goodScore = jsonObject.getDouble("Good") * fullScore;
-        double passScore = jsonObject.getDouble("Pass") * fullScore;
-
-        double averageScore = rows.stream()
-                .mapToDouble(row -> row.getDouble("average_score", 0))
-                .sum() / rows.size();
-
-        return TOTAL_SCORE_LEVEL
-                .replace("{{table}}", tableName)
-                .replace("{{average_score}}", String.valueOf(averageScore))
-                .replace("{{fail_score}}", String.valueOf(passScore))
-                .replace("{{good_score}}", String.valueOf(goodScore))
-                .replace("{{excellent_score}}", String.valueOf(excellentScore));
-    }
 }
