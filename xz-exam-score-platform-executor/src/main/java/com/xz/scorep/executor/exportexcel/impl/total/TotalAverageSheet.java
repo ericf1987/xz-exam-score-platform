@@ -279,12 +279,13 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             sheetContext.rowAdd(totalRow);
 
         } else {//全科
+            //查学校参考人数、最高分、最低分、平均分、四率
             List<Row> rows = putSchoolProjectInfo(sheetContext, projectId, dao);
 
             //先按平均分排名,最后增加总计行
             accordingAverageSorting(sheetContext, rows);
-            Row total = getSchoolProjectTotalRow(projectId, dao);
 
+            Row total = getSchoolProjectTotalRow(projectId, dao);
             sheetContext.rowAdd(total);
         }
 
@@ -292,7 +293,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         //添加注释
         putNoteRow(sheetContext, projectId);
 
-        sheetContext.freeze(1, 2);
+        sheetContext.freeze(3, 1);
         sheetContext.saveData();// 保存到 ExcelWriter
     }
 
@@ -313,7 +314,6 @@ public abstract class TotalAverageSheet extends SheetGenerator {
     }
 
     private List<Row> putSchoolProjectInfo(SheetContext sheetContext, String projectId, DAO dao) {
-        //查学校参考人数、最高分、最低分、平均分、四率
         String sql = SCHOOL_PROJECT_OR_SUBJECT_INFO
                 .replace("{{table}}", "score_project")
                 .replace("{{targetType}}", getTargetType(sheetContext))
