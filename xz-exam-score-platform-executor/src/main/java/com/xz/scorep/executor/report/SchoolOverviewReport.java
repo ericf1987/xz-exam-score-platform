@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.report;
 
+import com.hyd.dao.Row;
 import com.xz.scorep.executor.aggritems.AverageQuery;
 import com.xz.scorep.executor.aggritems.MinMaxQuery;
 import com.xz.scorep.executor.aggritems.ScoreLevelRateQuery;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -35,10 +37,10 @@ public class SchoolOverviewReport extends AbstractReport {
     private ScoreLevelRateQuery scoreLevelRateQuery;
 
     @Override
-    public Map<?, ?> generateReport(String projectId, String schoolId) {
+    public Map<?, ?> generateReport(String projectId, String schoolId, String subjectId) {
 
         // 各科平均分
-        Map<String, String> schoolSubjectAverages = averageQuery.getSchoolSubjectAverages(projectId, schoolId);
+        List<Row> schoolSubjectAverages = averageQuery.getSchoolSubjectAverages(projectId, schoolId);
 
         //////////////////////////////////////////////////////////////
 

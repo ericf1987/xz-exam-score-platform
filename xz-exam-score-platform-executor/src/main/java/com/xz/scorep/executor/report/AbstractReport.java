@@ -16,5 +16,5 @@ public abstract class AbstractReport {
         this.reportManager.register(this);
     }
 
-    public abstract Map<?,?> generateReport(String projectId, String schoolId);
+    public abstract Map<?,?> generateReport(String projectId, String schoolId, String subjectId);
 }

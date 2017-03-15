@@ -1,9 +1,11 @@
 package com.xz.scorep.executor.aggritems;
 
+import com.hyd.dao.Row;
 import com.xz.scorep.executor.BaseTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,8 +27,8 @@ public class AverageQueryTest extends BaseTest {
 
     @Test
     public void getSchoolSubjectAverages() throws Exception {
-        Map<String, String> averages = averageQuery.getSchoolSubjectAverages(PROJECT_ID, SCHOOL_ID);
-        averages.entrySet().forEach(System.out::println);
+        List<Row> averages = averageQuery.getSchoolSubjectAverages(PROJECT_ID, SCHOOL_ID);
+        averages.forEach(System.out::println);
     }
 
     @Test
