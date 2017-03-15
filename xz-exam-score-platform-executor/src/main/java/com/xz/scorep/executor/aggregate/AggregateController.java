@@ -28,7 +28,7 @@ public class AggregateController {
     public String runAggregate(
             @RequestParam("projectId") String projectId,
             @RequestParam(required = false, name = "aggrName") String aggrName,
-            @RequestParam(required = false, name = "Basic") String aggrType,
+            @RequestParam(required = false, name = "Basic", defaultValue = "Basic") String aggrType,
             @RequestParam(required = false, name = "async", defaultValue = "false") boolean async
     ) {
         if (StringUtil.isNotBlank(aggrName)) {
