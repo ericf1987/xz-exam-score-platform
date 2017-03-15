@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.exportexcel;
 
 import com.xz.ajiaedu.common.cryption.MD5;
+import com.xz.ajiaedu.common.io.FileUtils;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.ajiaedu.common.xml.XmlNode;
 import com.xz.ajiaedu.common.xml.XmlNodeReader;
@@ -14,6 +15,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -67,6 +70,16 @@ public class ExcelReportManager implements ApplicationContextAware {
      */
     void generateReports(final String projectId, boolean async) {
 
+        String reportRootPath = excelConfig.getSavePath();
+        String projectReportRootPath = getSaveFilePath(projectId, reportRootPath, "");
+
+        try {
+            LOG.info("删除旧的报表文件...");
+            FileUtils.deleteDirectory(new File(projectReportRootPath));
+        } catch (IOException e) {
+            throw new ExcelReportException("删除旧报表文件失败", e);
+        }
+
         int poolSize = excelConfig.getPoolSize();
         List<ReportTask> reportTasks = createReportGenerators(projectId);
         AsyncCounter counter = new AsyncCounter("生成报表", reportTasks.size(), 20);
@@ -76,7 +89,7 @@ public class ExcelReportManager implements ApplicationContextAware {
             Runnable runnable = () -> {
                 try {
                     String filePath = reportTask.getCategory() + "/" + reportTask.getFileName();
-                    String saveFilePath = getSaveFilePath(projectId, excelConfig.getSavePath(), filePath);
+                    String saveFilePath = getSaveFilePath(projectId, reportRootPath, filePath);
 
                     ReportGenerator reportGenerator = applicationContext.getBean(reportTask.getGeneratorClass());
                     reportGenerator.generate(projectId, reportTask.getRange(), reportTask.getTarget(), saveFilePath);

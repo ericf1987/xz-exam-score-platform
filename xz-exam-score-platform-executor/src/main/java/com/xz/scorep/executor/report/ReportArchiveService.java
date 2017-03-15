@@ -35,6 +35,15 @@ public class ReportArchiveService {
     private OSSFileClient ossFileClient;
 
     public void startProjectArchive(String projectId) {
+
+        synchronized (this) {
+            if (runningArchives.contains(projectId)) {
+                LOG.info("项目 " + projectId + " 已经在打包全科报表。");
+                return;
+            }
+        }
+
+        LOG.info("开始给项目 " + projectId + " 打全科报表...");
         runningArchives.add(projectId);
 
         String excelPath = excelConfig.getSavePath();
@@ -43,6 +52,8 @@ public class ReportArchiveService {
         File tempFile = createZipArchive(archiveRoot);
         String uploadPath = uploadZipArchive(projectId, tempFile, "all.zip");
         saveProjectArchiveRecord(projectId, uploadPath);
+
+        LOG.info("项目 " + projectId + " 全科报表打包完毕。");
     }
 
     private void saveProjectArchiveRecord(String projectId, String uploadPath) {
@@ -84,6 +95,15 @@ public class ReportArchiveService {
     }
 
     public void startSubjectArchive(String projectId, String subjectId) {
+
+        synchronized (this) {
+            if (runningArchives.contains(projectId + ":" + subjectId)) {
+                LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 已经在打包报表。");
+                return;
+            }
+        }
+
+        LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 开始打包报表...");
         runningArchives.add(projectId + ":" + subjectId);
 
         String subjectName = SubjectService.getSubjectName(subjectId);
@@ -93,6 +113,7 @@ public class ReportArchiveService {
         File tempFile = createZipArchive(archiveRoot);
         String uploadPath = uploadZipArchive(projectId, tempFile, subjectId + ".zip");
         saveProjectArchiveRecord(projectId, uploadPath);
+        LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 报表打包完毕。");
     }
 
     public ArchiveStatus getProjectArchiveStatus(String projectId) {
