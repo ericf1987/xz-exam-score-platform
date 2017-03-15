@@ -121,7 +121,7 @@ public class ExcelReportManager implements ApplicationContextAware {
      *
      * @return 报表文件路径
      */
-    private String getSaveFilePath(String projectId, String savePath, String filePath) {
+    public static String getSaveFilePath(String projectId, String savePath, String filePath) {
         String md5 = MD5.digest(projectId);
 
         return StringUtil.joinPaths(savePath,

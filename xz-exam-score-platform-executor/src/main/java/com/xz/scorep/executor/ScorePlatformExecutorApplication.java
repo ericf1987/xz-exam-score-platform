@@ -1,5 +1,7 @@
 package com.xz.scorep.executor;
 
+import com.xz.ajiaedu.common.aliyun.OSSFileClient;
+import com.xz.ajiaedu.common.aliyun.OSSTempCridentialKeeper2;
 import com.xz.ajiaedu.common.appauth.AppAuthClient;
 import com.xz.scorep.executor.config.AppAuthConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,5 +28,11 @@ public class ScorePlatformExecutorApplication {
                 appAuthConfig.getAppKey(),
                 appAuthConfig.getAppSecret()
         );
+    }
+
+    @Bean
+    public OSSFileClient ossFileClient() {
+        return new OSSFileClient(
+                new OSSTempCridentialKeeper2(appAuthClient(), "znxunzhi-ajiaedu-update"));
     }
 }

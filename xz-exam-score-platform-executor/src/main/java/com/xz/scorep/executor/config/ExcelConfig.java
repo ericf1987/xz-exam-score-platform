@@ -11,6 +11,16 @@ public class ExcelConfig {
 
     private String savePath;
 
+    private String archiveUrlPrefix;
+
+    public String getArchiveUrlPrefix() {
+        return archiveUrlPrefix;
+    }
+
+    public void setArchiveUrlPrefix(String archiveUrlPrefix) {
+        this.archiveUrlPrefix = archiveUrlPrefix;
+    }
+
     public int getPoolSize() {
         return poolSize;
     }
