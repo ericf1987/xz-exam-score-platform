@@ -26,7 +26,7 @@ public class AggregateController {
      * @param aggrType      统计类型（可选，当 aggrName 不为空时将被忽略）
      * @param async         是否异步统计
      * @param importProject 是否（重新）导入考试信息，当项目不存在时强制重新导入
-     * @param importScore   是否（重新）导入考试成绩
+     * @param importScore   是否（重新）导入考试成绩，当项目不存在时强制重新导入
      *
      * @return 统计结果
      */

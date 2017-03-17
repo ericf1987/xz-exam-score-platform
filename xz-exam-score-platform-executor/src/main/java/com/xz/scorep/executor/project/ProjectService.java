@@ -26,7 +26,7 @@ public class ProjectService {
     }
 
     // 检查数据库是否存在
-    private boolean projectDatabaseExists(String projectId) {
+    public boolean projectDatabaseExists(String projectId) {
         String sql = "SELECT schema_name FROM INFORMATION_SCHEMA.SCHEMATA WHERE schema_name=?";
         Row row = daoFactory.getRootDao().queryFirst(sql, projectId);
         return row != null;

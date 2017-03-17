@@ -2,6 +2,7 @@ package com.xz.scorep.executor.aggregate;
 
 import com.xz.scorep.executor.importproject.ImportProjectParameters;
 import com.xz.scorep.executor.importproject.ImportProjectService;
+import com.xz.scorep.executor.project.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class AggregateService {
 
     @Autowired
     private ImportProjectService importProjectService;
+
+    @Autowired
+    private ProjectService projectService;
 
     private Map<String, Aggregator> aggregatorMap = new HashMap<>();
 
@@ -87,7 +91,7 @@ public class AggregateService {
             createAggregationRecord(aggregation);
 
             // 根据需要导入数据
-            importData(parameter, projectId);
+            importData(parameter);
 
             // 对要求统计的指标执行统计
             runAggregators(condition, projectId);
@@ -122,14 +126,22 @@ public class AggregateService {
         }
     }
 
-    private void importData(AggregateParameter parameter, String projectId) {
-        // 导入项目信息
-        if (parameter.isImportProject()) {
+    private void importData(AggregateParameter parameter) {
+
+        String projectId = parameter.getProjectId();
+        boolean databaseExists = projectService.projectDatabaseExists(projectId);
+
+        if (!databaseExists) {
+            projectService.initProjectDatabase(projectId);
+        }
+
+        // 导入项目信息（如果项目数据不存在，则一定会执行）
+        if (parameter.isImportProject() || !databaseExists) {
             importProjectService.importProject(ImportProjectParameters.importAllButScore(projectId));
         }
 
-        // 导入项目分数
-        if (parameter.isImportScore()) {
+        // 导入项目分数（如果项目数据不存在，则一定会执行）
+        if (parameter.isImportScore() || !databaseExists) {
             importProjectService.importProject(ImportProjectParameters.importScoreOnly(projectId));
         }
     }
