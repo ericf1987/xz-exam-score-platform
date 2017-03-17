@@ -16,6 +16,31 @@ public class ImportProjectParameters {
         parameters.setImportReportConfig(true);
         parameters.setImportStudents(true);
         parameters.setImportQuests(true);
+        parameters.setImportScore(true);
+        return parameters;
+    }
+
+    public static ImportProjectParameters importAllButScore(String projectId) {
+        ImportProjectParameters parameters = new ImportProjectParameters();
+        parameters.setProjectId(projectId);
+        parameters.setRecreateDatabase(true);
+        parameters.setImportProjectInfo(true);
+        parameters.setImportReportConfig(true);
+        parameters.setImportStudents(true);
+        parameters.setImportQuests(true);
+        parameters.setImportScore(false);
+        return parameters;
+    }
+
+    public static ImportProjectParameters importScoreOnly(String projectId) {
+        ImportProjectParameters parameters = new ImportProjectParameters();
+        parameters.setProjectId(projectId);
+        parameters.setRecreateDatabase(false);
+        parameters.setImportProjectInfo(false);
+        parameters.setImportReportConfig(false);
+        parameters.setImportStudents(false);
+        parameters.setImportQuests(false);
+        parameters.setImportScore(true);
         return parameters;
     }
 
@@ -27,6 +52,7 @@ public class ImportProjectParameters {
         parameters.setImportReportConfig(false);
         parameters.setImportStudents(false);
         parameters.setImportQuests(false);
+        parameters.setImportScore(false);
         return parameters;
     }
 

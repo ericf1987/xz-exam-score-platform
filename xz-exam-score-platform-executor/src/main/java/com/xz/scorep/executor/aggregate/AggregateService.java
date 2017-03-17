@@ -1,5 +1,7 @@
 package com.xz.scorep.executor.aggregate;
 
+import com.xz.scorep.executor.importproject.ImportProjectParameters;
+import com.xz.scorep.executor.importproject.ImportProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,9 @@ public class AggregateService {
     @Autowired
     private AggregationService aggregationService;
 
+    @Autowired
+    private ImportProjectService importProjectService;
+
     private Map<String, Aggregator> aggregatorMap = new HashMap<>();
 
     /**
@@ -30,25 +35,27 @@ public class AggregateService {
         this.aggregatorMap.put(aggregator.getAggrName(), aggregator);
     }
 
+    //////////////////////////////////////////////////////////////
+
     /**
-     * 执行所有统计项（异步）
+     * 执行统计（异步）
      *
-     * @param projectId     项目ID
-     * @param aggregateType 统计类型
+     * @param parameter 统计参数
      */
-    public void runAggregateAsync(final String projectId, AggregateType aggregateType) {
-        Runnable runnable = () -> runAggregate(projectId, aggregateType);
+    public void runAggregateAsync(AggregateParameter parameter) {
+        Runnable runnable = () -> runAggregate(parameter);
         executorService.submit(runnable);
     }
 
     /**
-     * 执行一类特定的统计项
+     * 执行统计
      *
-     * @param projectId     项目ID
-     * @param aggregateType 统计类别
+     * @param parameter 统计参数
      */
-    public void runAggregate(String projectId, AggregateType aggregateType) {
-        runAggregate(projectId, aggregator ->
+    public void runAggregate(AggregateParameter parameter) {
+        AggregateType aggregateType = parameter.getAggregateType();
+
+        runAggregate(parameter, aggregator ->
                 aggregateType == AggregateType.Complete || aggregator.isOfType(aggregateType));
     }
 
@@ -64,46 +71,66 @@ public class AggregateService {
     }
 
     /**
-     * 执行所有的统计项
-     *
-     * @param projectId 项目ID
-     */
-    public void runAggregate(final String projectId) {
-        Predicate<Aggregator> allAggregators = aggregator -> true;
-        runAggregate(projectId, allAggregators);
-    }
-
-    /**
      * 执行满足条件的统计项
      *
-     * @param projectId 项目ID
+     * @param parameter 统计参数
+     * @param condition 对哪些指标做统计
      */
-    public void runAggregate(final String projectId, Predicate<Aggregator> condition) {
+    public void runAggregate(final AggregateParameter parameter, Predicate<Aggregator> condition) {
 
+        String projectId = parameter.getProjectId();
         Aggregation aggregation = new Aggregation(projectId);
 
         try {
-            aggregation.setStatus(AggregateStatus.Running);
-            aggregation.setStartTime(new Date());
-            aggregationService.insertAggregation(aggregation);
 
-            List<Aggregator> aggregators = new ArrayList<>(this.aggregatorMap.values());
-            aggregators.removeIf(condition.negate());
-            aggregators.sort(Comparator.comparingInt(Aggregator::getAggregateOrder));
+            // 添加本次统计记录
+            createAggregationRecord(aggregation);
 
-            for (Aggregator aggregator : aggregators) {
-                aggregator.aggregate(projectId);
-            }
+            // 根据需要导入数据
+            importData(parameter, projectId);
+
+            // 对要求统计的指标执行统计
+            runAggregators(condition, projectId);
+
         } catch (Exception e) {
             LOG.error("项目 " + projectId + " 统计失败", e);
         } finally {
             aggregation.setStatus(AggregateStatus.Finished);
             aggregation.setEndTime(new Date());
 
+            // 更新本次统计记录
             aggregationService.endAggregation(
                     aggregation.getId(), aggregation.getStatus(), aggregation.getEndTime());
 
             LOG.info("项目 " + projectId + " 统计完成，耗时 " + aggregation.duration() + " ms");
+        }
+    }
+
+    private void createAggregationRecord(Aggregation aggregation) {
+        aggregation.setStatus(AggregateStatus.Running);
+        aggregation.setStartTime(new Date());
+        aggregationService.insertAggregation(aggregation);
+    }
+
+    private void runAggregators(Predicate<Aggregator> condition, String projectId) throws Exception {
+        List<Aggregator> aggregators = new ArrayList<>(this.aggregatorMap.values());
+        aggregators.removeIf(condition.negate());
+        aggregators.sort(Comparator.comparingInt(Aggregator::getAggregateOrder));
+
+        for (Aggregator aggregator : aggregators) {
+            aggregator.aggregate(projectId);
+        }
+    }
+
+    private void importData(AggregateParameter parameter, String projectId) {
+        // 导入项目信息
+        if (parameter.isImportProject()) {
+            importProjectService.importProject(ImportProjectParameters.importAllButScore(projectId));
+        }
+
+        // 导入项目分数
+        if (parameter.isImportScore()) {
+            importProjectService.importProject(ImportProjectParameters.importScoreOnly(projectId));
         }
     }
 
