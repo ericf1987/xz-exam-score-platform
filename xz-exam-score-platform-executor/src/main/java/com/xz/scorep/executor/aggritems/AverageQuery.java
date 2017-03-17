@@ -7,10 +7,7 @@ import com.xz.scorep.executor.project.SubjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -39,7 +36,7 @@ public class AverageQuery {
             "'{{subject}}' as subject, avg(score) as average from score_subject_{{subject}}";
 
     private static final String AVG_SUBJECT_SCHOOL = "select " +
-            "'{{subject}}' as subject, avg(score) as average from score_subject_{{subject}} where student_id in(\n" +
+            "'{{subjectId}}' as subject_id,'{{subjectName}}' as subject_name, avg(score) as avg_score from score_subject_{{subjectId}} where student_id in(\n" +
             "  select id from student where class_id in (\n" +
             "    select id from class where school_id=?\n" +
             "  )\n" +
@@ -72,13 +69,16 @@ public class AverageQuery {
     }
 
     // 学校各科平均分
-    public Map<String, String> getSchoolSubjectAverages(String projectId, String schoolId) {
+    public List<Row> getSchoolSubjectAverages(String projectId, String schoolId) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<String> subjectQueries = new ArrayList<>();
 
         subjectService.listSubjects(projectId).forEach(subject -> {
             String subjectId = subject.getId();
-            subjectQueries.add(AVG_SUBJECT_SCHOOL.replace("{{subject}}", subjectId));
+            String subjectName = subject.getName();
+            String sql = AVG_SUBJECT_SCHOOL
+                    .replace("{{subjectId}}", subjectId).replace("{{subjectName}}",subjectName);
+            subjectQueries.add(sql);
         });
 
         String finalQuery = String.join(" union ", subjectQueries);
@@ -86,12 +86,10 @@ public class AverageQuery {
         Arrays.fill(params, schoolId);
 
         List<Row> rows = projectDao.query(finalQuery, (Object[]) params);
+        return rows;
 
-        return rows.stream().collect(Collectors.toMap(
-                row -> row.getString("subject"),
-                row -> row.getString("average")
-        ));
     }
+
 
     // 学校总分平均分
     public double getSchoolProjectAverage(String projectId, String schoolId) {

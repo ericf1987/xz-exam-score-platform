@@ -33,10 +33,11 @@ public class ReportController {
      *
      * @return 报表内容
      */
-    @GetMapping("/report/{projectId}/{schoolId}/{reportName}")
+    @GetMapping("/report/{projectId}/{schoolId}/{subjectId}/{reportName}")
     @ResponseBody
     public Result getReport(@PathVariable("projectId") String projectId,
                             @PathVariable("schoolId") String schoolId,
+                            @PathVariable("subjectId") String subjectId,
                             @PathVariable("reportName") String reportName) {
 
         AbstractReport report = reportManager.getReport(reportName);
@@ -45,7 +46,7 @@ public class ReportController {
             return Result.fail(404, "没有找到报表 " + reportName);
         }
 
-        Map<?, ?> reportContent = report.generateReport(projectId, schoolId);
+        Map<?, ?> reportContent = report.generateReport(projectId, schoolId,subjectId);
         return Result.success().set("report", reportContent);
     }
 
