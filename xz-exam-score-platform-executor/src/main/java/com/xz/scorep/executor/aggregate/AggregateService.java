@@ -1,5 +1,7 @@
 package com.xz.scorep.executor.aggregate;
 
+import com.hyd.dao.Row;
+import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.importproject.ImportProjectParameters;
 import com.xz.scorep.executor.importproject.ImportProjectService;
 import com.xz.scorep.executor.project.ProjectService;
@@ -7,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -161,5 +164,10 @@ public class AggregateService {
                 LOG.error("项目 " + projectId + " 的 " + aggrName + " 统计失败", e);
             }
         }
+    }
+
+    public Row getAggregationStatus(String projectId) {
+        Row row = aggregationService.getAggregateStatus(projectId);
+        return row;
     }
 }

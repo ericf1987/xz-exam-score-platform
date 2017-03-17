@@ -5,6 +5,8 @@ import com.xz.ajiaedu.common.http.HttpRequest;
 import com.xz.scorep.executor.BaseTest;
 import org.junit.Test;
 
+import java.io.IOException;
+
 /**
  * (description)
  * created at 2017/3/15
@@ -17,6 +19,14 @@ public class ReportControllerTest {
 
     static {
         BaseTest.setupProxy();
+    }
+
+    @Test
+    public void test() throws IOException {
+        String url = "http://10.10.22.212:8180/report/" + PROJECT_ID + "/1b4289a9-58e2-4560-8617-27f791f956b6/000/SubjectsAverageScore";
+        HttpRequest request = new HttpRequest(url);
+        String response = request.request();
+        System.out.println(response);
     }
 
     @Test

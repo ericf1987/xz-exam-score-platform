@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.aggregate;
 
+import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +16,6 @@ public class AggregateController {
     @Autowired
     private AggregateService aggregateService;
 
-    @Autowired
-    private AggregationService aggregationService;
-
     /**
      * 执行统计
      *
@@ -27,7 +25,6 @@ public class AggregateController {
      * @param async         是否异步统计
      * @param importProject 是否（重新）导入考试信息，当项目不存在时强制重新导入
      * @param importScore   是否（重新）导入考试成绩，当项目不存在时强制重新导入
-     *
      * @return 统计结果
      */
     @PostMapping("/aggr/start")
@@ -69,5 +66,7 @@ public class AggregateController {
     @GetMapping("/aggr/status")
     @ResponseBody
     public Result getAggregationStatus(@RequestParam("projectId") String projectId) {
+        Row row = aggregateService.getAggregationStatus(projectId);
+        return Result.success().set("status", row);
     }
 }

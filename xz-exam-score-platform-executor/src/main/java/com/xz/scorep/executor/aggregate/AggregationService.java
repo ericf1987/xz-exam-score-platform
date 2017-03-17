@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.List;
 
 @Service
 public class AggregationService {
@@ -30,15 +29,8 @@ public class AggregationService {
     }
 
     public Row getAggregateStatus(String projectId) {
-        String sql = "select start_time,end_time from aggregation where project_id = ?";
-        List<Row> list = this.daoFactory.getManagerDao().query(sql, projectId);
-        if (list.isEmpty() || list.size() == 0) {
-            Row row = new Row();
-            row.put("start_time", "0");
-            row.put("end_time", "0");
-            return row;
-        } else {
-            return list.get(list.size() - 1);
-        }
+        String sql = "select start_time,end_time from aggregation where project_id = ? order by start_time desc LIMIT 1";
+        Row row = this.daoFactory.getManagerDao().queryFirst(sql, projectId);
+        return row;
     }
 }
