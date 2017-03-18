@@ -24,10 +24,10 @@ public class AggregateController {
      * @param importScore   是否（重新）导入考试成绩，当项目不存在时强制重新导入
      * @return 统计结果
      */
-    @PostMapping("/aggr/start")
+    @PostMapping("/aggr/start/{projectId}/{Basic}/{async}/{importProject}/{importScore}")
     @ResponseBody
     public Result runAggregate(
-            @RequestParam("projectId") String projectId,
+            @PathVariable("projectId") String projectId,
             @RequestParam(required = false, name = "aggrName") String aggrName,
             @RequestParam(required = false, name = "Basic", defaultValue = "Basic") String aggrType,
             @RequestParam(required = false, name = "async", defaultValue = "false") boolean async,

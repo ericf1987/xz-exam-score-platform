@@ -31,7 +31,19 @@ public class ReportControllerTest {
 
 
     @Test
-    public void test() throws IOException {
+    public void test() {
+        String url = "http://10.10.22.212:8180/aggr/start/430300-564140e278df4e92a2a739a6f27ac391/Quick/true/false/false";
+        HttpRequest request = new HttpRequest(url);
+        try {
+            String post = request.requestPost();
+            System.out.println(post);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void test111() throws IOException {
         String url = "http://10.10.22.212:8180/report/" + PROJECT_ID + "/1b4289a9-58e2-4560-8617-27f791f956b6/000/SubjectsAverageScore";
         HttpRequest request = new HttpRequest(url);
         String response = request.request();
