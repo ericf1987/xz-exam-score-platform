@@ -5,10 +5,7 @@ import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class AggregateController {
@@ -63,9 +60,9 @@ public class AggregateController {
         }
     }
 
-    @GetMapping("/aggr/status")
+    @GetMapping("/aggr/status/{projectId}")
     @ResponseBody
-    public Result getAggregationStatus(@RequestParam("projectId") String projectId) {
+    public Result getAggregationStatus(@PathVariable("projectId") String projectId) {
         Row row = aggregateService.getAggregationStatus(projectId);
         return Result.success().set("status", row);
     }
