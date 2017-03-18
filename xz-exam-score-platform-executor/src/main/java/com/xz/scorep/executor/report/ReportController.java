@@ -120,8 +120,9 @@ public class ReportController {
         String url;
 
         if (StringUtil.isEmpty(subjectId)) {
+            //全科报表  设置科目ID为000
             status = reportArchiveService.getProjectArchiveStatus(projectId);
-            url = reportArchiveService.getProjectArchiveUrl(projectId);
+            url = reportArchiveService.getSubjectArchiveUrl(projectId,"000");
         } else {
             status = reportArchiveService.getSubjectArchiveStatus(projectId, subjectId);
             url = reportArchiveService.getSubjectArchiveUrl(projectId, subjectId);

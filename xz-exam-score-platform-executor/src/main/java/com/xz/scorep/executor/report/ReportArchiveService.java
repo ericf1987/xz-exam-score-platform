@@ -32,6 +32,9 @@ public class ReportArchiveService {
     private ExcelConfig excelConfig;
 
     @Autowired
+    SubjectService subjectService;
+
+    @Autowired
     private OSSFileClient ossFileClient;
 
     public void startProjectArchive(String projectId) {
@@ -51,17 +54,17 @@ public class ReportArchiveService {
 
         File tempFile = createZipArchive(archiveRoot);
         String uploadPath = uploadZipArchive(projectId, tempFile, "all.zip");
-        saveProjectArchiveRecord(projectId, uploadPath);
+        saveProjectArchiveRecord("000", projectId, uploadPath);
 
         LOG.info("项目 " + projectId + " 全科报表打包完毕。");
     }
 
-    private void saveProjectArchiveRecord(String projectId, String uploadPath) {
-        String currentUrl = getProjectArchiveUrl(projectId);
+    private void saveProjectArchiveRecord(String subjectId, String projectId, String uploadPath) {
+        String currentUrl = getSubjectArchiveUrl(projectId, subjectId);
         if (currentUrl == null) {
             String url = excelConfig.getArchiveUrlPrefix() + uploadPath;
-            daoFactory.getManagerDao().execute("insert into report_archive(project_id,last_generate,archive_url) " +
-                    "values(?,current_timestamp,?)", projectId, url);
+            daoFactory.getManagerDao().execute("insert into report_archive(project_id,subject_id,last_generate,archive_url) " +
+                    "values(?,?,current_timestamp,?)", projectId, subjectId, url);
         }
     }
 
@@ -106,13 +109,13 @@ public class ReportArchiveService {
         LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 开始打包报表...");
         runningArchives.add(projectId + ":" + subjectId);
 
-        String subjectName = SubjectService.getSubjectName(subjectId);
+        String subjectName = subjectService.getSubjectName(subjectId);
         String excelPath = excelConfig.getSavePath();
         String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "单科报表/" + subjectName);
 
         File tempFile = createZipArchive(archiveRoot);
-        String uploadPath = uploadZipArchive(projectId, tempFile, subjectId + ".zip");
-        saveProjectArchiveRecord(projectId, uploadPath);
+        String uploadPath = uploadZipArchive(projectId, tempFile, subjectName + ".zip");
+        saveProjectArchiveRecord(subjectId, projectId, uploadPath);
         LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 报表打包完毕。");
     }
 
@@ -122,12 +125,6 @@ public class ReportArchiveService {
 
     public ArchiveStatus getSubjectArchiveStatus(String projectId, String subjectId) {
         return runningArchives.contains(projectId + ":" + subjectId) ? ArchiveStatus.Running : ArchiveStatus.Ready;
-    }
-
-    public String getProjectArchiveUrl(String projectId) {
-        Row row = daoFactory.getManagerDao().queryFirst(
-                "select archive_url from report_archive where project_id=?", projectId);
-        return row == null ? null : row.getString("archive_url");
     }
 
     public String getSubjectArchiveUrl(String projectId, String subjectId) {

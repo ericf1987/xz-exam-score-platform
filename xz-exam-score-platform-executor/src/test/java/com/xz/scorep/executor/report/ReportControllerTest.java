@@ -61,7 +61,7 @@ public class ReportControllerTest {
 
     @Test
     public void queryProjectReport() throws Exception {
-        HttpRequest queryRequest = new HttpRequest("http://10.10.22.212:8180/report/archive-status/" + PROJECT_ID);
+        HttpRequest queryRequest = new HttpRequest("http://10.10.22.212:8180/report/archive-status/" + "430300-564140e278df4e92a2a739a6f27ac391");
         System.out.println(queryRequest.request());
     }
 
