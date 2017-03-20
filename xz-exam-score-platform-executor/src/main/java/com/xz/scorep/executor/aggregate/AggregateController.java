@@ -33,7 +33,7 @@ public class AggregateController {
     public Result runAggregate(
             @RequestParam("projectId") String projectId,
             @RequestParam(required = false, name = "aggrName") String aggrName,
-            @RequestParam(required = false, name = "Basic", defaultValue = "Basic") String aggrType,
+            @RequestParam(required = false, name = "aggrType", defaultValue = "Basic") String aggrType,
             @RequestParam(required = false, name = "async", defaultValue = "false") boolean async,
             @RequestParam(required = false, name = "importProject", defaultValue = "false") boolean importProject,
             @RequestParam(required = false, name = "importScore", defaultValue = "false") boolean importScore,
