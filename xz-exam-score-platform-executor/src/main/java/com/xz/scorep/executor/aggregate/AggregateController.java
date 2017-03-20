@@ -25,7 +25,6 @@ public class AggregateController {
      * @param importProject 是否（重新）导入考试信息，当项目不存在时强制重新导入
      * @param importScore   是否（重新）导入考试成绩，当项目不存在时强制重新导入
      * @param subjects      科目列表，科目之间逗号隔开（可选）
-     *
      * @return 统计结果
      */
     @PostMapping("/aggr/start")
@@ -74,7 +73,15 @@ public class AggregateController {
     public Result getAggregationStatus(
             @PathVariable("projectId") String projectId,
             @PathVariable("subjectId") String subjectId) {
-        Row row = aggregateService.getAggregationStatus(projectId,subjectId);
+        Row row = aggregateService.getAggregationStatus(projectId, subjectId);
         return Result.success().set("status", row);
+    }
+
+
+    @GetMapping("/aggr/status/{projectId}")
+    @ResponseBody
+    public Result getAggregationStatus(
+            @PathVariable("projectId") String projectId) {
+        return getAggregationStatus(projectId, null);
     }
 }

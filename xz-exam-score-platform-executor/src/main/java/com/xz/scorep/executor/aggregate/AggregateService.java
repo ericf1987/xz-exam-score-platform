@@ -172,7 +172,7 @@ public class AggregateService {
             if (subjectId == null && row.getString("subject_id") == null) {
                 return row;
             }
-            if (row.getString("subject_id") == null || subjectId != null) {
+            if (row.getString("subject_id") == null || subjectId == null) {
                 continue;
             }
             if (row.getString("subject_id").contains(subjectId)) {
