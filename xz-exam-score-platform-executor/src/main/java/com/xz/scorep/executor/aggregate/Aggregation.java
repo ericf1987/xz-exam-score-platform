@@ -17,12 +17,22 @@ public class Aggregation {
 
     private String projectId;
 
+    private String subjectId;
+
     private Date startTime;
 
     private Date endTime;
 
     public Aggregation(String projectId) {
         this.projectId = projectId;
+    }
+
+    public String getSubjectId() {
+        return subjectId;
+    }
+
+    public void setSubjectId(String subjectId) {
+        this.subjectId = subjectId;
     }
 
     public Date getStartTime() {

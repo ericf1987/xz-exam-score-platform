@@ -2,7 +2,6 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.xz.scorep.executor.aggregate.*;
-import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.project.SubjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +32,8 @@ public class StudentProjectScoreAggregator extends Aggregator {
         LOG.info("项目 {} 的学生总分已清空", projectId);
 
         AtomicInteger counter = new AtomicInteger(0);
-        List<String> subjectIds = subjectService.listSubjects(projectId)
-                .stream().map(ExamSubject::getId).collect(Collectors.toList());
+
+        List<String> subjectIds = getSubjectsId(aggregateParameter);
 
         subjectIds.forEach(subjectId -> {
             accumulateScore(projectDao, subjectId);
@@ -42,6 +41,23 @@ public class StudentProjectScoreAggregator extends Aggregator {
                     projectId, counter.incrementAndGet(), subjectIds.size());
         });
     }
+
+
+    private List<String> getSubjectsId(AggregateParameter aggregateParameter) {
+        String projectId = aggregateParameter.getProjectId();
+        List<String> subjectId;
+
+        if (aggregateParameter.getSubjects().isEmpty()) {
+            subjectId = subjectService.listSubjects(projectId)
+                    .stream().map(subject -> subject.getId())
+                    .collect(Collectors.toList());
+
+        } else {
+            subjectId = aggregateParameter.getSubjects();
+        }
+        return subjectId;
+    }
+
 
     private void accumulateScore(DAO projectDao, String subjectId) {
         String tableName = "score_subject_" + subjectId;

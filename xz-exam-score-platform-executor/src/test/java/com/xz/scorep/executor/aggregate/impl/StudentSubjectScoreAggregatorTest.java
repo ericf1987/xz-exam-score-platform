@@ -20,7 +20,7 @@ public class StudentSubjectScoreAggregatorTest extends BaseTest {
     @Test
     public void aggregate() throws Exception {
         this.aggregator.aggregate(
-                new AggregateParameter(PROJECT_ID, AggregateType.Quick, "001"));
+                new AggregateParameter(PROJECT_ID, AggregateType.Quick));
     }
 
 }

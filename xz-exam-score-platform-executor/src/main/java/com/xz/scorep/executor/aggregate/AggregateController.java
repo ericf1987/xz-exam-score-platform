@@ -69,10 +69,12 @@ public class AggregateController {
         }
     }
 
-    @GetMapping("/aggr/status/{projectId}")
+    @GetMapping("/aggr/status/{projectId}/{subjectId}")
     @ResponseBody
-    public Result getAggregationStatus(@PathVariable("projectId") String projectId) {
-        Row row = aggregateService.getAggregationStatus(projectId);
+    public Result getAggregationStatus(
+            @PathVariable("projectId") String projectId,
+            @PathVariable("subjectId") String subjectId) {
+        Row row = aggregateService.getAggregationStatus(projectId,subjectId);
         return Result.success().set("status", row);
     }
 }

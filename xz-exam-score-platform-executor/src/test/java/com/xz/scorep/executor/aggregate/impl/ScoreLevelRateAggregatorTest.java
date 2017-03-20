@@ -2,6 +2,7 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.xz.scorep.executor.BaseTest;
 import com.xz.scorep.executor.aggregate.AggregateParameter;
+import com.xz.scorep.executor.aggregate.AggregateType;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,7 +19,7 @@ public class ScoreLevelRateAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        scoreLevelRateAggregator.aggregate(new AggregateParameter(PROJECT_ID));
+        scoreLevelRateAggregator.aggregate(new AggregateParameter(PROJECT_ID, AggregateType.Quick));
     }
 
 }

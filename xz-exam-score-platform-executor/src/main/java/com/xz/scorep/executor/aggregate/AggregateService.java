@@ -89,7 +89,7 @@ public class AggregateService {
         try {
 
             // 添加本次统计记录
-            createAggregationRecord(aggregation);
+            createAggregationRecord(aggregation, parameter);
 
             // 根据需要导入数据
             importData(parameter);
@@ -111,7 +111,9 @@ public class AggregateService {
         }
     }
 
-    private void createAggregationRecord(Aggregation aggregation) {
+    private void createAggregationRecord(Aggregation aggregation, AggregateParameter parameter) {
+        //添加本次统计科目信息
+        aggregation.setSubjectId(String.join(",", parameter.getSubjects()));
         aggregation.setStatus(AggregateStatus.Running);
         aggregation.setStartTime(new Date());
         aggregationService.insertAggregation(aggregation);
@@ -164,7 +166,19 @@ public class AggregateService {
         }
     }
 
-    public Row getAggregationStatus(String projectId) {
-        return aggregationService.getAggregateStatus(projectId);
+    public Row getAggregationStatus(String projectId, String subjectId) {
+        List<Row> rows = aggregationService.getAggregateStatus(projectId);
+        for (Row row : rows) {
+            if (subjectId == null && row.getString("subject_id") == null) {
+                return row;
+            }
+            if (row.getString("subject_id") == null || subjectId != null) {
+                continue;
+            }
+            if (row.getString("subject_id").contains(subjectId)) {
+                return row;
+            }
+        }
+        return new Row();
     }
 }

@@ -9,6 +9,7 @@ import com.xz.ajiaedu.common.report.Keys.Range;
 import com.xz.ajiaedu.common.report.Keys.Target;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamProject;
+import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /**
  * 成绩四率分布
@@ -91,10 +93,26 @@ public class ScoreLevelRateAggregator extends Aggregator {
         daoFactory.getProjectDao(projectId).execute("truncate table scorelevelmap");
         LOG.info("scorelevelmap 内容已清除");
 
+        List<ExamSubject> subjects = getExamSubjects(aggregateParameter, projectId);
+
         LOG.info("统计整体成绩四率...");
         aggregateProjectScoreLevels(projectId, scoreLevels);
-        LOG.info("统计科目成绩四率...");
-        aggregateSubjectScoreLevels(projectId, scoreLevels);
+        LOG.info("统计科目成绩四率...,科目列表:{}",subjects.toString());
+        aggregateSubjectScoreLevels(projectId, scoreLevels, subjects);
+    }
+
+    private List<ExamSubject> getExamSubjects(AggregateParameter aggregateParameter, String projectId) {
+        List<ExamSubject> subjects;
+
+        if (aggregateParameter.getSubjects().isEmpty()) {
+            subjects = subjectService.listSubjects(projectId);
+
+        } else {
+            subjects = aggregateParameter.getSubjects()
+                    .stream().map(subjectId -> subjectService.findSubject(projectId, subjectId))
+                    .collect(Collectors.toList());
+        }
+        return subjects;
     }
 
     private Map<String, Object> createMap(
@@ -140,8 +158,8 @@ public class ScoreLevelRateAggregator extends Aggregator {
                 });
     }
 
-    private void aggregateSubjectScoreLevels(String projectId, JSONObject scoreLevels) {
-        subjectService.listSubjects(projectId).forEach(subject -> {
+    private void aggregateSubjectScoreLevels(String projectId, JSONObject scoreLevels, List<ExamSubject> examSubjects) {
+        examSubjects.forEach(subject -> {
             double fullScore = subject.getFullScore();
             String tableName = "score_subject_" + subject.getId();
 

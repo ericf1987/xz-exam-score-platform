@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class AggregationService {
@@ -28,9 +29,8 @@ public class AggregationService {
                         .Where("id=?", aggregationId));
     }
 
-    public Row getAggregateStatus(String projectId) {
-        String sql = "select start_time,end_time from aggregation where project_id = ? order by start_time desc LIMIT 1";
-        Row row = this.daoFactory.getManagerDao().queryFirst(sql, projectId);
-        return row;
+    public List<Row> getAggregateStatus(String projectId) {
+        String sql = "select subject_id,start_time,end_time from aggregation where project_id = ? order by start_time desc";
+        return this.daoFactory.getManagerDao().query(sql, projectId);
     }
 }
