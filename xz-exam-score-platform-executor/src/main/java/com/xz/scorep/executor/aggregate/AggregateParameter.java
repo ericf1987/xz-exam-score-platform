@@ -1,5 +1,9 @@
 package com.xz.scorep.executor.aggregate;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * (description)
  * created at 2017/3/17
@@ -17,6 +21,29 @@ public class AggregateParameter {
     private boolean importScore;
 
     private String aggrName;
+
+    private List<String> subjects = new ArrayList<>();
+
+    public AggregateParameter() {
+    }
+
+    public AggregateParameter(String projectId) {
+        this.projectId = projectId;
+    }
+
+    public AggregateParameter(String projectId, AggregateType aggregateType, String... subjectIds) {
+        this.projectId = projectId;
+        this.aggregateType = aggregateType;
+        this.subjects = Arrays.asList(subjectIds);
+    }
+
+    public List<String> getSubjects() {
+        return subjects;
+    }
+
+    public void setSubjects(List<String> subjects) {
+        this.subjects = subjects;
+    }
 
     public String getAggrName() {
         return aggrName;

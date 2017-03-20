@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.aggregate.impl;
 
 import com.xz.scorep.executor.BaseTest;
+import com.xz.scorep.executor.aggregate.AggregateParameter;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -17,7 +18,7 @@ public class StudentObjectiveScoreAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        studentObjectiveScoreAggregator.aggregate(PROJECT_ID);
+        studentObjectiveScoreAggregator.aggregate(new AggregateParameter(PROJECT_ID));
     }
 
 }

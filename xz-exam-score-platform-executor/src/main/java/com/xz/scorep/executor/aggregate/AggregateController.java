@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+
 @Controller
 public class AggregateController {
 
@@ -22,17 +24,20 @@ public class AggregateController {
      * @param async         是否异步统计
      * @param importProject 是否（重新）导入考试信息，当项目不存在时强制重新导入
      * @param importScore   是否（重新）导入考试成绩，当项目不存在时强制重新导入
+     * @param subjects      科目列表，科目之间逗号隔开（可选）
+     *
      * @return 统计结果
      */
-    @PostMapping("/aggr/start/{projectId}/{Basic}/{async}/{importProject}/{importScore}")
+    @PostMapping("/aggr/start")
     @ResponseBody
     public Result runAggregate(
-            @PathVariable("projectId") String projectId,
+            @RequestParam("projectId") String projectId,
             @RequestParam(required = false, name = "aggrName") String aggrName,
             @RequestParam(required = false, name = "Basic", defaultValue = "Basic") String aggrType,
             @RequestParam(required = false, name = "async", defaultValue = "false") boolean async,
             @RequestParam(required = false, name = "importProject", defaultValue = "false") boolean importProject,
-            @RequestParam(required = false, name = "importScore", defaultValue = "false") boolean importScore
+            @RequestParam(required = false, name = "importScore", defaultValue = "false") boolean importScore,
+            @RequestParam(required = false, name = "subjects", defaultValue = "") String subjects
     ) {
 
         if (StringUtil.isNotBlank(aggrName)) {
@@ -49,6 +54,11 @@ public class AggregateController {
             parameter.setAggrName(aggrName);
             parameter.setImportScore(importScore);
             parameter.setImportProject(importProject);
+
+            if (subjects != null) {
+                parameter.setSubjects(Arrays.asList(subjects.split(",")));
+            }
+
             if (async) {
                 aggregateService.runAggregateAsync(parameter);
                 return Result.success("统计已经开始执行。");

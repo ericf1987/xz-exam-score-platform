@@ -2,10 +2,7 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
-import com.xz.scorep.executor.aggregate.AggragateOrder;
-import com.xz.scorep.executor.aggregate.AggregateType;
-import com.xz.scorep.executor.aggregate.AggregateTypes;
-import com.xz.scorep.executor.aggregate.Aggregator;
+import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
 import com.xz.scorep.executor.project.SubjectService;
@@ -107,7 +104,8 @@ public class ScoreSegmentsAggregator extends Aggregator {
     private SubjectService subjectService;
 
     @Override
-    public void aggregate(String projectId) throws Exception {
+    public void aggregate(AggregateParameter aggregateParameter) throws Exception {
+        String projectId = aggregateParameter.getProjectId();
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
         projectDao.execute("truncate table segments");

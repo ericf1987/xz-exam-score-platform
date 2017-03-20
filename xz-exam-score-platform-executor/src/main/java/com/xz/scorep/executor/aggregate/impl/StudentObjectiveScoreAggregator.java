@@ -2,10 +2,7 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.DAOException;
-import com.xz.scorep.executor.aggregate.AggragateOrder;
-import com.xz.scorep.executor.aggregate.AggregateType;
-import com.xz.scorep.executor.aggregate.AggregateTypes;
-import com.xz.scorep.executor.aggregate.Aggregator;
+import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.db.DAOFactory;
@@ -41,7 +38,8 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
     private SubjectService subjectService;
 
     @Override
-    public void aggregate(String projectId) throws Exception {
+    public void aggregate(AggregateParameter aggregateParameter) throws Exception {
+        String projectId = aggregateParameter.getProjectId();
         List<ExamSubject> subjects = subjectService.listSubjects(projectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
 

@@ -25,7 +25,7 @@ public abstract class Aggregator {
         this.aggregateService.registerAggregator(this);
     }
 
-    public abstract void aggregate(String projectId) throws Exception;
+    public abstract void aggregate(AggregateParameter aggregateParameter) throws Exception;
 
     public String getAggrName() {
         String className = this.getClass().getSimpleName();

@@ -2,6 +2,7 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.xz.scorep.executor.BaseTest;
+import com.xz.scorep.executor.aggregate.AggregateParameter;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,7 @@ public class RankAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        rankAggregator.aggregate(PROJECT_ID);
+        rankAggregator.aggregate(new AggregateParameter(PROJECT_ID));
     }
 
     @Test

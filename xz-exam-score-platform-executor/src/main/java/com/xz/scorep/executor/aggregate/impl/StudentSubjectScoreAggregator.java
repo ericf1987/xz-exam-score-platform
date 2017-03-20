@@ -2,11 +2,9 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.DAOException;
-import com.xz.scorep.executor.aggregate.AggragateOrder;
-import com.xz.scorep.executor.aggregate.AggregateType;
-import com.xz.scorep.executor.aggregate.AggregateTypes;
-import com.xz.scorep.executor.aggregate.Aggregator;
+import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamQuest;
+import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.ThreadPools;
@@ -18,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Component
 @AggragateOrder(0)
@@ -33,15 +32,34 @@ public class StudentSubjectScoreAggregator extends Aggregator {
     private SubjectService subjectService;
 
     @Override
-    public void aggregate(String projectId) throws Exception {
+    public void aggregate(AggregateParameter aggregateParameter) throws Exception {
+        String projectId = aggregateParameter.getProjectId();
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
+        List<ExamSubject> subjects = getSubjects(aggregateParameter);
+
         ThreadPools.createAndRunThreadPool(20, 1,
-                (pool) -> accumulateSubjectScores(projectId, projectDao, pool));
+                pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
     }
 
-    private void accumulateSubjectScores(String projectId, DAO projectDao, ThreadPoolExecutor executor) {
-        subjectService.listSubjects(projectId).forEach(subject -> {
+    private List<ExamSubject> getSubjects(AggregateParameter aggregateParameter) {
+        String projectId = aggregateParameter.getProjectId();
+        List<ExamSubject> subjects;
+
+        if (aggregateParameter.getSubjects().isEmpty()) {
+            subjects = subjectService.listSubjects(projectId);
+
+        } else {
+            subjects = aggregateParameter.getSubjects()
+                    .stream().map(subjectId -> subjectService.findSubject(projectId, subjectId))
+                    .collect(Collectors.toList());
+        }
+        return subjects;
+    }
+
+    private void accumulateSubjectScores(String projectId, DAO projectDao, ThreadPoolExecutor executor, List<ExamSubject> subjects) {
+
+        subjects.forEach(subject -> {
             String subjectId = subject.getId();
             String tableName = "score_subject_" + subjectId;
 

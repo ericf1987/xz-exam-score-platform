@@ -7,10 +7,7 @@ import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.ajiaedu.common.report.Keys.Range;
 import com.xz.ajiaedu.common.report.Keys.Target;
-import com.xz.scorep.executor.aggregate.AggragateOrder;
-import com.xz.scorep.executor.aggregate.AggregateType;
-import com.xz.scorep.executor.aggregate.AggregateTypes;
-import com.xz.scorep.executor.aggregate.Aggregator;
+import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.project.SubjectService;
@@ -84,7 +81,8 @@ public class ScoreLevelRateAggregator extends Aggregator {
     private SubjectService subjectService;
 
     @Override
-    public void aggregate(String projectId) throws Exception {
+    public void aggregate(AggregateParameter aggregateParameter) throws Exception {
+        String projectId = aggregateParameter.getProjectId();
 
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
         JSONObject scoreLevels = JSON.parseObject(reportConfig.getScoreLevels());

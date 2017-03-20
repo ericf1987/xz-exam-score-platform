@@ -1,7 +1,6 @@
 package com.xz.scorep.executor.aggregate;
 
 import com.hyd.dao.Row;
-import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.importproject.ImportProjectParameters;
 import com.xz.scorep.executor.importproject.ImportProjectService;
 import com.xz.scorep.executor.project.ProjectService;
@@ -9,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -97,7 +95,7 @@ public class AggregateService {
             importData(parameter);
 
             // 对要求统计的指标执行统计
-            runAggregators(condition, projectId);
+            runAggregators(condition, parameter);
 
         } catch (Exception e) {
             LOG.error("项目 " + projectId + " 统计失败", e);
@@ -119,13 +117,13 @@ public class AggregateService {
         aggregationService.insertAggregation(aggregation);
     }
 
-    private void runAggregators(Predicate<Aggregator> condition, String projectId) throws Exception {
+    private void runAggregators(Predicate<Aggregator> condition, AggregateParameter parameter) throws Exception {
         List<Aggregator> aggregators = new ArrayList<>(this.aggregatorMap.values());
         aggregators.removeIf(condition.negate());
         aggregators.sort(Comparator.comparingInt(Aggregator::getAggregateOrder));
 
         for (Aggregator aggregator : aggregators) {
-            aggregator.aggregate(projectId);
+            aggregator.aggregate(parameter);
         }
     }
 
@@ -158,7 +156,7 @@ public class AggregateService {
 
             try {
                 LOG.info("项目 " + projectId + " 的 " + aggrName + " 统计开始...");
-                aggregator.aggregate(projectId);
+                aggregator.aggregate(new AggregateParameter(projectId));
                 LOG.info("项目 " + projectId + " 的 " + aggrName + " 统计完毕。");
             } catch (Exception e) {
                 LOG.error("项目 " + projectId + " 的 " + aggrName + " 统计失败", e);
@@ -167,7 +165,6 @@ public class AggregateService {
     }
 
     public Row getAggregationStatus(String projectId) {
-        Row row = aggregationService.getAggregateStatus(projectId);
-        return row;
+        return aggregationService.getAggregateStatus(projectId);
     }
 }

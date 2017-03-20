@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.aggregate.impl;
 
 import com.xz.scorep.executor.BaseTest;
+import com.xz.scorep.executor.aggregate.AggregateParameter;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -17,8 +18,7 @@ public class ScoreLevelRateAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        String projectId = "430300-9cef9f2059ce4a36a40a7a60b07c7e00";
-        scoreLevelRateAggregator.aggregate(projectId);
+        scoreLevelRateAggregator.aggregate(new AggregateParameter(PROJECT_ID));
     }
 
 }

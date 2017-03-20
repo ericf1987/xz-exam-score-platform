@@ -2,6 +2,7 @@ package com.xz.scorep.executor.exportexcel.impl.total;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
+import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Target;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.ExcelCellStyles;
@@ -233,7 +234,9 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
         String schoolId = task.getRange().getId();
         String subjectId = String.valueOf(task.getTarget().getId());
         String subjectName = task.getTarget().getName();
-        double fullScore = subjectService.getSubjectFullScore(projectId, subjectId);
+
+        ExamSubject examSubject = subjectService.findSubject(projectId, subjectId);
+        double fullScore = examSubject.getFullScore();
 
         DAO dao = daoFactory.getProjectDao(projectId);
 

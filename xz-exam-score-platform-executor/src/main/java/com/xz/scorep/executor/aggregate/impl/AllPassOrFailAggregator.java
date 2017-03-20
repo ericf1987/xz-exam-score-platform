@@ -5,10 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.CounterMap;
-import com.xz.scorep.executor.aggregate.AggragateOrder;
-import com.xz.scorep.executor.aggregate.AggregateType;
-import com.xz.scorep.executor.aggregate.AggregateTypes;
-import com.xz.scorep.executor.aggregate.Aggregator;
+import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.ClassService;
@@ -63,7 +60,8 @@ public class AllPassOrFailAggregator extends Aggregator {
 
 
     @Override
-    public void aggregate(String projectId) throws Exception {
+    public void aggregate(AggregateParameter aggregateParameter) throws Exception {
+        String projectId = aggregateParameter.getProjectId();
         DAO projectDao = daoFactory.getProjectDao(projectId);
         projectDao.execute("truncate table all_pass_or_fail ");
         LOG.info("全科及格率、不及格率表已清空");
