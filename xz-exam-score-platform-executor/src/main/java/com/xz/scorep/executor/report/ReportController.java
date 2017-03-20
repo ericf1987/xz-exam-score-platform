@@ -2,8 +2,6 @@ package com.xz.scorep.executor.report;
 
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +14,6 @@ import java.util.Map;
 @Controller
 public class ReportController {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReportController.class);
 
     @Autowired
     private ReportManager reportManager;
@@ -30,7 +27,6 @@ public class ReportController {
      * @param projectId  项目ID
      * @param schoolId   学校ID（可选，如果为空则传 "-"）
      * @param reportName 报表名称
-     *
      * @return 报表内容
      */
     @GetMapping("/report/{projectId}/{schoolId}/{subjectId}/{reportName}")
@@ -46,7 +42,7 @@ public class ReportController {
             return Result.fail(404, "没有找到报表 " + reportName);
         }
 
-        Map<?, ?> reportContent = report.generateReport(projectId, schoolId,subjectId);
+        Map<?, ?> reportContent = report.generateReport(projectId, schoolId, subjectId);
         return Result.success().set("report", reportContent);
     }
 
@@ -54,7 +50,6 @@ public class ReportController {
      * 报表打包
      *
      * @param projectId 项目ID
-     *
      * @return 接收命令的结果（通常为成功）
      */
     @PostMapping("/report/archive/{projectId}")
@@ -70,7 +65,6 @@ public class ReportController {
      *
      * @param projectId 项目ID
      * @param subjectId 科目ID
-     *
      * @return 接收命令的结果（通常为成功）
      */
     @PostMapping("/report/archive/{projectId}/{subjectId}")
@@ -91,7 +85,6 @@ public class ReportController {
      * 查询报表打包状态
      *
      * @param projectId 项目ID
-     *
      * @return status=打包状态；url=打包地址
      */
     @GetMapping("/report/archive-status/{projectId}")
@@ -107,7 +100,6 @@ public class ReportController {
      *
      * @param projectId 项目ID
      * @param subjectId 科目ID
-     *
      * @return status=打包状态；url=打包地址
      */
     @GetMapping("/report/archive-status/{projectId}/{subjectId}")
@@ -122,7 +114,7 @@ public class ReportController {
         if (StringUtil.isEmpty(subjectId)) {
             //全科报表  设置科目ID为000
             status = reportArchiveService.getProjectArchiveStatus(projectId);
-            url = reportArchiveService.getSubjectArchiveUrl(projectId,"000");
+            url = reportArchiveService.getSubjectArchiveUrl(projectId, "000");
         } else {
             status = reportArchiveService.getSubjectArchiveStatus(projectId, subjectId);
             url = reportArchiveService.getSubjectArchiveUrl(projectId, subjectId);

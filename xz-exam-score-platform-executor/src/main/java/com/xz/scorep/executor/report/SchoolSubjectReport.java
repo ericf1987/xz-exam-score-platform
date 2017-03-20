@@ -16,7 +16,6 @@ import java.util.Map;
  */
 @Component
 public class SchoolSubjectReport extends AbstractReport {
-
     @Autowired
     SchoolDetailReportQuery query;
 

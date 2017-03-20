@@ -49,7 +49,6 @@ public class AggregateController {
             parameter.setAggrName(aggrName);
             parameter.setImportScore(importScore);
             parameter.setImportProject(importProject);
-
             if (async) {
                 aggregateService.runAggregateAsync(parameter);
                 return Result.success("统计已经开始执行。");
