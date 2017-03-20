@@ -2,6 +2,7 @@ package com.xz.scorep.executor.exportexcel;
 
 import com.xz.ajiaedu.common.cryption.MD5;
 import com.xz.ajiaedu.common.io.FileUtils;
+import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.ajiaedu.common.xml.XmlNode;
 import com.xz.ajiaedu.common.xml.XmlNodeReader;
@@ -18,6 +19,8 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +45,8 @@ public class ExcelReportManager implements ApplicationContextAware {
 
     private ApplicationContext applicationContext;
 
+    private Map<String, Context> runningProjects = new ConcurrentHashMap<>();
+
     @Autowired
     private ExcelConfigParser excelConfigParser;
 
@@ -63,12 +68,40 @@ public class ExcelReportManager implements ApplicationContextAware {
         }
     }
 
+    public boolean isRunning(String projectId) {
+        return this.runningProjects.containsKey(projectId);
+    }
+
+    public AsyncCounter getCounter(String projectId) {
+        if (!runningProjects.containsKey(projectId)) {
+            return null;
+        } else {
+            Context context = runningProjects.get(projectId);
+            return context.get("counter");
+        }
+    }
+
+    void generateReports(final String projectId, boolean async) {
+        if (isRunning(projectId)) {
+            return;
+        }
+
+        try {
+            Context context = new Context();
+            runningProjects.put(projectId, context);
+            generateReports0(projectId, async, context);
+        } finally {
+            runningProjects.remove(projectId);
+        }
+    }
+
     /**
      * 生成指定项目的所有报表文件
      *
      * @param projectId 项目ID
+     * @param context   上下文
      */
-    void generateReports(final String projectId, boolean async) {
+    private void generateReports0(final String projectId, boolean async, Context context) {
 
         String reportRootPath = excelConfig.getSavePath();
         String projectReportRootPath = getSaveFilePath(projectId, reportRootPath, "");
@@ -83,6 +116,8 @@ public class ExcelReportManager implements ApplicationContextAware {
         int poolSize = excelConfig.getPoolSize();
         List<ReportTask> reportTasks = createReportGenerators(projectId);
         AsyncCounter counter = new AsyncCounter("生成报表", reportTasks.size(), 20);
+        context.put("counter", counter);
+
         ThreadPoolExecutor pool = async ? executionPool : newBlockingThreadPoolExecutor(poolSize, poolSize, QUEUE_SIZE);
 
         for (final ReportTask reportTask : reportTasks) {

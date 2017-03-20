@@ -44,6 +44,14 @@ public class AsyncCounter {
         this.interval = interval;
     }
 
+    public int getCurrentCount() {
+        return this.atomicInteger.get();
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
     public synchronized void count() {
         int value = atomicInteger.incrementAndGet();
 

@@ -17,8 +17,11 @@ public class ExportExcelController {
     @ResponseBody
     public Result exportExcel(@RequestParam("projectId") String projectId) {
 
-        this.excelReportManager.generateReports(projectId, false);
+        if (this.excelReportManager.isRunning(projectId)) {
+            return Result.fail("正在执行 Excel 生成。");
+        }
 
+        this.excelReportManager.generateReports(projectId, false);
         return Result.success();
     }
 }
