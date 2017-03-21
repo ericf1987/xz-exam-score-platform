@@ -21,7 +21,7 @@ public class AggregateControllerTest extends BaseTest {
                 .setParameter("projectId", PROJECT_ID)
                 .setParameter("aggrType", AggregateType.Quick.name())
                 .setParameter("async", "true")
-                .setParameter("importScore", "true");
+                .setParameter("importScore", "false");
 
         String response = request.requestPost();
         System.out.println(response);
