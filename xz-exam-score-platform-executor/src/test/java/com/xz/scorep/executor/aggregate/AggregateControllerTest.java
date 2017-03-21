@@ -5,6 +5,7 @@ import com.xz.scorep.executor.BaseTest;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Author: luckylo
@@ -17,11 +18,10 @@ public class AggregateControllerTest extends BaseTest {
     public void test() throws IOException {
         String url = "http://10.10.22.212:8180/aggr/start";
         HttpRequest request = new HttpRequest(url)
-                .setParameter("projectId", "430300-564140e278df4e92a2a739a6f27ac391")
+                .setParameter("projectId", PROJECT_ID)
                 .setParameter("aggrType", AggregateType.Quick.name())
                 .setParameter("async", "true")
-                .setParameter("importScore", "true")
-                .setHeader("subjects","001");
+                .setParameter("importScore", "true");
 
         String response = request.requestPost();
         System.out.println(response);
@@ -35,4 +35,8 @@ public class AggregateControllerTest extends BaseTest {
         System.out.println(post);
     }
 
+    @Test
+    public void testSplit() throws Exception {
+        System.out.println(Arrays.asList("001".split(",")));
+    }
 }

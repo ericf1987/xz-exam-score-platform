@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @Controller
 public class AggregateController {
@@ -55,7 +57,9 @@ public class AggregateController {
             parameter.setImportProject(importProject);
 
             if (subjects != null) {
-                parameter.setSubjects(Arrays.asList(subjects.split(",")));
+                List<String> list = new ArrayList<>(Arrays.asList(subjects.split(",")));
+                list.removeIf(StringUtil::isEmpty);
+                parameter.setSubjects(list);
             }
 
             if (async) {

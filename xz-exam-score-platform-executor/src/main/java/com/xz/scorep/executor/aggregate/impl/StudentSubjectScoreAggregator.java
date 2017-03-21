@@ -46,12 +46,23 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         String projectId = aggregateParameter.getProjectId();
         List<ExamSubject> subjects;
 
-        if (aggregateParameter.getSubjects().isEmpty()) {
+        List<String> paramSubjects = aggregateParameter.getSubjects();
+        LOG.info("传入的科目参数：" + paramSubjects);
+
+        if (paramSubjects.isEmpty()) {
             subjects = subjectService.listSubjects(projectId);
 
         } else {
-            subjects = aggregateParameter.getSubjects()
-                    .stream().map(subjectId -> subjectService.findSubject(projectId, subjectId))
+            subjects = paramSubjects
+                    .stream().map(subjectId -> {
+                        ExamSubject subject = subjectService.findSubject(projectId, subjectId);
+
+                        if (subject == null) {
+                            throw new IllegalStateException("科目 " + subjectId + " 没找到");
+                        }
+
+                        return subject;
+                    })
                     .collect(Collectors.toList());
         }
         return subjects;
