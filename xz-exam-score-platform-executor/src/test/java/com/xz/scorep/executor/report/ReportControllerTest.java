@@ -52,7 +52,9 @@ public class ReportControllerTest {
 
     @Test
     public void archiveProjectReport() throws Exception {
-        HttpRequest archiveRequest = new HttpRequest("http://10.10.22.212:8180/report/archive/" + PROJECT_ID, HttpRequest.DEFAULT_TIMEOUT * 10);
+        HttpRequest archiveRequest = new HttpRequest("http://10.10.22.212:8180/report/archive", HttpRequest.DEFAULT_TIMEOUT * 10);
+        archiveRequest.setParameter("projectId",PROJECT_ID);
+        archiveRequest.setParameter("subjectId","002");
         ThreadTimer.____start____("Generating report archive");
         String response = archiveRequest.requestPost();
         System.out.println(response);

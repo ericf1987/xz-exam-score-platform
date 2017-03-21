@@ -4,11 +4,9 @@ import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
+import javax.websocket.server.PathParam;
 import java.util.Map;
 
 @Controller
@@ -46,19 +44,6 @@ public class ReportController {
         return Result.success().set("report", reportContent);
     }
 
-    /**
-     * 报表打包
-     *
-     * @param projectId 项目ID
-     * @return 接收命令的结果（通常为成功）
-     */
-    @PostMapping("/report/archive/{projectId}")
-    @ResponseBody
-    public Result archiveReport(
-            @PathVariable("projectId") String projectId
-    ) {
-        return archiveReport(projectId, null);
-    }
 
     /**
      * 报表打包
@@ -67,11 +52,11 @@ public class ReportController {
      * @param subjectId 科目ID
      * @return 接收命令的结果（通常为成功）
      */
-    @PostMapping("/report/archive/{projectId}/{subjectId}")
+    @PostMapping("/report/archive")
     @ResponseBody
     public Result archiveReport(
-            @PathVariable("projectId") String projectId,
-            @PathVariable("subjectId") String subjectId
+            @RequestParam("projectId") String projectId,
+            @RequestParam(required = false, name = "subjectId") String subjectId
     ) {
         if (StringUtil.isEmpty(subjectId)) {
             reportArchiveService.startProjectArchive(projectId);
