@@ -23,6 +23,17 @@ public class ReportArchiveService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReportArchiveService.class);
 
+
+    private static final String AGGR_SQL = "select start_time from aggregation " +
+            " where project_id = {{projectId}} " +
+            " ORDER BY start_time desc limit 1";
+
+    //上次压缩包生成时间一定是在导出报表(生成Excel)之后的
+    private static final String GENERATE_SQL = "select last_generate from report_archive " +
+            " where project_id = '{{projectId}}'" +
+            " ORDER BY last_generate desc limit 1";
+
+
     private Set<String> runningArchives = new HashSet<>();
 
     @Autowired
@@ -44,8 +55,13 @@ public class ReportArchiveService {
                 LOG.info("项目 " + projectId + " 已经在打包全科报表。");
                 return;
             }
-        }
+            //上次生成Excel之后无统计记录直接跳过
+            if (hasAggrAfterGenerate(projectId)) {
+                LOG.info("项目 " + projectId + " 上次生成Excel之后再无统计记录。");
+                return;
+            }
 
+        }
         LOG.info("开始给项目 " + projectId + " 打全科报表...");
         runningArchives.add(projectId);
 
@@ -57,6 +73,22 @@ public class ReportArchiveService {
         saveProjectArchiveRecord("000", projectId, uploadPath);
 
         LOG.info("项目 " + projectId + " 全科报表打包完毕。");
+    }
+
+    private boolean hasAggrAfterGenerate(String projectId) {
+
+        long aggrTime = daoFactory.getManagerDao()
+                .queryFirst(AGGR_SQL.replace("{{projectId}}", projectId))
+                .getLong("start_time", 0);
+        long generateTime = daoFactory.getManagerDao()
+                .queryFirst(GENERATE_SQL.replace("{{projectId}}", projectId))
+                .getLong("last_generate", 0);
+
+        //上次生成Excel之后再无统计记录
+        if (generateTime >= aggrTime) {
+            return true;
+        }
+        return false;
     }
 
     private void saveProjectArchiveRecord(String subjectId, String projectId, String uploadPath) {
@@ -102,6 +134,12 @@ public class ReportArchiveService {
         synchronized (this) {
             if (runningArchives.contains(projectId + ":" + subjectId)) {
                 LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 已经在打包报表。");
+                return;
+            }
+
+            //上次生成Excel之后无统计记录直接跳过
+            if (hasAggrAfterGenerate(projectId)) {
+                LOG.info("项目 " + projectId + " 上次生成Excel之后再无统计记录。");
                 return;
             }
         }
