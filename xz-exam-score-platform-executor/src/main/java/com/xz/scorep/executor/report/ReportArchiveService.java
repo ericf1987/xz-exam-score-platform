@@ -87,7 +87,7 @@ public class ReportArchiveService {
                 .queryFirst(generateSql);
 
         //没有统计过或者没有生成过报表,则必须生成
-        if (aggrRow==null || generateRow==null){
+        if (aggrRow == null || generateRow == null) {
             return true;
         }
 
