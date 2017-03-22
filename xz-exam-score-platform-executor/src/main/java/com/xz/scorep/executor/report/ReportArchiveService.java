@@ -25,7 +25,7 @@ public class ReportArchiveService {
 
 
     private static final String AGGR_SQL = "select start_time from aggregation " +
-            " where project_id = {{projectId}} " +
+            " where project_id = '{{projectId}}' " +
             " ORDER BY start_time desc limit 1";
 
     //上次压缩包生成时间一定是在导出报表(生成Excel)之后的
@@ -56,7 +56,7 @@ public class ReportArchiveService {
                 return;
             }
             //上次生成Excel之后无统计记录直接跳过
-            if (hasAggrAfterGenerate(projectId)) {
+            if (!hasAggrAfterGenerate(projectId)) {
                 LOG.info("项目 " + projectId + " 上次生成Excel之后再无统计记录。");
                 return;
             }
@@ -77,18 +77,31 @@ public class ReportArchiveService {
 
     private boolean hasAggrAfterGenerate(String projectId) {
 
-        long aggrTime = daoFactory.getManagerDao()
-                .queryFirst(AGGR_SQL.replace("{{projectId}}", projectId))
+        String aggrSql = AGGR_SQL.replace("{{projectId}}", projectId);
+        String generateSql = GENERATE_SQL.replace("{{projectId}}", projectId);
+
+        Row aggrRow = daoFactory.getManagerDao()
+                .queryFirst(aggrSql);
+
+        Row generateRow = daoFactory.getManagerDao()
+                .queryFirst(generateSql);
+
+        //没有统计过或者没有生成过报表,则必须生成
+        if (aggrRow==null || generateRow==null){
+            return true;
+        }
+
+        long aggrTime = aggrRow
                 .getLong("start_time", 0);
-        long generateTime = daoFactory.getManagerDao()
-                .queryFirst(GENERATE_SQL.replace("{{projectId}}", projectId))
+
+        long generateTime = generateRow
                 .getLong("last_generate", 0);
 
         //上次生成Excel之后再无统计记录
         if (generateTime >= aggrTime) {
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     private void saveProjectArchiveRecord(String subjectId, String projectId, String uploadPath) {
@@ -138,7 +151,7 @@ public class ReportArchiveService {
             }
 
             //上次生成Excel之后无统计记录直接跳过
-            if (hasAggrAfterGenerate(projectId)) {
+            if (!hasAggrAfterGenerate(projectId)) {
                 LOG.info("项目 " + projectId + " 上次生成Excel之后再无统计记录。");
                 return;
             }
