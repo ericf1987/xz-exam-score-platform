@@ -97,7 +97,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             String questId = examQuest.getId();
 
             String combineSql = "update " + tableName + " p \n" +
-                    "  left join `score_" + questId + "` q on p.student_id=q.student_id\n" +
+                    "  inner join `score_" + questId + "` q using(student_id)\n" +
                     "  set p.score=p.score+ifnull(q.score,0)";
 
             projectDao.execute(combineSql);
