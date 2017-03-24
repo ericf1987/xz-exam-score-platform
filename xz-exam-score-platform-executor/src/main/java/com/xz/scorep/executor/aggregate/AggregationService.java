@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.List;
 
 @Service
 public class AggregationService {
@@ -29,8 +28,31 @@ public class AggregationService {
                         .Where("id=?", aggregationId));
     }
 
-    public List<Row> getAggregateStatus(String projectId) {
-        String sql = "select subject_id,start_time,end_time from aggregation where project_id = ? order by start_time desc";
-        return this.daoFactory.getManagerDao().query(sql, projectId);
+    public Row getAggregateStatus(String projectId) {
+        String sql = "select * from aggregation where project_id = ? and status = 'Finished' order by start_time desc";
+        return this.daoFactory.getManagerDao().queryFirst(sql, projectId);
     }
+
+    public Row getAggregateByStatus(String projectId, String status) {
+        String sql = "select * from aggregation where project_id = ? and status = ? order by start_time desc";
+        return this.daoFactory.getManagerDao().queryFirst(sql, projectId, status);
+    }
+
+
+    public Row getAggregateStatus(String projectId, String subjectId) {
+        String sql = "select * from aggregation where project_id = ? and subject_id =? and status = 'Finished' order by start_time desc";
+        return this.daoFactory.getManagerDao().queryFirst(sql, projectId, subjectId);
+    }
+
+
+    public Row getAggregateStatus(String projectId, AggregateType aggrType) {
+        String sql = "select * from aggregation where project_id = ? and aggr_type =? and status = 'Finished' order by start_time desc";
+        return this.daoFactory.getManagerDao().queryFirst(sql, projectId, aggrType.name());
+    }
+
+    public Row getAggregateStatus(String projectId, AggregateType aggrType,String subjectId) {
+        String sql = "select * from aggregation where project_id = ? and aggr_type =? and subject_id =? and status = 'Finished' order by start_time desc";
+        return this.daoFactory.getManagerDao().queryFirst(sql, projectId, aggrType.name(),subjectId);
+    }
+
 }

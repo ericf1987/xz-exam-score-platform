@@ -19,6 +19,16 @@ public class Aggregation {
 
     private String subjectId;
 
+    public AggregateType getAggrType() {
+        return aggrType;
+    }
+
+    public void setAggrType(AggregateType aggrType) {
+        this.aggrType = aggrType;
+    }
+
+    private AggregateType aggrType;
+
     private Date startTime;
 
     private Date endTime;

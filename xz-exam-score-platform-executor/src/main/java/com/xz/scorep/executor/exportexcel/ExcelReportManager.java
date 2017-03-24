@@ -81,7 +81,7 @@ public class ExcelReportManager implements ApplicationContextAware {
         }
     }
 
-    void generateReports(final String projectId, boolean async) {
+    public void generateReports(final String projectId, boolean async) {
         if (isRunning(projectId)) {
             return;
         }
@@ -166,7 +166,6 @@ public class ExcelReportManager implements ApplicationContextAware {
      * @param projectId 项目ID
      * @param savePath  报表根目录
      * @param filePath  报表根目录下的文件路径
-     *
      * @return 报表文件路径
      */
     public static String getSaveFilePath(String projectId, String savePath, String filePath) {

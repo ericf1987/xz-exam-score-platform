@@ -4,6 +4,10 @@ import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.aliyun.OSSFileClient;
 import com.xz.ajiaedu.common.io.FileUtils;
 import com.xz.ajiaedu.common.io.ZipFileCreator;
+import com.xz.scorep.executor.aggregate.AggregateParameter;
+import com.xz.scorep.executor.aggregate.AggregateService;
+import com.xz.scorep.executor.aggregate.AggregateType;
+import com.xz.scorep.executor.aggregate.AggregationService;
 import com.xz.scorep.executor.config.ExcelConfig;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.ExcelReportManager;
@@ -43,28 +47,52 @@ public class ReportArchiveService {
     private ExcelConfig excelConfig;
 
     @Autowired
+    private AggregationService aggregationService;
+
+    @Autowired
+    private AggregateService aggregateService;
+
+    @Autowired
     SubjectService subjectService;
 
     @Autowired
     private OSSFileClient ossFileClient;
 
-    public void startProjectArchive(String projectId) {
+    @Autowired
+    private ExcelReportManager excelReportManager;
+
+
+    public void startProjectArchive(final String projectId) {
 
         synchronized (this) {
             if (runningArchives.contains(projectId)) {
                 LOG.info("项目 " + projectId + " 已经在打包全科报表。");
                 return;
             }
-            //上次生成Excel之后无统计记录直接跳过
-            if (!hasAggrAfterGenerate(projectId)) {
-                LOG.info("项目 " + projectId + " 上次生成Excel之后再无统计记录。");
-                return;
-            }
 
         }
+        Runnable runnable = () -> startProjectArchive0(projectId);
+
+        Thread thread = new Thread(runnable);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void startProjectArchive0(String projectId) {
         LOG.info("开始给项目 " + projectId + " 打全科报表...");
         runningArchives.add(projectId);
+        Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic);
+        if (status == null) {
+            runBasicAggregate(projectId);
 
+        }
+        //生成excel
+        //上次生成Excel之后无统计记录直接跳过
+        if (hasAggrAfterGenerate(projectId)) {
+            excelReportManager.generateReports(projectId, false);
+        }
+
+        LOG.info("项目 " + projectId + " 开始打包报表...");
         String excelPath = excelConfig.getSavePath();
         String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "全科报表");
 
@@ -149,16 +177,29 @@ public class ReportArchiveService {
                 LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 已经在打包报表。");
                 return;
             }
-
-            //上次生成Excel之后无统计记录直接跳过
-            if (!hasAggrAfterGenerate(projectId)) {
-                LOG.info("项目 " + projectId + " 上次生成Excel之后再无统计记录。");
-                return;
-            }
         }
 
+        Runnable runnable = () -> startSubjectArchive0(projectId, subjectId);
+        Thread thread = new Thread(runnable);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void startSubjectArchive0(String projectId, String subjectId) {
         LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 开始打包报表...");
         runningArchives.add(projectId + ":" + subjectId);
+
+        //查该项目该科目是有有过Basic统计记录
+        Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic, subjectId);
+        if (status == null) {
+            runBasicAggregate(projectId);
+        }
+
+        //生成excel
+        //上次生成Excel之后无统计记录直接跳过
+        if (hasAggrAfterGenerate(projectId)) {
+            excelReportManager.generateReports(projectId, false);
+        }
 
         String subjectName = subjectService.getSubjectName(subjectId);
         String excelPath = excelConfig.getSavePath();
@@ -168,6 +209,14 @@ public class ReportArchiveService {
         String uploadPath = uploadZipArchive(projectId, tempFile, subjectName + ".zip");
         saveProjectArchiveRecord(subjectId, projectId, uploadPath);
         LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 报表打包完毕。");
+    }
+
+    //执行Basic统计
+    private void runBasicAggregate(String projectId) {
+        AggregateParameter parameter = new AggregateParameter();
+        parameter.setAggregateType(AggregateType.Basic);
+        parameter.setProjectId(projectId);
+        aggregateService.runAggregate(parameter);
     }
 
     public ArchiveStatus getProjectArchiveStatus(String projectId) {

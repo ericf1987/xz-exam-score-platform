@@ -17,6 +17,9 @@ public class AggregateController {
     @Autowired
     private AggregateService aggregateService;
 
+    @Autowired
+    private AggregationService aggregationService;
+
     /**
      * 执行统计
      *
@@ -77,7 +80,7 @@ public class AggregateController {
     public Result getAggregationStatus(
             @PathVariable("projectId") String projectId,
             @PathVariable("subjectId") String subjectId) {
-        Row row = aggregateService.getAggregationStatus(projectId, subjectId);
+        Row row = aggregationService.getAggregateStatus(projectId, subjectId);
         return Result.success().set("status", row);
     }
 

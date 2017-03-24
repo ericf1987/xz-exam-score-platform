@@ -2,6 +2,8 @@ package com.xz.scorep.executor.report;
 
 import com.hyd.dao.Row;
 import com.xz.scorep.executor.aggritems.SchoolDetailReportQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,13 +18,14 @@ import java.util.Map;
  */
 @Component
 public class SchoolSubjectsDetailReport extends AbstractReport {
-
+    private final Logger LOG = LoggerFactory.getLogger(SchoolSubjectsDetailReport.class);
     @Autowired
     SchoolDetailReportQuery query;
 
     @Override
     public Map<?, ?> generateReport(String projectId, String schoolId, String subjectId) {
         Map<Object,Object> result = new HashMap<>();
+        LOG.info("查询学校全科详情报表,项目ID:{},学校ID{}",projectId,schoolId);
         Row schoolTotalRow = query.getSchoolSubjectsTotalDetail(projectId,schoolId);
         List<Row> classRows = query.getClassSubjectsTotalDetail(projectId,schoolId);
         result.put("school",schoolTotalRow);

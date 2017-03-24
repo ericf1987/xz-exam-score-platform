@@ -63,7 +63,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
         String tableName = "score_subject_" + subjectId;
 
         String combineSql = "update score_project p " +
-                "  inner join " + tableName + " q using(q.student_id)" +
+                "  inner join " + tableName + " q using(student_id)" +
                 "  set p.score=p.score+q.score";
 
         projectDao.execute(combineSql);
