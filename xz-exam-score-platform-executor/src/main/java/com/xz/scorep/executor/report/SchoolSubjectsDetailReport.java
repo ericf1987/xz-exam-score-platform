@@ -2,10 +2,10 @@ package com.xz.scorep.executor.report;
 
 import com.hyd.dao.Row;
 import com.xz.scorep.executor.aggritems.SchoolDetailReportQuery;
-import org.apache.commons.collections.map.HashedMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +22,7 @@ public class SchoolSubjectsDetailReport extends AbstractReport {
 
     @Override
     public Map<?, ?> generateReport(String projectId, String schoolId, String subjectId) {
-        Map<Object,Object> result = new HashedMap();
+        Map<Object,Object> result = new HashMap<>();
         Row schoolTotalRow = query.getSchoolSubjectsTotalDetail(projectId,schoolId);
         List<Row> classRows = query.getClassSubjectsTotalDetail(projectId,schoolId);
         result.put("school",schoolTotalRow);

@@ -13,7 +13,7 @@ import java.io.IOException;
  *
  * @author yidin
  */
-public class ReportControllerTest {
+public class ReportControllerTest extends BaseTest {
 
     public static final String PROJECT_ID = BaseTest.PROJECT_ID;
 
@@ -44,7 +44,7 @@ public class ReportControllerTest {
 
     @Test
     public void test111() throws IOException {
-        String url = "http://10.10.22.212:8180/report/" + PROJECT_ID + "/1b4289a9-58e2-4560-8617-27f791f956b6/000/SubjectsAverageScore";
+        String url = "http://10.10.22.212:8180/report/" + PROJECT2_ID + "/1b4289a9-58e2-4560-8617-27f791f956b6/000/SubjectsAverageScore";
         HttpRequest request = new HttpRequest(url);
         String response = request.request();
         System.out.println(response);
@@ -53,8 +53,8 @@ public class ReportControllerTest {
     @Test
     public void archiveProjectReport() throws Exception {
         HttpRequest archiveRequest = new HttpRequest("http://10.10.22.212:8180/report/archive", HttpRequest.DEFAULT_TIMEOUT * 10);
-        archiveRequest.setParameter("projectId",PROJECT_ID);
-        archiveRequest.setParameter("subjectId","002");
+        archiveRequest.setParameter("projectId",PROJECT2_ID);
+//        archiveRequest.setParameter("subjectId","002");
         ThreadTimer.____start____("Generating report archive");
         String response = archiveRequest.requestPost();
         System.out.println(response);
