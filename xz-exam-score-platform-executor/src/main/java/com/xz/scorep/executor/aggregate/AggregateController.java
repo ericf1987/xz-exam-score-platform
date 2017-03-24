@@ -89,6 +89,7 @@ public class AggregateController {
     @ResponseBody
     public Result getAggregationStatus(
             @PathVariable("projectId") String projectId) {
-        return getAggregationStatus(projectId, null);
+        Row row = aggregationService.getAggregateStatus(projectId);
+        return Result.success().set("status", row);
     }
 }

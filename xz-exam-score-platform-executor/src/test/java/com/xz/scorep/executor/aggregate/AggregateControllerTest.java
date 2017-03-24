@@ -15,7 +15,7 @@ public class AggregateControllerTest extends BaseTest {
 
 
     @Test
-    public void test() throws IOException {
+    public void test112333() throws IOException {
         String url = "http://10.10.22.212:8180/aggr/start";
         HttpRequest request = new HttpRequest(url)
                 .setParameter("projectId", PROJECT2_ID)
@@ -24,6 +24,14 @@ public class AggregateControllerTest extends BaseTest {
                 .setParameter("importScore", "false");
 
         String response = request.requestPost();
+        System.out.println(response);
+    }
+
+    @Test
+    public void test() throws IOException {
+        String url = "http://10.10.22.212:8180//aggr/status/430300-564140e278df4e92a2a739a6f27ac391/001";
+        HttpRequest request = new HttpRequest(url);
+        String response = request.request();
         System.out.println(response);
     }
 
