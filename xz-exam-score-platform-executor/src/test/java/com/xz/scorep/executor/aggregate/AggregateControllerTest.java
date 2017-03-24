@@ -18,7 +18,7 @@ public class AggregateControllerTest extends BaseTest {
     public void test() throws IOException {
         String url = "http://10.10.22.212:8180/aggr/start";
         HttpRequest request = new HttpRequest(url)
-                .setParameter("projectId", PROJECT_ID)
+                .setParameter("projectId", PROJECT2_ID)
                 .setParameter("aggrType", AggregateType.Quick.name())
                 .setParameter("async", "true")
                 .setParameter("importScore", "false");
