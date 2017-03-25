@@ -24,6 +24,11 @@ import static org.apache.commons.lang.StringUtils.defaultString;
 /**
  * 从网阅数据库导入成绩记录
  *
+ * 关于缺考和作弊的处理：
+ *
+ * 缺考：缺考考生的成绩会在合并科目分数之后进行删除，详见 {@link com.xz.scorep.executor.aggregate.impl.StudentSubjectScoreAggregator}
+ * 作弊：作弊考生的成绩在这里不会导入，于是在进行统计时，该考生所有科目都为零分
+ *
  * @author yidin
  */
 public class ImportScoreHelper {
@@ -123,7 +128,7 @@ public class ImportScoreHelper {
             absentService.saveAbsent(projectId, studentId, subjectId);
         }
 
-        // 仅当考生当科没有缺考和作弊时才会导入成绩，这样统计时就能体现正确人数
+        // 仅当考生当科没有缺考和作弊时才会导入成绩
         if (!cheat && !absent) {
             importStudentSubjectiveScore(subjectId, studentScoreDoc);
             importStudentObjectiveScore(subjectId, studentScoreDoc);

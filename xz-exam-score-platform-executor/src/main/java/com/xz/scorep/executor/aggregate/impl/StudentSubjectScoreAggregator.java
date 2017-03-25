@@ -5,6 +5,7 @@ import com.hyd.dao.DAOException;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.ExamSubject;
+import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.ThreadPools;
@@ -25,11 +26,19 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentSubjectScoreAggregator.class);
 
+    public static final String DEL_ABS_SCORE = "delete from score_subject_{{subject}} " +
+            "where student_id in (\n" +
+            "  select a.student_id from absent a where a.subject_id='{{subject}}'  \n" +
+            ")";
+
     @Autowired
     private QuestService questService;
 
     @Autowired
     private SubjectService subjectService;
+
+    @Autowired
+    private DAOFactory daoFactory;
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
@@ -40,6 +49,18 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         ThreadPools.createAndRunThreadPool(20, 1,
                 pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
+
+        removeAbsentStudents(projectId, subjects);
+    }
+
+    // 删除科目分数表中被标记为缺考的考生记录
+    private void removeAbsentStudents(String projectId, List<ExamSubject> subjects) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+
+        for (ExamSubject subject : subjects) {
+            String sql = DEL_ABS_SCORE.replace("{{subject}}", subject.getId());
+            projectDao.execute(sql);
+        }
     }
 
     private List<ExamSubject> getSubjects(AggregateParameter aggregateParameter) {
