@@ -50,7 +50,9 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         ThreadPools.createAndRunThreadPool(20, 1,
                 pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
 
+        LOG.info("删除项目 {} 缺考考生...", projectId);
         removeAbsentStudents(projectId, subjects);
+        LOG.info("项目 {} 缺考考生删除完毕。", projectId);
     }
 
     // 删除科目分数表中被标记为缺考的考生记录
