@@ -3,6 +3,8 @@ package com.xz.scorep.executor.aggregate;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
+import com.xz.scorep.executor.bean.ExamProject;
+import com.xz.scorep.executor.project.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,9 @@ public class AggregateController {
 
     @Autowired
     private AggregationService aggregationService;
+
+    @Autowired
+    private ProjectService projectService;
 
     /**
      * 执行统计
@@ -49,6 +54,11 @@ public class AggregateController {
             return Result.success("统计执行完毕。");
 
         } else {
+
+            ExamProject project = projectService.findProject(projectId);
+            if (project == null) {
+                importProject = true;
+            }
 
             AggregateType aggregateType = AggregateType.valueOf(aggrType);
 

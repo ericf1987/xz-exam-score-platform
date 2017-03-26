@@ -25,11 +25,22 @@ import java.util.List;
 @Component
 public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
 
+    private static final String CLASS_MIN_SCORE = "select student.class_id, min(score) as min_score\n" +
+            "  from {{scoreTable}} s, student\n" +
+            "  where s.student_id=student.id and s.score>0" +
+            "  and student.school_id=? " +
+            "  group by student.class_id";
+
+    private static final String SCHOOL_MIN_SCORE = "select min(score) as min_score\n" +
+            "  from {{scoreTable}} s, student\n" +
+            "  where s.student_id=student.id and s.score>0\n" +
+            "  and student.school_id=?";
+
     private static final String QUERY_CLASS_ROWS = "select\n" +
             "a.subject,a.full_score,a.school_name,\n" +
             "a.class_id,a.class_name,a.count,a.average_score,\n" +
             "a.subjective_avg_score,a.objective_avg_score,\n" +
-            "a.max_score,a.min_score,\n" +
+            "a.max_score,\n" +
             "IFNULL(xlnt.xlnt_count,0) as xlnt_count,\n" +
             "concat(IFNULL(xlnt.xlnt_rate,0),'%') as xlnt_rate,\n" +
             "IFNULL(good.good_count,0) as good_count,\n" +
@@ -50,8 +61,7 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
             "format(avg(score_subject_{{subjectId}}.score),2) as average_score,\n" +
             "format(AVG(score_subjective_{{subjectId}}.score),2) as subjective_avg_score,\n" +
             "format(AVG(score_objective_{{subjectId}}.score),2) as objective_avg_score,\n" +
-            "max(score_subject_{{subjectId}}.score) as max_score,\n" +
-            "min(score_subject_{{subjectId}}.score) as min_score\n" +
+            "max(score_subject_{{subjectId}}.score) as max_score\n" +
             "from school,score_subject_{{subjectId}},class,student,\n" +
             "score_subjective_{{subjectId}},score_objective_{{subjectId}}\n" +
             "where\n" +
@@ -128,7 +138,7 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
             "a.subject,a.full_score,a.school_name,\n" +
             "a.class_id,a.class_name,a.count,a.average_score,\n" +
             "a.subjective_avg_score,a.objective_avg_score,\n" +
-            "a.max_score,a.min_score,\n" +
+            "a.max_score,\n" +
             "IFNULL(xlnt.xlnt_count,0) as xlnt_count,\n" +
             "concat(IFNULL(xlnt.xlnt_rate,0),'%') as xlnt_rate,\n" +
             "IFNULL(good.good_count,0) as good_count,\n" +
@@ -149,8 +159,7 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
             "format(avg(score_subject_{{subjectId}}.score),2) as average_score,\n" +
             "format(AVG(score_subjective_{{subjectId}}.score),2) as subjective_avg_score,\n" +
             "format(AVG(score_objective_{{subjectId}}.score),2) as objective_avg_score,\n" +
-            "max(score_subject_{{subjectId}}.score) as max_score,\n" +
-            "min(score_subject_{{subjectId}}.score) as min_score\n" +
+            "max(score_subject_{{subjectId}}.score) as max_score\n" +
             "from school,score_subject_{{subjectId}},student,\n" +
             "score_subjective_{{subjectId}},score_objective_{{subjectId}}\n" +
             "where\n" +
@@ -218,10 +227,10 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
             ") fail on fail.class_id = a.class_id";
 
     @Autowired
-    SubjectService subjectService;
+    private SubjectService subjectService;
 
     @Autowired
-    DAOFactory daoFactory;
+    private DAOFactory daoFactory;
 
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {
@@ -234,6 +243,7 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
         String schoolId = task.getRange().getId();
         String subjectId = String.valueOf(task.getTarget().getId());
         String subjectName = task.getTarget().getName();
+        String scoreTable = "score_subject_" + subjectId;
 
         ExamSubject examSubject = subjectService.findSubject(projectId, subjectId);
         double fullScore = examSubject.getFullScore();
@@ -249,12 +259,18 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
         sheetContext.rowAdd(rows);
         sheetContext.rowSortBy("class_name");
 
+        sheetContext.rowAdd(dao.query(CLASS_MIN_SCORE.replace("{{scoreTable}}", scoreTable), schoolId));
+
         String totalSql = QUERY_TOTAL_ROW
                 .replace("{{subjectName}}",subjectName)
                 .replace("{{fullScore}}",StringUtils.removeEnd(String.valueOf(fullScore),".0"))
                 .replace("{{subjectId}}",subjectId)
                 .replace("{{schoolId}}",schoolId);
         sheetContext.rowAdd(dao.queryFirst(totalSql));
+
+        sheetContext.tablePutValue("total", "min_score",
+                dao.queryFirst(SCHOOL_MIN_SCORE.replace("{{scoreTable}}", scoreTable), schoolId)
+                        .getDouble("min_score", 0));
 
         sheetContext.rowStyle("total", ExcelCellStyles.Green.name());
         sheetContext.freeze(3, 3);

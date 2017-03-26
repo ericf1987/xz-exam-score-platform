@@ -31,9 +31,17 @@ public abstract class TotalAverageSheet extends SheetGenerator {
     private static final String PASS_OR_FAIL = "select range_id as school_id,concat(all_pass_rate,'%') as all_pass," +
             " concat(all_fail_rate,'%') as all_fail,all_pass_count,all_fail_count from all_pass_or_fail where range_type = 'school'";
 
+    private static final String SCHOOL_MIN_SCORE = "select student.school_id, min(score) as min_score\n" +
+            "  from {{scoreTable}} s, student\n" +
+            "  where s.student_id=student.id and s.score>0\n" +
+            "  group by student.school_id";
+
+    private static final String PROVINCE_MIN_SCORE = "select min(score) as min_score " +
+            "  from {{scoreTable}} s where s.score>0";
+
     private static final String SCHOOL_PROJECT_OR_SUBJECT_INFO = "SELECT\n" +
             " a.school_id,a.school_name,a.student_count,a.max_score,\n" +
-            " a.min_score,a.average_score,CONCAT(IFNULL(xlnt.xlnt, '0.00'),'%') AS excellent,\n" +
+            " a.average_score,CONCAT(IFNULL(xlnt.xlnt, '0.00'),'%') AS excellent,\n" +
             " CONCAT(IFNULL(good.good, '0.00'),'%') AS good,\n" +
             " CONCAT(IFNULL(pass.pass, '0.00'),'%') AS pass,\n" +
             " CONCAT(IFNULL(fail.fail, '0.00'),'%') AS fail\n" +
@@ -44,7 +52,6 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             " school. NAME AS school_name,\n" +
             " COUNT(student.id) student_count,\n" +
             " MAX({{table}}.score) AS max_score,\n" +
-            " MIN({{table}}.score) AS min_score,\n" +
             " FORMAT(AVG({{table}}.score),2) AS average_score\n" +
             " FROM\n" +
             " school,\n" +
@@ -125,7 +132,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             "select\n" +
             "'total' as school_id,'总体'as school_name, \n" +
             "COUNT(student.id) as student_count,max(score_project.score) as max_score,\n" +
-            "MIN(score_project.score) as min_score,format(AVG(score_project.score),2) as average_score,\n" +
+            "format(AVG(score_project.score),2) as average_score,\n" +
             "'--' as average_range\n" +
             "from student,score_project\n" +
             "where  student.id = score_project.student_id\n" +
@@ -178,7 +185,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             "(\n" +
             "select \n" +
             "'total' as school_id, '总体' as school_name,COUNT(student.id) as student_count,\n" +
-            "max(score_subject_{{subjectId}}.score) as max_score,MIN(score_subject_{{subjectId}}.score) as min_score,\n" +
+            "max(score_subject_{{subjectId}}.score) as max_score,\n" +
             "FORMAT(avg(score_subject_{{subjectId}}.score),2) as average_score,'--' as average_range\n" +
             "from student,score_subject_{{subjectId}}\n" +
             "WHERE\n" +
@@ -265,22 +272,28 @@ public abstract class TotalAverageSheet extends SheetGenerator {
 
         if (tableHeader.get("all_pass") == null) {//单科
             String subjectId = getSubjectId(sheetContext);
-            //查每个学校每科的人数、最高分、最低分、平均分、四率
+
+            // 每个学校每科的人数、最高分、平均分、四率
             List<Row> rows = putSchoolSubjectInfo(sheetContext, dao, subjectId);
 
-            //先按平均分排名,最后增加总计行
+            // 先按平均分排名,最后增加总计行
             accordingAverageSorting(sheetContext, rows);
+
+            sheetContext.rowAdd(querySchoolMinScore(dao, "score_subject_" + subjectId));
 
             //每一科目的总计栏
             Row totalRow = getSchoolSubjectTotalRow(dao, subjectId);
             sheetContext.rowAdd(totalRow);
 
         } else {//全科
-            //查学校参考人数、最高分、最低分、平均分、四率
+
+            // 学校参考人数、最高分、平均分、四率
             List<Row> rows = putSchoolProjectInfo(sheetContext, projectId, dao);
 
-            //先按平均分排名,最后增加总计行
+            // 先按平均分排名,最后增加总计行
             accordingAverageSorting(sheetContext, rows);
+
+            sheetContext.rowAdd(querySchoolMinScore(dao, "score_project"));
 
             Row total = getSchoolProjectTotalRow(projectId, dao);
             sheetContext.rowAdd(total);
@@ -292,6 +305,16 @@ public abstract class TotalAverageSheet extends SheetGenerator {
 
         sheetContext.freeze(3, 1);
         sheetContext.saveData();// 保存到 ExcelWriter
+    }
+
+    private List<Row> querySchoolMinScore(DAO dao, String tableName) {
+        String sql = SCHOOL_MIN_SCORE.replace("{{scoreTable}}", tableName);
+        return dao.query(sql);
+    }
+
+    private Row queryProvinceMinScore(DAO dao, String tableName) {
+        String sql = PROVINCE_MIN_SCORE.replace("{{scoreTable}}", tableName);
+        return dao.queryFirst(sql);
     }
 
     private Row getSchoolProjectTotalRow(String projectId, DAO dao) {
@@ -311,6 +334,9 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         Row passOrFail = dao.queryFirst("select * from all_pass_or_fail where range_type='province'");
         total.put("all_pass", passOrFail.getDouble("all_pass_rate", 0) + "%");
         total.put("all_fail", passOrFail.getDouble("all_fail_rate", 0) + "%");
+
+        Row minScoreRow = queryProvinceMinScore(dao, "score_project");
+        total.put("min_score", minScoreRow.getString("min_score"));
 
         return total;
     }
@@ -346,6 +372,10 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         String overRate = String.format("%.02f%%",
                 NumberUtil.scale(100.0 * totalOverAverageRate.getDouble("over_average", 0), 2));
         totalRow.put("over_average", overRate);
+
+        Row minScoreRow = queryProvinceMinScore(dao, "score_subject_" + subjectId);
+        totalRow.put("min_score", minScoreRow.getDouble("min_score", 0));
+
         return totalRow;
     }
 
@@ -420,7 +450,6 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             String schoolId = row.getString("school_id");
             int rank = ranker.getRank(schoolId, false);
             sheetContext.tablePutValue(schoolId, rankColumnName, rank+1);
-
         });
     }
 
