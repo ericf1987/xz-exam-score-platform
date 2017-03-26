@@ -2,6 +2,7 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.xz.scorep.executor.aggregate.*;
+import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.project.SubjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,9 @@ public class StudentProjectScoreAggregator extends Aggregator {
             LOG.info("项目 {} 的学生总分统计已完成 {}/{} 个科目",
                     projectId, counter.incrementAndGet(), subjectIds.size());
         });
+
+        LOG.info("删除全科成绩为 0 的考生...");
+        projectDao.execute("delete from score_project where score=0");
     }
 
 
@@ -49,7 +53,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
 
         if (aggregateParameter.getSubjects().isEmpty()) {
             subjectId = subjectService.listSubjects(projectId)
-                    .stream().map(subject -> subject.getId())
+                    .stream().map(ExamSubject::getId)
                     .collect(Collectors.toList());
 
         } else {
