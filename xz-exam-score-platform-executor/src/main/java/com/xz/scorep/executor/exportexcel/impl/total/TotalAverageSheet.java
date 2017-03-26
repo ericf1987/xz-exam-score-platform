@@ -251,8 +251,6 @@ public abstract class TotalAverageSheet extends SheetGenerator {
     @Autowired
     private ReportConfigService reportConfigService;
 
-    @Autowired
-    ProjectService projectService;
 
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {

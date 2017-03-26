@@ -19,7 +19,7 @@ public class TotalAverageReportTest extends BaseTest {
 
     @Test
     public void testGenerateReport() throws Exception {
-        String projectId = "430300-9cef9f2059ce4a36a40a7a60b07c7e00";
+        String projectId = "430900-9e8f3c054d72414b81cdd99bd48da695";
         String savePath = "./111.xlsx";
 
         report.generate(projectId,

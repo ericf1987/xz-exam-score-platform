@@ -23,7 +23,7 @@ public class ReportControllerTest extends BaseTest {
 
     @Test
     public void testURL() throws IOException {
-        String url = "http://10.10.22.212:8180/aggr/status/430300-9cef9f2059ce4a36a40a7a60b07c7e00";
+        String url = "http://10.10.22.212:8180/aggr/status/430900-9e8f3c054d72414b81cdd99bd48da695";
         HttpRequest request = new HttpRequest(url);
         String response = request.request();
         System.out.println(response);
@@ -53,7 +53,7 @@ public class ReportControllerTest extends BaseTest {
     @Test
     public void archiveProjectReport() throws Exception {
         HttpRequest archiveRequest = new HttpRequest("http://10.10.22.212:8180/report/archive", HttpRequest.DEFAULT_TIMEOUT * 10);
-        archiveRequest.setParameter("projectId",PROJECT2_ID);
+        archiveRequest.setParameter("projectId","430900-9e8f3c054d72414b81cdd99bd48da695");
 //        archiveRequest.setParameter("subjectId","002");
         ThreadTimer.____start____("Generating report archive");
         String response = archiveRequest.requestPost();
