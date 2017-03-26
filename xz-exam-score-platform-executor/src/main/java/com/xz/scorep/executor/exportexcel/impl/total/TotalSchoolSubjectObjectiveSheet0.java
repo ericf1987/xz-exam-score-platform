@@ -31,7 +31,27 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
             " where " +
             "   a.quest_id=quest.id and " +
             "   quest.exam_subject=? and " +
-            "   a.range_type=?";
+            "   a.range_type='province'";
+
+    private static final String QUERY_TEMPLATE_SCHOOL = "select" +
+            "   a.quest_id, a.`option`, a.range_id," +
+            "   a.option_rate as {{rateAlias}}" +
+            " from objective_option_rate a, quest " +
+            " where " +
+            "   a.quest_id=quest.id and " +
+            "   quest.exam_subject=? and " +
+            "   a.range_type='school' and" +
+            "   a.range_id=?";
+
+    private static final String QUERY_TEMPLATE_CLASS = "select" +
+            "   a.quest_id, a.`option`, a.range_id," +
+            "   a.option_rate as {{rateAlias}}" +
+            " from objective_option_rate a, quest " +
+            " where " +
+            "   a.quest_id=quest.id and " +
+            "   quest.exam_subject=? and " +
+            "   a.range_type='class' and" +
+            "   a.range_id in (select id from class where school_id=?)";
 
     @Autowired
     private ClassService classService;
@@ -112,19 +132,15 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
         List<Row> provinceOptionRates = fixKey(projectDao.query(
-                QUERY_TEMPLATE.replace("{{rateAlias}}", "province_rate"),
-                subjectId, "province"));
+                QUERY_TEMPLATE.replace("{{rateAlias}}", "province_rate"), subjectId));
         sheetContext.rowAdd(provinceOptionRates);
 
         List<Row> schoolOptionRates = fixKey(projectDao.query(
-                QUERY_TEMPLATE.replace("{{rateAlias}}", "school_rate"),
-                subjectId, "school"));
+                QUERY_TEMPLATE_SCHOOL.replace("{{rateAlias}}", "school_rate"), subjectId, schoolId));
         sheetContext.rowAdd(schoolOptionRates);
 
         List<Row> classOptionRates = fixKey(projectDao.query(
-                QUERY_TEMPLATE.replace("{{rateAlias}}", "class_rate"),
-                subjectId, "class"
-        ));
+                QUERY_TEMPLATE_CLASS.replace("{{rateAlias}}", "class_rate"), subjectId, schoolId));
         sheetContext.rowAdd(fixClassRows(classOptionRates));
 
         sheetContext.fillEmptyCells(column -> column.contains("_rate"), "0%");
