@@ -3,7 +3,10 @@ package com.xz.scorep.executor.db;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.hyd.dao.DAO;
 import com.hyd.dao.DataSources;
+import com.hyd.dao.Row;
+import com.hyd.simplecache.SimpleCache;
 import com.xz.ajiaedu.common.lang.StringUtil;
+import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.config.DbConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -23,6 +26,9 @@ public class DAOFactory {
 
     @Autowired
     private DbConfig dbConfig;
+
+    @Autowired
+    private CacheFactory cacheFactory;
 
     private DataSources dataSources = new DataSources();
 
@@ -49,7 +55,20 @@ public class DAOFactory {
 
     // 获得项目库连接 DAO
     public synchronized DAO getProjectDao(String projectId) {
+
+        SimpleCache globalCache = cacheFactory.getGlobalCache();
+        String missingCacheKey = "missing:" + projectId;
+        if (globalCache.get(missingCacheKey) != null) {
+            throw new IllegalStateException("项目 " + projectId + " 尚未导入。");
+        }
+
         if (!dataSources.contains(projectId)) {
+
+            Row row = getManagerDao().queryFirst("select 1 from project where id=?", projectId);
+            if (row == null) {
+                globalCache.put(missingCacheKey, true, 60);
+            }
+
             dataSources.setDataSource(projectId, getProjectDataSource(projectId));
         }
         return dataSources.getDAO(projectId);
