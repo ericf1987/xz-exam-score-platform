@@ -10,7 +10,6 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.ExcelCellStyles;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
-import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.Direction;
@@ -257,7 +256,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         generateEachSheet(sheetContext);
     }
 
-    protected void generateEachSheet(SheetContext sheetContext) {
+    void generateEachSheet(SheetContext sheetContext) {
         Map<String, String> tableHeader = getTableHeader();
         putTableHeader(sheetContext, tableHeader);
 
@@ -308,6 +307,11 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         String overRate = String.format("%.02f%%",
                 NumberUtil.scale(100.0 * overAverageRate.getDouble("over_average", 0), 2));
         total.put("over_average", overRate);
+
+        Row passOrFail = dao.queryFirst("select * from all_pass_or_fail where range_type='province'");
+        total.put("all_pass", passOrFail.getDouble("all_pass_rate", 0) + "%");
+        total.put("all_fail", passOrFail.getDouble("all_fail_rate", 0) + "%");
+
         return total;
     }
 

@@ -169,7 +169,7 @@ public class AllPassOrFailAggregator extends Aggregator {
         classStudentCount.forEach((classId, totalCount) -> {
             int allPassCount = getCount(classAllPassCount, classId);
             int allFailCount = getCount(classAllFailCount, classId);
-            resultRows.add(createMap(Range.SCHOOL, classId, totalCount, allPassCount, allFailCount));
+            resultRows.add(createMap(Range.CLASS, classId, totalCount, allPassCount, allFailCount));
         });
 
         projectDao.insert(resultRows, "all_pass_or_fail");

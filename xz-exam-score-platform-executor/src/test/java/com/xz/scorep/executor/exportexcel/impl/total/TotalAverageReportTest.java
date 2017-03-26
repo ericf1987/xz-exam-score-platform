@@ -1,13 +1,8 @@
 package com.xz.scorep.executor.exportexcel.impl.total;
 
 import com.xz.scorep.executor.BaseTest;
-import com.xz.scorep.executor.bean.Range;
-import com.xz.scorep.executor.bean.ScoreLevel;
-import com.xz.scorep.executor.bean.Target;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.junit.Assert.*;
 
 /**
  * Author: luckylo
@@ -19,12 +14,10 @@ public class TotalAverageReportTest extends BaseTest {
 
     @Test
     public void testGenerateReport() throws Exception {
-        String projectId = "430900-9e8f3c054d72414b81cdd99bd48da695";
-        String savePath = "./111.xlsx";
+        String savePath = "./target/联考学校平均分统计分析.xlsx";
 
-        report.generate(projectId,
-                Range.school("1b4289a9-58e2-4560-8617-27f791f956b6", "湘潭县第四中学"),
-                Target.subject("001", "语文"),
+        report.generate(PROJECT3_ID,
+                null, null,
                 savePath);
     }
 }
