@@ -84,6 +84,12 @@ public class ImportProjectService {
 
         LogUtils.changeLogLevel("com.hyd.dao", Level.INFO);
 
+        // 预先初始化项目记录
+        if (parameters.isImportProjectInfo()) {
+            LOG.info("导入项目 {} 基本信息...", projectId);
+            importProjectInfo(context);
+        }
+
         // 初始化数据库
         if (parameters.isRecreateDatabase()) {
             LOG.info("重新创建项目 {} 的数据库...", projectId);
@@ -92,8 +98,7 @@ public class ImportProjectService {
 
         // 导入项目数据
         if (parameters.isImportProjectInfo()) {
-            LOG.info("导入项目 {} 基本信息...", projectId);
-            importProjectInfo(context);
+            LOG.info("导入项目 {} 科目信息...", projectId);
             importSubjects(context);
         }
 
