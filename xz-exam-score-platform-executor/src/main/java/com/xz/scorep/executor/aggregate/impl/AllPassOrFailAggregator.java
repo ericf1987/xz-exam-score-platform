@@ -8,8 +8,6 @@ import com.xz.ajiaedu.common.lang.CounterMap;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.db.DAOFactory;
-import com.xz.scorep.executor.project.ClassService;
-import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import org.slf4j.Logger;
@@ -39,11 +37,15 @@ public class AllPassOrFailAggregator extends Aggregator {
 
     public static final String PROVINCE_COUNT = "select count(student.id) as count from student";
 
-    public static final String SCHOOL_COUNT = "select school.id ,COUNT(student.id) as count from student,school\n" +
-            " where school.id = student.school_id GROUP BY school.id";
+    public static final String SCHOOL_COUNT = "select school.name ,school.id ,COUNT(student.id) as count from student,score_project,school \n" +
+            "where school.id = student.school_id \n" +
+            "and score_project.student_id = student.id \n"+
+            "GROUP BY school.id";
 
-    public static final String CLASS_COUNT = "select class.id ,COUNT(student.id) as count from student,class\n" +
-            " where class.id = student.class_id GROUP BY class.id";
+    public static final String CLASS_COUNT = "select class.id ,COUNT(student.id) as count from student,score_project,class \n" +
+            " where class.id = student.class_id \n" +
+            "and score_project.student_id = student.id \n"+
+            "GROUP BY class.id";
 
 
     @Autowired
@@ -51,12 +53,6 @@ public class AllPassOrFailAggregator extends Aggregator {
 
     @Autowired
     ReportConfigService reportConfigService;
-
-    @Autowired
-    SchoolService schoolService;
-
-    @Autowired
-    ClassService classService;
 
 
     @Override
@@ -98,7 +94,7 @@ public class AllPassOrFailAggregator extends Aggregator {
         List<Row> insertRows = new ArrayList<>();
 
         LOG.info("开始统计整体全科及格率、全科不及格率...");
-        aggregatorProvincePassFailRate(projectDao, score, result, insertRows,projectId);
+        aggregatorProvincePassFailRate(projectDao, score, result, insertRows, projectId);
         LOG.info("统计整体全科及格率、全科不及格率完成...");
         insertRows.clear();
 
@@ -114,11 +110,11 @@ public class AllPassOrFailAggregator extends Aggregator {
 
     private void aggregatorProvincePassFailRate(DAO projectDao, Map<String, Double> score, List<Row> result, List<Row> insertRows, String projectId) {
         Row provinceCount = projectDao.queryFirst(PROVINCE_COUNT);
-        int count = provinceCount.getInteger("count",0);
+        int count = provinceCount.getInteger("count", 0);
         CounterMap<String> passCounterMap = new CounterMap<>();
         CounterMap<String> failCounterMap = new CounterMap<>();
         result.stream()
-                .forEach(s-> checkStudentIsPassOrFail(score, projectId, passCounterMap, failCounterMap, s));
+                .forEach(s -> checkStudentIsPassOrFail(score, projectId, passCounterMap, failCounterMap, s));
 
         Row provinceRow = new Row();
         provinceRow.put("range_type", Range.PROVINCE);
@@ -189,7 +185,7 @@ public class AllPassOrFailAggregator extends Aggregator {
             if (row.getDouble(entry.getKey(), 0) < entry.getValue()) {
                 all_pass = false;
             }
-            if (row.getDouble(entry.getKey(), 0) > entry.getValue()) {
+            if (row.getDouble(entry.getKey(), 0) >= entry.getValue()) {
                 all_fail = true;
             }
         }
@@ -202,7 +198,7 @@ public class AllPassOrFailAggregator extends Aggregator {
     }
 
     private double getPercent(int count, int totalCount) {
-        return totalCount == 0 ? 0 : ((double) count / totalCount * 100);
+        return totalCount == 0 ? 0 : ((count * 1.0) / totalCount * 100);
     }
 
 }
