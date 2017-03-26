@@ -211,6 +211,7 @@ public class ImportProjectService {
 
         context.put("questList", questList);
         questService.saveQuest(projectId, questList);
+        LOG.info("已导入 " + questList.size() + " 个题目。");
     }
 
     //////////////////////////////////////////////////////////////

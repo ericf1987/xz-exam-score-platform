@@ -39,7 +39,7 @@ public class ExamQuest {
     }
 
     public ExamQuest(String id, String examSubject, boolean objective, String questNo, double fullScore) {
-        this.id = id;
+        this.id = fixId(id);
         this.examSubject = examSubject;
         this.objective = objective;
         this.questNo = questNo;
@@ -47,7 +47,7 @@ public class ExamQuest {
     }
 
     public ExamQuest(JSONObject jsonObject) {
-        this.id = jsonObject.getString("questId");
+        this.id = fixId(jsonObject.getString("questId"));
         this.examSubject = jsonObject.getString("cardSubjectId");
         this.questSubject = jsonObject.getString("subjectId");
         this.questionTypeId = jsonObject.getString("questionTypeId");
@@ -68,7 +68,7 @@ public class ExamQuest {
         this.scoreRule = jsonObject.getString("scoreRule");
 
         JSONArray items = jsonObject.getJSONArray("items");
-        this.options = items == null? "": items.toJSONString();
+        this.options = items == null ? "" : items.toJSONString();
     }
 
     public boolean isMultiChoice() {
@@ -92,7 +92,7 @@ public class ExamQuest {
     }
 
     public void setId(String id) {
-        this.id = id;
+        this.id = fixId(id);
     }
 
     public String getExamSubject() {
@@ -192,5 +192,16 @@ public class ExamQuest {
                 ", scoreRule='" + scoreRule + '\'' +
                 ", options='" + options + '\'' +
                 '}';
+    }
+
+    /**
+     * 数据库表名不能带点，在这里把点号替换为"-"
+     *
+     * @param id 表名
+     *
+     * @return 修复后的表名
+     */
+    private String fixId(String id) {
+        return id == null ? id : (id.contains(".") ? id.replace(".", "-") : id);
     }
 }

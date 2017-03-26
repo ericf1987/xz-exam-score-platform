@@ -2,6 +2,8 @@ package com.xz.scorep.executor.report;
 
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import java.util.Map;
 @Controller
 public class ReportController {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ReportController.class);
 
     @Autowired
     private ReportManager reportManager;
@@ -39,8 +42,13 @@ public class ReportController {
             return Result.fail(404, "没有找到报表 " + reportName);
         }
 
-        Map<?, ?> reportContent = report.generateReport(projectId, schoolId, subjectId);
-        return Result.success().set("report", reportContent);
+        try {
+            Map<?, ?> reportContent = report.generateReport(projectId, schoolId, subjectId);
+            return Result.success().set("report", reportContent);
+        } catch (Exception e) {
+            LOG.error("", e);
+            return Result.fail(e.getMessage());
+        }
     }
 
 
