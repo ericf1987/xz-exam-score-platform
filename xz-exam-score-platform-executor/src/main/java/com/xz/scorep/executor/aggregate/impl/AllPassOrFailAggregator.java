@@ -6,8 +6,10 @@ import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.CounterMap;
 import com.xz.scorep.executor.aggregate.*;
+import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.db.DAOFactory;
+import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import org.slf4j.Logger;
@@ -19,6 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * 统计全科及格率和全科不及格率
@@ -32,28 +36,25 @@ public class AllPassOrFailAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AllPassOrFailAggregator.class);
 
-    public static String SQL = "select student.id as student_id,student.class_id,student.school_id " +
-            " {{cols} from student {{tables}} where {{sub}}";
+    private static final String PROVINCE_COUNT = "select count(*) as cnt from score_project";
 
-    public static final String PROVINCE_COUNT = "select count(1) as count from score_project";
+    private static final String SCHOOL_COUNT = "select student.school_id, count(*) as cnt\n" +
+            "from score_project s, student where s.student_id=student.id\n" +
+            "group by student.school_id";
 
-    public static final String SCHOOL_COUNT = "select school.name ,school.id ,COUNT(student.id) as count from student,score_project,school \n" +
-            "where school.id = student.school_id \n" +
-            "and score_project.student_id = student.id \n"+
-            "GROUP BY school.id";
-
-    public static final String CLASS_COUNT = "select class.id ,COUNT(student.id) as count from student,score_project,class \n" +
-            " where class.id = student.class_id \n" +
-            "and score_project.student_id = student.id \n"+
-            "GROUP BY class.id";
+    private static final String CLASS_COUNT = "select student.class_id, count(*) as cnt\n" +
+            "from score_project s, student where s.student_id=student.id\n" +
+            "group by student.class_id";
 
 
     @Autowired
-    DAOFactory daoFactory;
+    private DAOFactory daoFactory;
 
     @Autowired
-    ReportConfigService reportConfigService;
+    private ReportConfigService reportConfigService;
 
+    @Autowired
+    private SubjectService subjectService;
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
@@ -62,143 +63,132 @@ public class AllPassOrFailAggregator extends Aggregator {
         projectDao.execute("truncate table all_pass_or_fail ");
         LOG.info("全科及格率、不及格率表已清空");
 
+        //////////////////////////////////////////////////////////////
+
+        int provinceStudentCount = projectDao.count(PROVINCE_COUNT);
+
+        Map<String, Integer> schoolStudentCount = projectDao.query(SCHOOL_COUNT)
+                .stream().collect(Collectors.toMap(
+                        row -> row.getString("school_id"),
+                        row -> row.getInteger("cnt", 0)
+                ));
+
+        Map<String, Integer> classStudentCount = projectDao.query(CLASS_COUNT)
+                .stream().collect(Collectors.toMap(
+                        row -> row.getString("class_id"),
+                        row -> row.getInteger("cnt", 0)
+                ));
+
+        //////////////////////////////////////////////////////////////
+
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
         JSONObject scoreLevels = JSON.parseObject(reportConfig.getScoreLevels());
+        double passRate = scoreLevels.getDouble("Pass");
 
-        List<Row> subjects = projectDao.query("select * from subject");
+        // subjectId -> 及格分数(double)
+        List<ExamSubject> subjects = subjectService.listSubjects(projectId);
+        Map<String, Double> passScores = subjects
+                .stream().collect(Collectors.toMap(
+                        ExamSubject::getId, subject -> subject.getFullScore() * passRate));
 
-        StringBuffer cols = new StringBuffer();
-        StringBuffer tables = new StringBuffer();
-        StringBuffer sub = new StringBuffer();
+        String sql = generateSql(subjects, passScores);
 
-        double rate = scoreLevels.getDouble("Pass");
-        Map<String, Double> score = new HashMap<>();
+        LOG.info("查询语句：\n" + sql);
 
-        for (Row row : subjects) {
-            String id = row.getString("id");
-            score.put("score_" + id, row.getDouble("full_score", 0) * rate);
+        List<Row> rows = daoFactory.getProjectDao(projectId).query(sql);
 
-            cols.append(",score_subject_" + id + ".score as score_" + id);
-            tables.append(",score_subject_" + id);
-            sub.append(" student.id = score_subject_" + id + ".student_id and");
-        }
-        String str = sub.substring(0, sub.lastIndexOf("and")).toString();
+        //////////////////////////////////////////////////////////////
 
-        String sql = SQL
-                .replace("{{cols}", cols.toString())
-                .replace("{{tables}}", tables.toString())
-                .replace("{{sub}}", str);
-
-        List<Row> result = projectDao.query(sql);
-
-        List<Row> insertRows = new ArrayList<>();
-
-        LOG.info("开始统计整体全科及格率、全科不及格率...");
-        aggregatorProvincePassFailRate(projectDao, score, result, insertRows, projectId);
-        LOG.info("统计整体全科及格率、全科不及格率完成...");
-        insertRows.clear();
-
-        LOG.info("开始统计学校全科及格率、全科不及格率...");
-        aggregatorSchoolPassFailRate(projectDao, score, result, insertRows);
-        LOG.info("统计学校全科及格率、全科不及格率完成...");
-        insertRows.clear();
-
-        LOG.info("开始统计班级全科及格率、全科不及格率...");
-        aggregatorClassPassFailRate(projectDao, score, result, insertRows);
-        LOG.info("统计班级全科及格率、全科不及格率完成...");
+        aggregateData(projectDao, rows, provinceStudentCount, schoolStudentCount, classStudentCount);
     }
 
-    private void aggregatorProvincePassFailRate(DAO projectDao, Map<String, Double> score, List<Row> result, List<Row> insertRows, String projectId) {
-        Row provinceCount = projectDao.queryFirst(PROVINCE_COUNT);
-        int count = provinceCount.getInteger("count", 0);
-        CounterMap<String> passCounterMap = new CounterMap<>();
-        CounterMap<String> failCounterMap = new CounterMap<>();
-        result.stream()
-                .forEach(s -> checkStudentIsPassOrFail(score, projectId, passCounterMap, failCounterMap, s));
+    private String generateSql(List<ExamSubject> subjects, Map<String, Double> passScores) {
+        StringBuilder sqlBuilder = new StringBuilder("select st.id as student_id,st.class_id,st.school_id,");
 
-        Row provinceRow = new Row();
-        provinceRow.put("range_type", Range.PROVINCE);
-        provinceRow.put("range_id", projectId);
+        // if (score_001>=80 and score_002>=80 and ..., 'true', 'false') as all_pass
+        String allPass = "if (" + String.join(" and ", subjects.stream().map(
+                subject -> "score_" + subject.getId() + ">=" + passScores.get(subject.getId()))
+                .collect(Collectors.toList())) + ", 'true', 'false') as all_pass";
 
-        provinceRow.put("all_pass_count", passCounterMap.getCount(projectId));
-        provinceRow.put("all_pass_rate", getPercent(passCounterMap.getCount(projectId), count));
-        provinceRow.put("all_fail_count", failCounterMap.getCount(projectId));
-        provinceRow.put("all_fail_rate", getPercent(failCounterMap.getCount(projectId), count));
-        insertRows.add(provinceRow);
-        projectDao.insert(insertRows, "all_pass_or_fail");
+        // if (score_001<80 and score_002<80 and ..., 'true', 'false') as all_fail
+        String allFail = "if (" + String.join(" and ", subjects.stream().map(
+                subject -> "score_" + subject.getId() + "<" + passScores.get(subject.getId()))
+                .collect(Collectors.toList())) + ", 'true', 'false') as all_fail";
+
+        sqlBuilder.append(allPass).append(",").append(allFail).append(" from (select s.student_id,");
+
+        String scoreColumns = String.join(",", subjects.stream().map(
+                subject -> "ifnull(score_subject_" + subject.getId() + ".score,0) as score_" + subject.getId())
+                .collect(Collectors.toList()));
+
+        sqlBuilder.append(scoreColumns).append(" from score_project s ");
+
+        String leftJoins = String.join(" ", subjects.stream().map(
+                subject -> "left join score_subject_" + subject.getId() + " using(student_id)")
+                .collect(Collectors.toList()));
+
+        sqlBuilder.append(leftJoins).append(") a, student st where a.student_id=st.id");
+        return sqlBuilder.toString();
     }
 
-    private void aggregatorClassPassFailRate(DAO projectDao, Map<String, Double> score, List<Row> result, List<Row> insertRows) {
-        List<Row> classCount = projectDao.query(CLASS_COUNT);
-        for (Row row : classCount) {
-            String classId = row.getString("id");
-            int count = row.getInteger("count", 0);
-            CounterMap<String> passCounterMap = new CounterMap<>();
-            CounterMap<String> failCounterMap = new CounterMap<>();
+    private void aggregateData(DAO projectDao, List<Row> rows,
+                               int provinceStudentCount,
+                               Map<String, Integer> schoolStudentCount,
+                               Map<String, Integer> classStudentCount) {
 
-            result.stream()
-                    .filter(s -> s.getString("class_id").equals(classId))
-                    .forEach(s -> checkStudentIsPassOrFail(score, classId, passCounterMap, failCounterMap, s));
-            Row classRow = new Row();
-            classRow.put("range_type", Range.CLASS);
-            classRow.put("range_id", classId);
+        AtomicInteger provinceAllPassCount = new AtomicInteger();
+        AtomicInteger provinceAllFailCount = new AtomicInteger();
 
-            classRow.put("all_pass_count", passCounterMap.getCount(classId));
-            classRow.put("all_pass_rate", getPercent(passCounterMap.getCount(classId), count));
-            classRow.put("all_fail_count", failCounterMap.getCount(classId));
-            classRow.put("all_fail_rate", getPercent(failCounterMap.getCount(classId), count));
-            insertRows.add(classRow);
-        }
+        CounterMap<String> schoolAllPassCount = new CounterMap<>();
+        CounterMap<String> schoolAllFailCount = new CounterMap<>();
+        CounterMap<String> classAllPassCount = new CounterMap<>();
+        CounterMap<String> classAllFailCount = new CounterMap<>();
 
-        projectDao.insert(insertRows, "all_pass_or_fail");
-    }
+        rows.forEach(row -> {
+            if (row.get("all_pass").equals("true")) {
+                provinceAllPassCount.incrementAndGet();
+                schoolAllPassCount.incre(row.getString("school_id"));
+                classAllPassCount.incre(row.getString("class_id"));
 
-    private void aggregatorSchoolPassFailRate(DAO projectDao, Map<String, Double> score, List<Row> result, List<Row> insertRows) {
-        List<Row> schoolCount = projectDao.query(SCHOOL_COUNT);
-        for (Row row : schoolCount) {
-            String schoolId = row.getString("id");
-            int count = row.getInteger("count", 0);
-            CounterMap<String> passCounterMap = new CounterMap<>();
-            CounterMap<String> failCounterMap = new CounterMap<>();
-
-            result.stream()
-                    .filter(s -> s.getString("school_id").equals(schoolId))
-                    .forEach(s -> checkStudentIsPassOrFail(score, schoolId, passCounterMap, failCounterMap, s));
-            Row schoolRow = new Row();
-            schoolRow.put("range_type", Range.SCHOOL);
-            schoolRow.put("range_id", schoolId);
-            schoolRow.put("all_pass_count", passCounterMap.getCount(schoolId));
-            schoolRow.put("all_pass_rate", getPercent(passCounterMap.getCount(schoolId), count));
-            schoolRow.put("all_fail_count", failCounterMap.getCount(schoolId));
-            schoolRow.put("all_fail_rate", getPercent(failCounterMap.getCount(schoolId), count));
-            insertRows.add(schoolRow);
-        }
-
-        projectDao.insert(insertRows, "all_pass_or_fail");
-    }
-
-    private void checkStudentIsPassOrFail(Map<String, Double> score, String id, CounterMap<String> passCounterMap,
-                                          CounterMap<String> failCounterMap, Row row) {
-        boolean all_pass = true;
-        boolean all_fail = false;
-        for (Map.Entry<String, Double> entry : score.entrySet()) {
-            if (row.getDouble(entry.getKey(), 0) < entry.getValue()) {
-                all_pass = false;
+            } else if (row.get("all_fail").equals("true")) {
+                provinceAllFailCount.incrementAndGet();
+                schoolAllFailCount.incre(row.getString("school_id"));
+                classAllFailCount.incre(row.getString("class_id"));
             }
-            if (row.getDouble(entry.getKey(), 0) >= entry.getValue()) {
-                all_fail = true;
-            }
-        }
-        if (all_pass) {
-            passCounterMap.incre(id);
-        }
-        if (!all_fail) {
-            failCounterMap.incre(id);
-        }
+        });
+
+        List<Map<String, Object>> resultRows = new ArrayList<>();
+
+        resultRows.add(createMap(Range.PROVINCE, Range.PROVINCE_RANGE.getId(),
+                provinceStudentCount, provinceAllPassCount.get(), provinceAllFailCount.get()));
+
+        schoolStudentCount.forEach((schoolId, totalCount) -> {
+            int allPassCount = getCount(schoolAllPassCount, schoolId);
+            int allFailCount = getCount(schoolAllFailCount, schoolId);
+            resultRows.add(createMap(Range.SCHOOL, schoolId, totalCount, allPassCount, allFailCount));
+        });
+
+        classStudentCount.forEach((classId, totalCount) -> {
+            int allPassCount = getCount(classAllPassCount, classId);
+            int allFailCount = getCount(classAllFailCount, classId);
+            resultRows.add(createMap(Range.SCHOOL, classId, totalCount, allPassCount, allFailCount));
+        });
+
+        projectDao.insert(resultRows, "all_pass_or_fail");
     }
 
-    private double getPercent(int count, int totalCount) {
-        return totalCount == 0 ? 0 : ((count * 1.0) / totalCount * 100);
+    private int getCount(Map<String, Integer> map, String key) {
+        return map.getOrDefault(key, 0);
     }
 
+    private Map<String, Object> createMap(String rangeType, String rangeId, int totalCount, int allPassCount, int allFailCount) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("range_type", rangeType);
+        map.put("range_id", rangeId);
+        map.put("all_pass_count", allPassCount);
+        map.put("all_pass_rate", (double) allPassCount / totalCount * 100);
+        map.put("all_fail_count", allFailCount);
+        map.put("all_fail_rate", (double) allFailCount / totalCount * 100);
+        return map;
+    }
 }
