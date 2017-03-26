@@ -42,8 +42,14 @@ public class StudentProjectScoreAggregator extends Aggregator {
                     projectId, counter.incrementAndGet(), subjectIds.size());
         });
 
-        LOG.info("删除全科成绩为 0 的考生...");
-        projectDao.execute("delete from score_project where score=0");
+        LOG.info("删除全科缺考的考生...");
+
+        String where = String.join(" and ", subjectIds.stream().map(
+                subjectId -> "student_id not in (select student_id from score_subject_" + subjectId + ")")
+                .collect(Collectors.toList()));
+
+        String sql = "delete from score_project where " + where;
+        projectDao.execute(sql);
     }
 
 
