@@ -28,8 +28,8 @@ public class ScoreSegmentsAggregator extends Aggregator {
     private static final Logger LOG = LoggerFactory.getLogger(ScoreSegmentsAggregator.class);
 
     public static final String SEGMENT_SELECTION = "" +
-            "    @minscore := greatest(0, @step * FLOOR((score - 0.5) / @step)) as minscore,\n" +
-            "    @maxscore := @minscore + @step as maxscore\n";
+            "    @minscore := greatest(0, @step * FLOOR(score / @step)) as minscore,\n" +
+            "    @maxscore := @minscore + @step - 0.5 as maxscore\n";
 
     private static final String PROVINCE_PROJECT_SEGMENT = "select " +
             "    a.minscore, a.maxscore, count(1) as `count` from (\n" +

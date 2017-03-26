@@ -143,8 +143,8 @@ public class TotalDistributionSheet extends SheetGenerator {
     private static void fillSegmentTable(SheetContext sheetContext, int total, List<String> colSuffixes, Row row) {
 
         String key = row.getString(ITEM_ID);
-        String colNameSuffix = row.getDoubleObject("score_max").intValue()
-                + "-" + row.getDoubleObject("score_min").intValue();
+        String colNameSuffix = row.getDoubleObject("score_max")
+                + "-" + row.getDoubleObject("score_min");
 
         if (!colSuffixes.contains(colNameSuffix)) {
             colSuffixes.add(colNameSuffix);
