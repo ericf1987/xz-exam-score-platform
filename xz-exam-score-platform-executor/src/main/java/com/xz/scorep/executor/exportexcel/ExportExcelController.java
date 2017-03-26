@@ -21,7 +21,7 @@ public class ExportExcelController {
 
         if (this.excelReportManager.isRunning(projectId)) {
             LOG.info("项目ID{}Excel报表正在生成,请勿重复导出Excel报表...", projectId);
-            return Result.fail(1,"正在执行 Excel 生成,请耐心等待...。");
+            return Result.fail(1,"正在执行 Excel 生成,请耐心等待...");
         }
 
         this.excelReportManager.generateReports(projectId, false);
