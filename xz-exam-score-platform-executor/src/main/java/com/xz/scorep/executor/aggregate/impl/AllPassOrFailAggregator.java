@@ -93,8 +93,6 @@ public class AllPassOrFailAggregator extends Aggregator {
 
         String sql = generateSql(subjects, passScores);
 
-        LOG.info("查询语句：\n" + sql);
-
         List<Row> rows = daoFactory.getProjectDao(projectId).query(sql);
 
         //////////////////////////////////////////////////////////////
