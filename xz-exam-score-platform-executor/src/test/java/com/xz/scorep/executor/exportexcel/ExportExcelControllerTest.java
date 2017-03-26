@@ -15,7 +15,7 @@ public class ExportExcelControllerTest extends BaseTest {
     public void test() throws IOException {
         String url = "http://10.10.22.212:8180/export/excel";
         HttpRequest request = new HttpRequest(url)
-                .setParameter("projectId", "430300-9cef9f2059ce4a36a40a7a60b07c7e00");
+                .setParameter("projectId", "430900-9e8f3c054d72414b81cdd99bd48da695");
         String response = request.requestPost();
         System.out.println(response);
     }

@@ -35,7 +35,7 @@ public class AllPassOrFailAggregator extends Aggregator {
     public static String SQL = "select student.id as student_id,student.class_id,student.school_id " +
             " {{cols} from student {{tables}} where {{sub}}";
 
-    public static final String PROVINCE_COUNT = "select count(student.id) as count from student";
+    public static final String PROVINCE_COUNT = "select count(1) as count from score_project";
 
     public static final String SCHOOL_COUNT = "select school.name ,school.id ,COUNT(student.id) as count from student,score_project,school \n" +
             "where school.id = student.school_id \n" +
