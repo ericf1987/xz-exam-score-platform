@@ -25,13 +25,13 @@ import java.util.List;
 @Component
 public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
 
-    private static final String CLASS_MIN_SCORE = "select student.class_id, min(score) as min_score\n" +
+    public static final String CLASS_MIN_SCORE = "select student.class_id, min(score) as min_score\n" +
             "  from {{scoreTable}} s, student\n" +
             "  where s.student_id=student.id and s.score>0" +
             "  and student.school_id=? " +
             "  group by student.class_id";
 
-    private static final String SCHOOL_MIN_SCORE = "select min(score) as min_score\n" +
+    public static final String SCHOOL_MIN_SCORE = "select min(score) as min_score\n" +
             "  from {{scoreTable}} s, student\n" +
             "  where s.student_id=student.id and s.score>0\n" +
             "  and student.school_id=?";

@@ -15,6 +15,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+import static com.xz.scorep.executor.exportexcel.impl.total.TotalSchoolSubjectAverageSheet.CLASS_MIN_SCORE;
+import static com.xz.scorep.executor.exportexcel.impl.total.TotalSchoolSubjectAverageSheet.SCHOOL_MIN_SCORE;
+
 /**
  * Author: luckylo
  * Date : 2017-03-06
@@ -28,7 +31,6 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             "a.class_id,a.school_name,\n" +
             "a.class_name,a.count,\n" +
             "a.average_score,a.max_score,\n" +
-            "a.min_score,\n" +
             "IFNULL(xlnt.xlnt_count,0) as xlnt_count,\n" +
             "concat(IFNULL(xlnt.xlnt_rate,0),'%') as xlnt_rate,\n" +
             "IFNULL(good.good_count,0) as good_count,\n" +
@@ -49,8 +51,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             "class.name as class_name,\n" +
             "COUNT(student.id) as count,\n" +
             "FORMAT(AVG(score_project.score),2) as average_score,\n" +
-            "MAX(score_project.score) as max_score,\n" +
-            "MIN(score_project.score) as min_score\n" +
+            "MAX(score_project.score) as max_score\n" +
             "from school,class,\n" +
             "student,score_project\n" +
             "where \n" +
@@ -121,7 +122,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
     public static final String QUERY_TOTAL_INFO = "select\n" +
             "a.subject,a.full_score,a.class_id,\n" +
             "a.school_name,a.class_name,a.count,\n" +
-            "a.average_score,a.max_score,a.min_score,\n" +
+            "a.average_score,a.max_score,\n" +
             "IFNULL(xlnt.xlnt_count,0) as xlnt_count,\n" +
             "concat(IFNULL(xlnt.xlnt_rate,0),'%') as xlnt_rate,\n" +
             "IFNULL(good.good_count,0) as good_count,\n" +
@@ -141,8 +142,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             "'total' as class_id,school.name as school_name,\n" +
             "'全体' as class_name,COUNT(student.id) as count,\n" +
             "FORMAT(AVG(score_project.score),2) as average_score,\n" +
-            "MAX(score_project.score) as max_score,\n" +
-            "MIN(score_project.score) as min_score\n" +
+            "MAX(score_project.score) as max_score\n" +
             "from school,student,score_project\n" +
             "where \n" +
             "student.school_id = school.id\n" +
@@ -249,6 +249,9 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
         List<Row> rows = dao.query(classSql);
         sheetContext.rowAdd(rows);
 
+        String classMinScoreSql = CLASS_MIN_SCORE.replace("{{scoreTable}}", "score_project");
+        sheetContext.rowAdd(dao.query(classMinScoreSql, schoolId));
+
         sheetContext.rowSortBy("class_name");
 
         //总计栏
@@ -256,6 +259,10 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
                 .replace("{{schoolId}}", schoolId)
                 .replace("{{fullScore}}", StringUtils.removeEnd(fullScore,".0"));
         sheetContext.rowAdd(dao.queryFirst(totalSql));
+
+        sheetContext.tablePutValue("total", "min_score",
+                dao.queryFirst(SCHOOL_MIN_SCORE.replace("{{scoreTable}}", "score_project"), schoolId)
+                        .getDouble("min_score", 0));
 
         sheetContext.rowStyle("total", ExcelCellStyles.Green.name());
         sheetContext.freeze(3, 3);

@@ -123,7 +123,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
 
     private static final String TOTAL_SCORE_INFO = "select \n" +
             "a.school_id,a.school_name,a.student_count,\n" +
-            "a.max_score,a.min_score,a.average_score,\n" +
+            "a.max_score,a.average_score,\n" +
             "a.average_range,\n" +
             "xlnt.excellent,good.good,pass.pass,fail.fail,\n" +
             "pass_fail.all_pass,pass_fail.all_fail\n" +
@@ -178,7 +178,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
 
     private static final String SUBJECT_TOTAL_ROW = "select \n" +
             "a.school_id,a.school_name,a.student_count,\n" +
-            "a.max_score,a.min_score,a.average_score,\n" +
+            "a.max_score,a.average_score,\n" +
             "a.average_range,xlnt.excellent,good.good,\n" +
             "pass.pass,fail.fail\n" +
             "FROM\n" +
