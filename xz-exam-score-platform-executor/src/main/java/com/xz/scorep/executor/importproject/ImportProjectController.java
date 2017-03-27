@@ -12,6 +12,19 @@ public class ImportProjectController {
     @Autowired
     private ImportProjectService importProjectService;
 
+    /**
+     * 导入考试信息
+     *
+     * @param projectId        项目ID
+     * @param recreateDatabase 是否要重新创建数据库（如果是第一次导入，则会强制创建）
+     * @param projectInfo      是否导入项目基本信息
+     * @param reportConfig     是否导入报表配置信息
+     * @param students         是否导入学生列表
+     * @param quests           是否导入科目和题目列表
+     * @param score            是否导入网阅分数（应该是至少在某科阅卷完成后）
+     *
+     * @return 操作结果
+     */
     @PostMapping("/import/project")
     public Result importProject(
             @RequestParam(name = "projectId") String projectId,

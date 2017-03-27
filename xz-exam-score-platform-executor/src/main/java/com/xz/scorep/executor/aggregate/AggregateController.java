@@ -58,6 +58,7 @@ public class AggregateController {
             ExamProject project = projectService.findProject(projectId);
             if (project == null) {
                 importProject = true;
+                importScore = true;
             }
 
             AggregateType aggregateType = AggregateType.valueOf(aggrType);

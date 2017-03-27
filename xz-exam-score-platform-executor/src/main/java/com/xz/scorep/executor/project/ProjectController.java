@@ -18,17 +18,27 @@ public class ProjectController {
     @Autowired
     private AggregationService aggregationService;
 
+    @Autowired
+    private ProjectService projectService;
+
     @ResponseBody
     @GetMapping("/project/status")
     public Result getProjectStatus(
             @RequestParam("projectId") String projectId
     ) {
-        boolean generatingReport = excelReportManager.isRunning(projectId);
-        boolean runningAggregation = aggregationService.getAggregateByStatus(projectId, "Running") != null;
+        boolean projectImported = projectService.findProject(projectId) != null;
+
+        boolean generatingReport;
+        generatingReport = projectImported && excelReportManager.isRunning(projectId);
+
+        boolean runningAggregation;
+        runningAggregation = projectImported &&
+                aggregationService.getAggregateByStatus(projectId, "Running") != null;
 
         boolean canRunAggregation = !generatingReport && !runningAggregation;
 
         return Result.success()
+                .set("projectImported", projectImported)
                 .set("generatingReport", generatingReport)
                 .set("runningAggregation", runningAggregation)
                 .set("canRunAggregation", canRunAggregation);
