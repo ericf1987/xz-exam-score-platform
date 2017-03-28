@@ -66,14 +66,18 @@ public class ReportController {
             @RequestParam(required = false, name = "subjectId") String subjectId
     ) {
 
+        try {
+            if (StringUtil.isEmpty(subjectId)) {
+                reportArchiveService.startProjectArchive(projectId);
+            } else {
+                reportArchiveService.startSubjectArchive(projectId, subjectId);
+            }
 
-
-        if (StringUtil.isEmpty(subjectId)) {
-            reportArchiveService.startProjectArchive(projectId);
-        } else {
-            reportArchiveService.startSubjectArchive(projectId, subjectId);
+            return Result.success();
+        } catch (Exception e) {
+            LOG.error("", e);
+            return Result.fail(e.getMessage());
         }
-        return Result.success();
     }
 
     /**
