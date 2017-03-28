@@ -36,10 +36,6 @@ public class ProjectService {
     // 创建项目数据库
     private void createProjectDatabase(String projectId) {
 
-        if (projectDatabaseExists(projectId)) {
-            dropProjectDatabase(projectId);
-        }
-
         String username = StringUtil.substring(projectId, 0, 32);
 
         DAO dao = daoFactory.getRootDao();
@@ -55,6 +51,13 @@ public class ProjectService {
         DAO dao = daoFactory.getRootDao();
         dao.execute("drop database if exists `" + projectId + "`");
         dao.execute("drop user if exists `" + username + "`");
+
+        try {
+            throw new NullPointerException();
+        } catch (NullPointerException e) {
+            LOG.error("删除数据库的调用来源", e);
+        }
+
         LOG.info("数据库 " + projectId + " 已删除。");
     }
 
