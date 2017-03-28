@@ -45,7 +45,10 @@ public class ProjectController {
         boolean canRunAggregation = !generatingReport && !runningAggregation;
         LOG.info("projectImported={}, canRunAggregation={}", projectImported, canRunAggregation);
 
-        boolean canQuery = project != null && project.getStatus().equals(ProjectStatus.Ready.name());
+        boolean canQuery = project != null && (
+                project.getStatus().equals(ProjectStatus.Ready.name()) ||
+                project.getStatus().equals(ProjectStatus.GeneratingReport.name()) ||
+                project.getStatus().equals(ProjectStatus.Archiving.name()));
 
         return Result.success()
                 .set("projectImported", projectImported)
