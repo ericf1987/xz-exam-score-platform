@@ -145,6 +145,9 @@ public class ReportArchiveService {
             String url = excelConfig.getArchiveUrlPrefix() + uploadPath;
             daoFactory.getManagerDao().execute("insert into report_archive(project_id,subject_id,last_generate,archive_url) " +
                     "values(?,?,current_timestamp,?)", projectId, subjectId, url);
+        }else {
+         daoFactory.getManagerDao().execute("update report_archive set archive_url = ?," +
+                 "last_generate = current_timestamp where project_id = ? and subject_id =?",currentUrl,projectId,subjectId);
         }
     }
 

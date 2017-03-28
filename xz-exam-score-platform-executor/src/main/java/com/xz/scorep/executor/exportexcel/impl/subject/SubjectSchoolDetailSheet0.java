@@ -12,6 +12,8 @@ import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetTask;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.utils.Direction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +24,9 @@ import java.util.stream.Collectors;
 
 @Component
 public class SubjectSchoolDetailSheet0 extends SheetGenerator {
+
+
+    private static final Logger LOG = LoggerFactory.getLogger(SubjectSchoolDetailSheet0.class);
 
     @Autowired
     private StudentQuery studentQuery;
