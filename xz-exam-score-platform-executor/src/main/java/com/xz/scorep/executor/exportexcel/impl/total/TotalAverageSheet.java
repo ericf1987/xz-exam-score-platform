@@ -332,8 +332,15 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         total.put("over_average", overRate);
 
         Row passOrFail = dao.queryFirst("select * from all_pass_or_fail where range_type='province'");
-        total.put("all_pass", passOrFail.getDouble("all_pass_rate", 0) + "%");
-        total.put("all_fail", passOrFail.getDouble("all_fail_rate", 0) + "%");
+
+        if (passOrFail != null) {
+            total.put("all_pass", passOrFail.getDouble("all_pass_rate", 0) + "%");
+            total.put("all_fail", passOrFail.getDouble("all_fail_rate", 0) + "%");
+        } else {
+            total.put("all_pass", "0.00%");
+            total.put("all_fail", "0.00%");
+        }
+
 
         Row minScoreRow = queryProvinceMinScore(dao, "score_project");
         total.put("min_score", minScoreRow.getString("min_score"));
@@ -449,7 +456,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         rows.forEach(row -> {
             String schoolId = row.getString("school_id");
             int rank = ranker.getRank(schoolId, false);
-            sheetContext.tablePutValue(schoolId, rankColumnName, rank+1);
+            sheetContext.tablePutValue(schoolId, rankColumnName, rank + 1);
         });
     }
 

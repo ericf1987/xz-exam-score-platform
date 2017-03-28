@@ -139,10 +139,6 @@ public class AggregateService {
         String projectId = parameter.getProjectId();
         boolean databaseExists = projectService.projectDatabaseExists(projectId);
 
-        if (!databaseExists) {
-            projectService.initProjectDatabase(projectId);
-        }
-
         // 导入项目信息（如果项目数据不存在，则一定会执行）
         if (parameter.isImportProject() || !databaseExists) {
             importProjectService.importProject(ImportProjectParameters.importAllButScore(projectId));

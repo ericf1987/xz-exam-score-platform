@@ -5,6 +5,8 @@ import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.project.ProjectService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,7 @@ public class AggregateController {
 
     @Autowired
     private ProjectService projectService;
+    private static final Logger LOG = LoggerFactory.getLogger(AggregateController.class);
 
     /**
      * 执行统计
@@ -48,6 +51,8 @@ public class AggregateController {
             @RequestParam(required = false, name = "importScore", defaultValue = "false") boolean importScore,
             @RequestParam(required = false, name = "subjects", defaultValue = "") String subjects
     ) {
+        LOG.info("projectId {},aggrType {},async {},importProject {},importScore {},subjects {}",
+                projectId, aggrType, async, importProject, importScore, subjects);
 
         if (StringUtil.isNotBlank(aggrName)) {
             aggregateService.runAggregate(projectId, aggrName);  // 调试用

@@ -63,7 +63,7 @@ public class ReportControllerTest extends BaseTest {
 
     @Test
     public void queryProjectReport() throws Exception {
-        HttpRequest queryRequest = new HttpRequest("http://10.10.22.212:8180/report/archive-status/" + "430300-564140e278df4e92a2a739a6f27ac391");
+        HttpRequest queryRequest = new HttpRequest("http://10.10.22.212:8180/report/archive-status/" + "430100-4bc2ffbf50214ebc8ec34dd5166ef5b5");
         System.out.println(queryRequest.request());
     }
 

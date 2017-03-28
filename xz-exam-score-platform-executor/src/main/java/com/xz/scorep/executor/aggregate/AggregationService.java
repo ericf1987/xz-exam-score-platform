@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class AggregationService {
@@ -50,9 +51,10 @@ public class AggregationService {
         return this.daoFactory.getManagerDao().queryFirst(sql, projectId, aggrType.name());
     }
 
-    public Row getAggregateStatus(String projectId, AggregateType aggrType,String subjectId) {
+    public Row getAggregateStatus(String projectId, AggregateType aggrType, String subjectId) {
         String sql = "select * from aggregation where project_id = ? and aggr_type =? and subject_id =? and status = 'Finished' order by start_time desc";
-        return this.daoFactory.getManagerDao().queryFirst(sql, projectId, aggrType.name(),subjectId);
+        return this.daoFactory.getManagerDao().queryFirst(sql, projectId, aggrType.name(), subjectId);
     }
+
 
 }
