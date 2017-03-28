@@ -103,4 +103,11 @@ public class ExamProject {
                 ", fullScore=" + fullScore +
                 '}';
     }
+
+    public boolean canQuery() {
+        return this.getStatus() != null && (
+                getStatus().equals(ProjectStatus.Ready.name()) ||
+                        getStatus().equals(ProjectStatus.GeneratingReport.name()) ||
+                        getStatus().equals(ProjectStatus.Archiving.name()));
+    }
 }

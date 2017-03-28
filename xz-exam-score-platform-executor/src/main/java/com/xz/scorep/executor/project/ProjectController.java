@@ -3,7 +3,6 @@ package com.xz.scorep.executor.project;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.aggregate.AggregationService;
 import com.xz.scorep.executor.bean.ExamProject;
-import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.exportexcel.ExcelReportManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,10 +44,7 @@ public class ProjectController {
         boolean canRunAggregation = !generatingReport && !runningAggregation;
         LOG.info("projectImported={}, canRunAggregation={}", projectImported, canRunAggregation);
 
-        boolean canQuery = project != null && (
-                project.getStatus().equals(ProjectStatus.Ready.name()) ||
-                project.getStatus().equals(ProjectStatus.GeneratingReport.name()) ||
-                project.getStatus().equals(ProjectStatus.Archiving.name()));
+        boolean canQuery = project != null && project.canQuery();
 
         return Result.success()
                 .set("projectImported", projectImported)
