@@ -85,28 +85,32 @@ public class ReportArchiveService {
     private void startProjectArchive0(String projectId) {
         LOG.info("开始给项目 " + projectId + " 打全科报表...");
 
-        Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic);
-        if (status == null) {
-            runBasicAggregate(projectId);
+        try {
+            Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic);
+            if (status == null) {
+                runBasicAggregate(projectId);
+            }
+
+            //生成excel
+            //上次生成Excel之后无统计记录直接跳过
+            if (hasAggrAfterGenerate(projectId)) {
+                excelReportManager.generateReports(projectId, false);
+            }
+
+            LOG.info("项目 " + projectId + " 开始打包报表...");
+            String excelPath = excelConfig.getSavePath();
+            String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "全科报表");
+
+            File tempFile = createZipArchive(archiveRoot);
+            Row row = daoFactory.getManagerDao().queryFirst("select * from project where id = ?", projectId);
+            String fileName = row.getString("name") + "_全科.zip";
+            String uploadPath = uploadZipArchive(projectId, tempFile, fileName);
+            saveProjectArchiveRecord("000", projectId, uploadPath);
+        } catch (Exception e) {
+            LOG.error("", e);
+        } finally {
+            LOG.info("项目 " + projectId + " 全科报表打包结束。");
         }
-
-        //生成excel
-        //上次生成Excel之后无统计记录直接跳过
-        if (hasAggrAfterGenerate(projectId)) {
-            excelReportManager.generateReports(projectId, false);
-        }
-
-        LOG.info("项目 " + projectId + " 开始打包报表...");
-        String excelPath = excelConfig.getSavePath();
-        String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "全科报表");
-
-        File tempFile = createZipArchive(archiveRoot);
-        Row row = daoFactory.getManagerDao().queryFirst("select * from project where id = ?", projectId);
-        String fileName = row.getString("name") + "_全科.zip";
-        String uploadPath = uploadZipArchive(projectId, tempFile, fileName);
-        saveProjectArchiveRecord("000", projectId, uploadPath);
-
-        LOG.info("项目 " + projectId + " 全科报表打包完毕。");
     }
 
     private boolean hasAggrAfterGenerate(String projectId) {
@@ -181,29 +185,34 @@ public class ReportArchiveService {
     private void startSubjectArchive0(String projectId, String subjectId) {
         LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 开始打包报表...");
 
-        //查该项目该科目是有有过Basic统计记录
-        Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic, subjectId);
-        if (status == null) {
-            runBasicAggregate(projectId);
+        try {
+            //查该项目该科目是有有过Basic统计记录
+            Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic, subjectId);
+            if (status == null) {
+                runBasicAggregate(projectId);
+            }
+
+            //生成excel
+            //上次生成Excel之后无统计记录直接跳过
+            if (hasAggrAfterGenerate(projectId)) {
+                excelReportManager.generateReports(projectId, false);
+            }
+
+            String subjectName = SubjectService.getSubjectName(subjectId);
+            String excelPath = excelConfig.getSavePath();
+            String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "单科报表/" + subjectName);
+            Row row = daoFactory.getManagerDao().queryFirst("select * from project where id = ?", projectId);
+
+            String fileName = row.getString("name") + "_" + subjectName + ".zip";
+
+            File tempFile = createZipArchive(archiveRoot);
+            String uploadPath = uploadZipArchive(projectId, tempFile, fileName);
+            saveProjectArchiveRecord(subjectId, projectId, uploadPath);
+        } catch (Exception e) {
+            LOG.error("", e);
+        } finally {
+            LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 报表打包结束。");
         }
-
-        //生成excel
-        //上次生成Excel之后无统计记录直接跳过
-        if (hasAggrAfterGenerate(projectId)) {
-            excelReportManager.generateReports(projectId, false);
-        }
-
-        String subjectName = SubjectService.getSubjectName(subjectId);
-        String excelPath = excelConfig.getSavePath();
-        String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "单科报表/" + subjectName);
-        Row row = daoFactory.getManagerDao().queryFirst("select * from project where id = ?", projectId);
-
-        String fileName = row.getString("name") + "_" + subjectName + ".zip";
-
-        File tempFile = createZipArchive(archiveRoot);
-        String uploadPath = uploadZipArchive(projectId, tempFile, fileName);
-        saveProjectArchiveRecord(subjectId, projectId, uploadPath);
-        LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 报表打包完毕。");
     }
 
     //执行Basic统计
