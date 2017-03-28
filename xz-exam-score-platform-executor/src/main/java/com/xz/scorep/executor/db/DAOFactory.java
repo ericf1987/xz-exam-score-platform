@@ -3,9 +3,9 @@ package com.xz.scorep.executor.db;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.hyd.dao.DAO;
 import com.hyd.dao.DataSources;
-import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.config.DbConfig;
+import com.xz.scorep.executor.project.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +24,9 @@ public class DAOFactory {
 
     @Autowired
     private DbConfig dbConfig;
+
+    @Autowired
+    private ProjectService projectService;
 
     private DataSources dataSources = new DataSources();
 
@@ -52,12 +55,6 @@ public class DAOFactory {
     public synchronized DAO getProjectDao(String projectId) {
 
         if (!dataSources.contains(projectId)) {
-
-            Row row = getManagerDao().queryFirst("select 1 from project where id=?", projectId);
-            if (row == null) {
-                throw new IllegalStateException("项目 " + projectId + " 尚未导入。");
-            }
-
             dataSources.setDataSource(projectId, getProjectDataSource(projectId));
         }
         return dataSources.getDAO(projectId);
