@@ -4,6 +4,7 @@ import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.bean.ExamProject;
+import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,16 +150,23 @@ public class ProjectService {
         managerDao.insert(project, "project");
     }
 
+    // 项目状态时刻在变化，这里将来也不能改成缓存
     public ExamProject findProject(String projectId) {
         String sql = "select * from project where id=?";
         return daoFactory.getManagerDao().queryFirst(ExamProject.class, sql, projectId);
     }
 
-    public String getProjectProvince(String projectId) {
-        return "430000";
-    }
-
     public void updateProjectFullScore(String projectId, double fullScore) {
         daoFactory.getManagerDao().execute("update project set full_score=? where id=?", fullScore, projectId);
+    }
+
+    public void updateProjectStatus(String projectId, ProjectStatus status) {
+        daoFactory.getManagerDao().execute("update project set status=? where id=?", status.name(), projectId);
+    }
+
+    public boolean updateProjectStatus(String projectId, ProjectStatus fromStatus, ProjectStatus toStatus) {
+        return daoFactory.getManagerDao().execute(
+                "update project set status=? where id=? and status=?",
+                toStatus.name(), projectId, fromStatus.name()) > 0;
     }
 }

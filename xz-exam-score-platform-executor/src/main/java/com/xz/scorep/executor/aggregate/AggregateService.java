@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.aggregate;
 
+import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.importproject.ImportProjectParameters;
 import com.xz.scorep.executor.importproject.ImportProjectService;
 import com.xz.scorep.executor.project.ProjectService;
@@ -47,7 +48,13 @@ public class AggregateService {
      * @param parameter 统计参数
      */
     public void runAggregateAsync(AggregateParameter parameter) {
-        Runnable runnable = () -> runAggregate(parameter);
+        Runnable runnable = () -> {
+            try {
+                runAggregate(parameter);
+            } catch (Exception e) {
+                LOG.error("项目 " + parameter.getProjectId() + " 正在统计当中，跳过重复的统计请求");
+            }
+        };
         executorService.submit(runnable);
     }
 
@@ -125,27 +132,39 @@ public class AggregateService {
     }
 
     private void runAggregators(Predicate<Aggregator> condition, AggregateParameter parameter) throws Exception {
-        List<Aggregator> aggregators = new ArrayList<>(this.aggregatorMap.values());
-        aggregators.removeIf(condition.negate());
-        aggregators.sort(Comparator.comparingInt(Aggregator::getAggregateOrder));
 
-        for (Aggregator aggregator : aggregators) {
-            aggregator.aggregate(parameter);
+        String projectId = parameter.getProjectId();
+
+        // 如果项目当前是空闲状态，则成功修改为正在统计，否则不能开始执行
+        if (!projectService.updateProjectStatus(
+                projectId, ProjectStatus.Ready, ProjectStatus.Aggregating)) {
+            throw new IllegalStateException("项目 " + projectId + " 正忙，无法进行统计");
+        }
+
+        try {
+            List<Aggregator> aggregators = new ArrayList<>(this.aggregatorMap.values());
+            aggregators.removeIf(condition.negate());
+            aggregators.sort(Comparator.comparingInt(Aggregator::getAggregateOrder));
+
+            for (Aggregator aggregator : aggregators) {
+                aggregator.aggregate(parameter);
+            }
+        } finally {
+            // 如果成功开始统计，则在结束后恢复项目状态
+            projectService.updateProjectStatus(projectId, ProjectStatus.Aggregating, ProjectStatus.Ready);
         }
     }
 
     private void importData(AggregateParameter parameter) {
-
         String projectId = parameter.getProjectId();
-        boolean databaseExists = projectService.projectDatabaseExists(projectId);
 
-        // 导入项目信息（如果项目数据不存在，则一定会执行）
-        if (parameter.isImportProject() || !databaseExists) {
+        // 导入项目信息
+        if (parameter.isImportProject()) {
             importProjectService.importProject(ImportProjectParameters.importAllButScore(projectId));
         }
 
-        // 导入项目分数（如果项目数据不存在，则一定会执行）
-        if (parameter.isImportScore() || !databaseExists) {
+        // 导入项目分数
+        if (parameter.isImportScore()) {
             importProjectService.importProject(ImportProjectParameters.importScoreOnly(projectId));
         }
     }

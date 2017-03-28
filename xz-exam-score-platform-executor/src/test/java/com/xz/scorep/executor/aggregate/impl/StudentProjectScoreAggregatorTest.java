@@ -19,7 +19,8 @@ public class StudentProjectScoreAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        studentProjectScoreAggregator.aggregate(new AggregateParameter(PROJECT_ID, AggregateType.Quick,"001"));
+        studentProjectScoreAggregator.aggregate(
+                new AggregateParameter(PROJECT4_ID, AggregateType.Quick));
     }
 
 }

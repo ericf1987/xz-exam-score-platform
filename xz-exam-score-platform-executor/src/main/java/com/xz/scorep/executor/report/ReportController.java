@@ -65,6 +65,9 @@ public class ReportController {
             @RequestParam("projectId") String projectId,
             @RequestParam(required = false, name = "subjectId") String subjectId
     ) {
+
+
+
         if (StringUtil.isEmpty(subjectId)) {
             reportArchiveService.startProjectArchive(projectId);
         } else {
@@ -103,12 +106,13 @@ public class ReportController {
         ArchiveStatus status;
         String url;
 
+        // 打包状态不分科目，正在打包就是正在打包
+        status = reportArchiveService.getProjectArchiveStatus(projectId);
+
         if (StringUtil.isEmpty(subjectId)) {
             //全科报表  设置科目ID为000
-            status = reportArchiveService.getProjectArchiveStatus(projectId);
             url = reportArchiveService.getSubjectArchiveUrl(projectId, "000");
         } else {
-            status = reportArchiveService.getSubjectArchiveStatus(projectId, subjectId);
             url = reportArchiveService.getSubjectArchiveUrl(projectId, subjectId);
         }
 

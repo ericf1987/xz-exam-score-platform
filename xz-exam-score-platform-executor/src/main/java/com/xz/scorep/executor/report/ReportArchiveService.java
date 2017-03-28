@@ -8,9 +8,11 @@ import com.xz.scorep.executor.aggregate.AggregateParameter;
 import com.xz.scorep.executor.aggregate.AggregateService;
 import com.xz.scorep.executor.aggregate.AggregateType;
 import com.xz.scorep.executor.aggregate.AggregationService;
+import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.config.ExcelConfig;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.ExcelReportManager;
+import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.project.SubjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 @Service
 public class ReportArchiveService {
@@ -29,16 +29,13 @@ public class ReportArchiveService {
 
 
     private static final String AGGR_SQL = "select start_time from aggregation " +
-            " where project_id = '{{projectId}}' " +
+            " where project_id = ? " +
             " ORDER BY start_time desc limit 1";
 
     //上次压缩包生成时间一定是在导出报表(生成Excel)之后的
     private static final String GENERATE_SQL = "select last_generate from report_archive " +
-            " where project_id = '{{projectId}}'" +
+            " where project_id = ?" +
             " ORDER BY last_generate desc limit 1";
-
-
-    private Set<String> runningArchives = new HashSet<>();
 
     @Autowired
     private DAOFactory daoFactory;
@@ -53,7 +50,7 @@ public class ReportArchiveService {
     private AggregateService aggregateService;
 
     @Autowired
-    SubjectService subjectService;
+    private ProjectService projectService;
 
     @Autowired
     private OSSFileClient ossFileClient;
@@ -61,31 +58,38 @@ public class ReportArchiveService {
     @Autowired
     private ExcelReportManager excelReportManager;
 
+    // 全科打包和单科打包的通用逻辑
+    public void startRunnable(final String projectId, Runnable runnable) {
 
-    public void startProjectArchive(final String projectId) {
-
-        synchronized (this) {
-            if (runningArchives.contains(projectId)) {
-                LOG.info("项目 " + projectId + " 已经在打包全科报表。");
-                return;
-            }
-
+        if (!projectService.updateProjectStatus(projectId, ProjectStatus.Ready, ProjectStatus.Archiving)) {
+            throw new IllegalStateException("项目 " + projectId + " 正忙，无法执行打包");
         }
-        Runnable runnable = () -> startProjectArchive0(projectId);
 
-        Thread thread = new Thread(runnable);
+        Runnable _runnable = () -> {
+            try {
+                runnable.run();
+            } finally {
+                projectService.updateProjectStatus(projectId, ProjectStatus.Archiving, ProjectStatus.Ready);
+            }
+        };
+
+        Thread thread = new Thread(_runnable);
         thread.setDaemon(true);
         thread.start();
     }
 
+    public void startProjectArchive(final String projectId) {
+        startRunnable(projectId, () -> startProjectArchive0(projectId));
+    }
+
     private void startProjectArchive0(String projectId) {
         LOG.info("开始给项目 " + projectId + " 打全科报表...");
-        runningArchives.add(projectId);
+
         Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic);
         if (status == null) {
             runBasicAggregate(projectId);
-
         }
+
         //生成excel
         //上次生成Excel之后无统计记录直接跳过
         if (hasAggrAfterGenerate(projectId)) {
@@ -107,14 +111,11 @@ public class ReportArchiveService {
 
     private boolean hasAggrAfterGenerate(String projectId) {
 
-        String aggrSql = AGGR_SQL.replace("{{projectId}}", projectId);
-        String generateSql = GENERATE_SQL.replace("{{projectId}}", projectId);
-
         Row aggrRow = daoFactory.getManagerDao()
-                .queryFirst(aggrSql);
+                .queryFirst(AGGR_SQL, projectId);
 
         Row generateRow = daoFactory.getManagerDao()
-                .queryFirst(generateSql);
+                .queryFirst(GENERATE_SQL, projectId);
 
         //没有统计过或者没有生成过报表,则必须生成
         if (aggrRow == null || generateRow == null) {
@@ -173,23 +174,12 @@ public class ReportArchiveService {
     }
 
     public void startSubjectArchive(String projectId, String subjectId) {
-
-        synchronized (this) {
-            if (runningArchives.contains(projectId + ":" + subjectId)) {
-                LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 已经在打包报表。");
-                return;
-            }
-        }
-
         Runnable runnable = () -> startSubjectArchive0(projectId, subjectId);
-        Thread thread = new Thread(runnable);
-        thread.setDaemon(true);
-        thread.start();
+        startRunnable(projectId, runnable);
     }
 
     private void startSubjectArchive0(String projectId, String subjectId) {
         LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 开始打包报表...");
-        runningArchives.add(projectId + ":" + subjectId);
 
         //查该项目该科目是有有过Basic统计记录
         Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic, subjectId);
@@ -203,7 +193,7 @@ public class ReportArchiveService {
             excelReportManager.generateReports(projectId, false);
         }
 
-        String subjectName = subjectService.getSubjectName(subjectId);
+        String subjectName = SubjectService.getSubjectName(subjectId);
         String excelPath = excelConfig.getSavePath();
         String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "单科报表/" + subjectName);
         Row row = daoFactory.getManagerDao().queryFirst("select * from project where id = ?", projectId);
@@ -225,11 +215,8 @@ public class ReportArchiveService {
     }
 
     public ArchiveStatus getProjectArchiveStatus(String projectId) {
-        return runningArchives.contains(projectId) ? ArchiveStatus.Running : ArchiveStatus.Ready;
-    }
-
-    public ArchiveStatus getSubjectArchiveStatus(String projectId, String subjectId) {
-        return runningArchives.contains(projectId + ":" + subjectId) ? ArchiveStatus.Running : ArchiveStatus.Ready;
+        return projectService.findProject(projectId).getStatus()
+                .equals(ProjectStatus.Ready.name()) ? ArchiveStatus.Ready : ArchiveStatus.Running;
     }
 
     public String getSubjectArchiveUrl(String projectId, String subjectId) {

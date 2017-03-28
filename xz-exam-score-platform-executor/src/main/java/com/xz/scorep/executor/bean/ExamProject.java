@@ -22,6 +22,8 @@ public class ExamProject {
 
     private double fullScore;
 
+    private String status;
+
     public ExamProject() {
     }
 
@@ -32,6 +34,14 @@ public class ExamProject {
         this.createTime = createTime;
         this.grade = grade;
         this.fullScore = fullScore;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getRange() {

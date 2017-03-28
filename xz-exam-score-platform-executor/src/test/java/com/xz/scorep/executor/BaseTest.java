@@ -19,6 +19,8 @@ public abstract class BaseTest {
 
     public static final String PROJECT3_ID = "430900-9e8f3c054d72414b81cdd99bd48da695";
 
+    public static final String PROJECT4_ID = "430100-5d2142085fc747c9b5b230203bbfd402";
+
     public static final String SCHOOL_ID = "002e02d6-c036-4780-85d4-e54e3f1fbf9f";
 
     public static final String SCHOOL_NAME = "湘潭市第十八中学";

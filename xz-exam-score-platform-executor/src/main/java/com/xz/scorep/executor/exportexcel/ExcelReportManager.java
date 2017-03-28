@@ -2,11 +2,12 @@ package com.xz.scorep.executor.exportexcel;
 
 import com.xz.ajiaedu.common.cryption.MD5;
 import com.xz.ajiaedu.common.io.FileUtils;
-import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.ajiaedu.common.xml.XmlNode;
 import com.xz.ajiaedu.common.xml.XmlNodeReader;
+import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.config.ExcelConfig;
+import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.utils.AsyncCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +19,9 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -45,13 +46,16 @@ public class ExcelReportManager implements ApplicationContextAware {
 
     private ApplicationContext applicationContext;
 
-    private Map<String, Context> runningProjects = new ConcurrentHashMap<>();
-
     @Autowired
     private ExcelConfigParser excelConfigParser;
 
     @Autowired
     private ExcelConfig excelConfig;
+
+    @Autowired
+    private ProjectService projectService;
+
+    private Map<String, AsyncCounter> counterMap = new HashMap<>();
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
@@ -69,29 +73,27 @@ public class ExcelReportManager implements ApplicationContextAware {
     }
 
     public boolean isRunning(String projectId) {
-        return this.runningProjects.containsKey(projectId);
+        return projectService.findProject(projectId).getStatus()
+                .equals(ProjectStatus.GeneratingReport.name());
     }
 
     public AsyncCounter getCounter(String projectId) {
-        if (!runningProjects.containsKey(projectId)) {
-            return null;
-        } else {
-            Context context = runningProjects.get(projectId);
-            return context.get("counter");
-        }
+        return counterMap.getOrDefault(projectId, null);
     }
 
     public void generateReports(final String projectId, boolean async) {
-        if (isRunning(projectId)) {
-            return;
+
+        // 如果项目当前是空闲状态，则成功修改为正在生成 Excel，否则不能开始执行
+        if (!projectService.updateProjectStatus(projectId, ProjectStatus.Ready, ProjectStatus.GeneratingReport)) {
+            throw new IllegalStateException("项目 " + projectId + " 正忙，无法执行生成 Excel");
         }
 
         try {
-            Context context = new Context();
-            runningProjects.put(projectId, context);
-            generateReports0(projectId, async, context);
+            generateReports0(projectId, async);
         } finally {
-            runningProjects.remove(projectId);
+            // 如果成功开始生成 Excel，则在结束后恢复项目状态
+            projectService.updateProjectStatus(projectId, ProjectStatus.GeneratingReport, ProjectStatus.Ready);
+            counterMap.remove(projectId);
         }
     }
 
@@ -99,9 +101,9 @@ public class ExcelReportManager implements ApplicationContextAware {
      * 生成指定项目的所有报表文件
      *
      * @param projectId 项目ID
-     * @param context   上下文
+     * @param async     是否异步
      */
-    private void generateReports0(final String projectId, boolean async, Context context) {
+    private void generateReports0(final String projectId, boolean async) {
 
         String reportRootPath = excelConfig.getSavePath();
         String projectReportRootPath = getSaveFilePath(projectId, reportRootPath, "");
@@ -116,7 +118,7 @@ public class ExcelReportManager implements ApplicationContextAware {
         int poolSize = excelConfig.getPoolSize();
         List<ReportTask> reportTasks = createReportGenerators(projectId);
         AsyncCounter counter = new AsyncCounter("生成报表", reportTasks.size(), 20);
-        context.put("counter", counter);
+        counterMap.put(projectId, counter);
 
         ThreadPoolExecutor pool = async ? executionPool : newBlockingThreadPoolExecutor(poolSize, poolSize, QUEUE_SIZE);
 
@@ -166,6 +168,7 @@ public class ExcelReportManager implements ApplicationContextAware {
      * @param projectId 项目ID
      * @param savePath  报表根目录
      * @param filePath  报表根目录下的文件路径
+     *
      * @return 报表文件路径
      */
     public static String getSaveFilePath(String projectId, String savePath, String filePath) {

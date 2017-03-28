@@ -7,7 +7,10 @@ import com.xz.scorep.executor.project.SubjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -85,8 +88,7 @@ public class AverageQuery {
         String[] params = new String[subjectQueries.size()];
         Arrays.fill(params, schoolId);
 
-        List<Row> rows = projectDao.query(finalQuery, (Object[]) params);
-        return rows;
+        return projectDao.query(finalQuery, (Object[]) params);
 
     }
 

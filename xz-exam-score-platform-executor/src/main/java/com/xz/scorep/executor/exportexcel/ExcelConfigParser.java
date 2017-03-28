@@ -48,7 +48,7 @@ public class ExcelConfigParser {
         try {
             Context context = new Context()
                     .put("projectId", projectId)
-                    .put(RANGE_PROVINCE, Range.province(projectService.getProjectProvince(projectId)))
+                    .put(RANGE_PROVINCE, Range.PROVINCE_RANGE)
                     .put("base", reportSet.getString("base"));
 
             iterateReportSet(context, reportSet, "", reportTasks);

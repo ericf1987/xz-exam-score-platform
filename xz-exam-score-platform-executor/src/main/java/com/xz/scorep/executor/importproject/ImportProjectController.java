@@ -1,6 +1,10 @@
 package com.xz.scorep.executor.importproject;
 
 import com.xz.ajiaedu.common.lang.Result;
+import com.xz.scorep.executor.bean.ExamProject;
+import com.xz.scorep.executor.project.ProjectService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -9,8 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ImportProjectController {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ImportProjectController.class);
+
     @Autowired
     private ImportProjectService importProjectService;
+
+    @Autowired
+    private ProjectService projectService;
 
     /**
      * 导入考试信息
@@ -35,6 +44,17 @@ public class ImportProjectController {
             @RequestParam(required = false, defaultValue = "false", name = "quests") boolean quests,
             @RequestParam(required = false, defaultValue = "false", name = "score") boolean score
     ) {
+
+        ExamProject project = projectService.findProject(projectId);
+        if (project == null) {
+            LOG.info("项目 " + projectId + " 没找到，需要重新创建。");
+            recreateDatabase = true;
+            projectInfo = true;
+            reportConfig = true;
+            students = true;
+            quests = true;
+        }
+
         importProjectService.importProject(ImportProjectParameters.importSelected(
                 projectId, recreateDatabase, projectInfo, reportConfig, students, quests, score
         ));

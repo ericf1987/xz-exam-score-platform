@@ -44,6 +44,7 @@
 <fieldset>
     <legend>执行项目统计</legend>
     <form action="aggr/start" method="post">
+        <input type="hidden" name="async" value="true"/>
         <div><label>项目ID: </label><input type="text" name="projectId"></div>
         <div><label>指标名称（为空表示统计所有指标）: </label><input type="text" name="aggrName"></div>
         <input type="submit" value="执行统计"/>

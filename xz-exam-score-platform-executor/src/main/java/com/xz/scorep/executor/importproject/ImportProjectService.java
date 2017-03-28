@@ -1,6 +1,5 @@
 package com.xz.scorep.executor.importproject;
 
-import ch.qos.logback.classic.Level;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.hyd.dao.DAO;
@@ -14,13 +13,13 @@ import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.ExamSubject;
+import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.mongo.MongoClientFactory;
 import com.xz.scorep.executor.project.*;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigParser;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
-import com.xz.scorep.executor.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,7 +81,7 @@ public class ImportProjectService {
         Context context = new Context();
         context.put(PROJECT_ID_KEY, projectId);
 
-        LogUtils.changeLogLevel("com.hyd.dao", Level.INFO);
+        projectService.updateProjectStatus(projectId, ProjectStatus.Importing);
 
         // 预先初始化项目记录
         if (parameters.isImportProjectInfo()) {
@@ -125,8 +124,7 @@ public class ImportProjectService {
         }
 
         LOG.info("导入项目 {} 完成。", projectId);
-
-        LogUtils.restoreLogLevel("com.hyd.dao");
+        projectService.updateProjectStatus(projectId, ProjectStatus.Ready);
     }
 
     private void importScore(Context context) {
@@ -170,6 +168,8 @@ public class ImportProjectService {
                 new Param().setParameter(PROJECT_ID_KEY, projectId));
 
         ExamProject project = projectResultParser.parse(context, result);
+        project.setStatus(ProjectStatus.Importing.name());
+
         context.put("project", project);
         projectService.saveProject(project);
     }
