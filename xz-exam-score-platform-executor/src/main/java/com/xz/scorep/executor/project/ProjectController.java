@@ -2,6 +2,8 @@ package com.xz.scorep.executor.project;
 
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.aggregate.AggregationService;
+import com.xz.scorep.executor.bean.ExamProject;
+import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.exportexcel.ExcelReportManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +32,8 @@ public class ProjectController {
     public Result getProjectStatus(
             @RequestParam("projectId") String projectId
     ) {
-        boolean projectImported = projectService.findProject(projectId) != null;
+        ExamProject project = projectService.findProject(projectId);
+        boolean projectImported = project != null;
 
         boolean generatingReport;
         generatingReport = projectImported && excelReportManager.isRunning(projectId);
@@ -40,11 +43,15 @@ public class ProjectController {
                 aggregationService.getAggregateByStatus(projectId, "Running") != null;
 
         boolean canRunAggregation = !generatingReport && !runningAggregation;
-        LOG.info("projectImported {} ,canRunAggregation {}",projectImported,canRunAggregation);
+        LOG.info("projectImported={}, canRunAggregation={}", projectImported, canRunAggregation);
+
+        boolean canQuery = project != null && project.getStatus().equals(ProjectStatus.Ready.name());
+
         return Result.success()
                 .set("projectImported", projectImported)
                 .set("generatingReport", generatingReport)
                 .set("runningAggregation", runningAggregation)
-                .set("canRunAggregation", canRunAggregation);
+                .set("canRunAggregation", canRunAggregation)
+                .set("canQuery", canQuery);
     }
 }
