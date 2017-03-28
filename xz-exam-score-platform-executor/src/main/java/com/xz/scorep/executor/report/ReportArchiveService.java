@@ -220,6 +220,7 @@ public class ReportArchiveService {
         AggregateParameter parameter = new AggregateParameter();
         parameter.setAggregateType(AggregateType.Basic);
         parameter.setProjectId(projectId);
+        parameter.setIgnoreStatus(true);
         aggregateService.runAggregate(parameter);
     }
 

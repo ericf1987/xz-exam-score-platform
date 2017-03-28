@@ -136,7 +136,7 @@ public class AggregateService {
         String projectId = parameter.getProjectId();
 
         // 如果项目当前是空闲状态，则成功修改为正在统计，否则不能开始执行
-        if (!projectService.updateProjectStatus(
+        if (!parameter.isIgnoreStatus() && !projectService.updateProjectStatus(
                 projectId, ProjectStatus.Ready, ProjectStatus.Aggregating)) {
             throw new IllegalStateException("项目 " + projectId + " 正忙，无法进行统计");
         }

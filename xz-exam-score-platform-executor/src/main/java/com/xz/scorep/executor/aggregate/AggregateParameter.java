@@ -20,6 +20,8 @@ public class AggregateParameter {
 
     private boolean importScore;
 
+    private boolean ignoreStatus;
+
     private String aggrName;
 
     private List<String> subjects = new ArrayList<>();
@@ -35,6 +37,14 @@ public class AggregateParameter {
         this.projectId = projectId;
         this.aggregateType = aggregateType;
         this.subjects = Arrays.asList(subjectIds);
+    }
+
+    public boolean isIgnoreStatus() {
+        return ignoreStatus;
+    }
+
+    public void setIgnoreStatus(boolean ignoreStatus) {
+        this.ignoreStatus = ignoreStatus;
     }
 
     public List<String> getSubjects() {
