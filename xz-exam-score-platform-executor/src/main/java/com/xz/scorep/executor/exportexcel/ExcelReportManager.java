@@ -81,10 +81,11 @@ public class ExcelReportManager implements ApplicationContextAware {
         return counterMap.getOrDefault(projectId, null);
     }
 
-    public void generateReports(final String projectId, boolean async) {
+    public void generateReports(final String projectId, boolean async, boolean ignoreStatus) {
 
         // 如果项目当前是空闲状态，则成功修改为正在生成 Excel，否则不能开始执行
-        if (!projectService.updateProjectStatus(projectId, ProjectStatus.Ready, ProjectStatus.GeneratingReport)) {
+        if (!ignoreStatus &&
+                !projectService.updateProjectStatus(projectId, ProjectStatus.Ready, ProjectStatus.GeneratingReport)) {
             throw new IllegalStateException("项目 " + projectId + " 正忙，无法执行生成 Excel");
         }
 

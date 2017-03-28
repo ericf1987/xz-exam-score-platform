@@ -20,7 +20,7 @@ public class ExportExcelController {
     @ResponseBody
     public Result exportExcel(@RequestParam("projectId") String projectId) {
         try {
-            excelReportManager.generateReports(projectId, true);
+            excelReportManager.generateReports(projectId, true, false);
             return Result.success();
         } catch (Exception e) {
             LOG.error("", e);

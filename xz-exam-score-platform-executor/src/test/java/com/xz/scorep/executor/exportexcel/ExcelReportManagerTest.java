@@ -17,12 +17,12 @@ public class ExcelReportManagerTest extends BaseTest {
 
     @Test
     public void generateReports() throws Exception {
-        excelReportManager.generateReports(PROJECT_ID, false);
+        excelReportManager.generateReports(PROJECT_ID, false, false);
     }
 
     @Test
     public void generateReportsAsync() throws Exception {
-        excelReportManager.generateReports(PROJECT_ID, true);
+        excelReportManager.generateReports(PROJECT_ID, true, false);
     }
 
 }

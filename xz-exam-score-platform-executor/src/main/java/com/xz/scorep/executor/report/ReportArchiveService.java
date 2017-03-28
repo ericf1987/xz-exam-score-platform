@@ -94,7 +94,7 @@ public class ReportArchiveService {
             //生成excel
             //上次生成Excel之后无统计记录直接跳过
             if (hasAggrAfterGenerate(projectId)) {
-                excelReportManager.generateReports(projectId, false);
+                excelReportManager.generateReports(projectId, false, true);
             }
 
             LOG.info("项目 " + projectId + " 开始打包报表...");
@@ -195,7 +195,7 @@ public class ReportArchiveService {
             //生成excel
             //上次生成Excel之后无统计记录直接跳过
             if (hasAggrAfterGenerate(projectId)) {
-                excelReportManager.generateReports(projectId, false);
+                excelReportManager.generateReports(projectId, false, true);
             }
 
             String subjectName = SubjectService.getSubjectName(subjectId);
