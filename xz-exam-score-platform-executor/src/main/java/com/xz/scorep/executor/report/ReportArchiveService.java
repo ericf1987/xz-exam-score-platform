@@ -97,7 +97,9 @@ public class ReportArchiveService {
         String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "全科报表");
 
         File tempFile = createZipArchive(archiveRoot);
-        String uploadPath = uploadZipArchive(projectId, tempFile, "all.zip");
+        Row row = daoFactory.getManagerDao().queryFirst("select * from project where id = ?", projectId);
+        String fileName = row.getString("name") + "_全科.zip";
+        String uploadPath = uploadZipArchive(projectId, tempFile, fileName);
         saveProjectArchiveRecord("000", projectId, uploadPath);
 
         LOG.info("项目 " + projectId + " 全科报表打包完毕。");
@@ -204,9 +206,12 @@ public class ReportArchiveService {
         String subjectName = subjectService.getSubjectName(subjectId);
         String excelPath = excelConfig.getSavePath();
         String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "单科报表/" + subjectName);
+        Row row = daoFactory.getManagerDao().queryFirst("select * from project where id = ?", projectId);
+
+        String fileName = row.getString("name") + "_" + subjectName + ".zip";
 
         File tempFile = createZipArchive(archiveRoot);
-        String uploadPath = uploadZipArchive(projectId, tempFile, subjectName + ".zip");
+        String uploadPath = uploadZipArchive(projectId, tempFile, fileName);
         saveProjectArchiveRecord(subjectId, projectId, uploadPath);
         LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 报表打包完毕。");
     }

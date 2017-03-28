@@ -17,10 +17,10 @@ public class TotalDistributionReportTest extends BaseTest {
 
     @Test
     public void testGenerateReport() throws Exception {
-        String projectId = PROJECT3_ID;
+        String projectId = "430100-4bc2ffbf50214ebc8ec34dd5166ef5b5";
         String savePath = "./target/联考学校分数分布统计.xlsx";
 
         // 总体统计，无需指明范围和目标
-        report.generate(projectId, null, null, savePath);
+        report.generate(PROJECT_ID, null, null, savePath);
     }
 }

@@ -73,6 +73,7 @@ public class TotalDistributionSheet extends SheetGenerator {
         );
 
         sheetContext.rowAdd(itemRows);
+        sheetContext.headerMove(Direction.DOWN);
 
         ////////////////////////////////////////////////////////////// 统计各学校的分数段人数
 
@@ -125,6 +126,7 @@ public class TotalDistributionSheet extends SheetGenerator {
                 .And("target_type=?", target.getType())
                 .And("target_id=?", target.getId())
         );
+
 
         total = totalSegments.stream().mapToInt(row -> row.getInteger("student_count", 0)).sum();
 
