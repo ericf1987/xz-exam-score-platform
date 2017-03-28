@@ -47,8 +47,12 @@ public class AggregationService {
 
 
     public Row getAggregateStatus(String projectId, AggregateType aggrType) {
-        String sql = "select * from aggregation where project_id = ? and aggr_type =? and status = 'Finished' order by start_time desc";
-        return this.daoFactory.getManagerDao().queryFirst(sql, projectId, aggrType.name());
+        String sql = "select * from aggregation where project_id = ?  and status = 'Finished' order by start_time desc";
+        Row row = this.daoFactory.getManagerDao().queryFirst(sql, projectId);
+        if (row.getString("aggr_type").equals(aggrType.name())){
+            return row;
+        }
+        return null;
     }
 
     public Row getAggregateStatus(String projectId, AggregateType aggrType, String subjectId) {
