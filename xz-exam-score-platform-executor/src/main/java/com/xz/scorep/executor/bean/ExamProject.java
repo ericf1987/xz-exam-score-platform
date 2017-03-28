@@ -105,9 +105,11 @@ public class ExamProject {
     }
 
     public boolean canQuery() {
+
+        // Aggregating 和 Importing 都在操作数据库因此不能查询；
+        // Archiving 因为包含了 Aggregating 操作，所以也不能查询
         return this.getStatus() != null && (
                 getStatus().equals(ProjectStatus.Ready.name()) ||
-                        getStatus().equals(ProjectStatus.GeneratingReport.name()) ||
-                        getStatus().equals(ProjectStatus.Archiving.name()));
+                        getStatus().equals(ProjectStatus.GeneratingReport.name()));
     }
 }
