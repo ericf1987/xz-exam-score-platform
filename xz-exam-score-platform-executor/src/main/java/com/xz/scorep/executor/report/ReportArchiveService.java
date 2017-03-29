@@ -8,6 +8,7 @@ import com.xz.scorep.executor.aggregate.AggregateParameter;
 import com.xz.scorep.executor.aggregate.AggregateService;
 import com.xz.scorep.executor.aggregate.AggregateType;
 import com.xz.scorep.executor.aggregate.AggregationService;
+import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.config.ExcelConfig;
 import com.xz.scorep.executor.db.DAOFactory;
@@ -101,10 +102,12 @@ public class ReportArchiveService {
             String excelPath = excelConfig.getSavePath();
             String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "全科报表");
 
+            ExamProject project = projectService.findProject(projectId);
             File tempFile = createZipArchive(archiveRoot);
-            Row row = daoFactory.getManagerDao().queryFirst("select * from project where id = ?", projectId);
-            String fileName = row.getString("name") + "_全科.zip";
+            String fileName = project.getName() + "_全科.zip";
             String uploadPath = uploadZipArchive(projectId, tempFile, fileName);
+
+            LOG.info("报表打包完毕，已上传到 " + uploadPath);
             saveProjectArchiveRecord("000", projectId, uploadPath);
         } catch (Exception e) {
             LOG.error("", e);
