@@ -7,14 +7,21 @@ import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Date;
-import java.util.List;
 
 @Service
 public class AggregationService {
 
     @Autowired
     private DAOFactory daoFactory;
+
+    @PostConstruct
+    private void initAggregationService() {
+        daoFactory.getManagerDao().execute(
+                "update aggregation set status=? where status=?",
+                AggregateStatus.Finished.name(), AggregateStatus.Running.name());
+    }
 
     public void insertAggregation(Aggregation aggregation) {
         DAO managerDao = this.daoFactory.getManagerDao();
@@ -49,7 +56,7 @@ public class AggregationService {
     public Row getAggregateStatus(String projectId, AggregateType aggrType) {
         String sql = "select * from aggregation where project_id = ?  and status = 'Finished' order by start_time desc";
         Row row = this.daoFactory.getManagerDao().queryFirst(sql, projectId);
-        if (row.getString("aggr_type").equals(aggrType.name())){
+        if (row.getString("aggr_type").equals(aggrType.name())) {
             return row;
         }
         return null;
