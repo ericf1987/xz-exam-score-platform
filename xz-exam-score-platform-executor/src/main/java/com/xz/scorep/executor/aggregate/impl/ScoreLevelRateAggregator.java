@@ -97,7 +97,7 @@ public class ScoreLevelRateAggregator extends Aggregator {
 
         LOG.info("统计整体成绩四率...");
         aggregateProjectScoreLevels(projectId, scoreLevels);
-        LOG.info("统计科目成绩四率...,科目列表:{}",subjects.toString());
+        LOG.info("统计科目成绩四率...,科目列表:{}", subjects.toString());
         aggregateSubjectScoreLevels(projectId, scoreLevels, subjects);
     }
 

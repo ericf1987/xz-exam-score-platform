@@ -31,7 +31,7 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
             " where " +
             "   a.quest_id=quest.id and " +
             "   quest.exam_subject=? and " +
-            "   a.range_type='province'";
+            "   a.range_type='province' and a.option is not null";
 
     private static final String QUERY_TEMPLATE_SCHOOL = "select" +
             "   a.quest_id, a.`option`, a.range_id," +
@@ -41,7 +41,7 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
             "   a.quest_id=quest.id and " +
             "   quest.exam_subject=? and " +
             "   a.range_type='school' and" +
-            "   a.range_id=?";
+            "   a.range_id=? and a.option is not null";
 
     private static final String QUERY_TEMPLATE_CLASS = "select" +
             "   a.quest_id, a.`option`, a.range_id," +
@@ -50,6 +50,7 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
             " where " +
             "   a.quest_id=quest.id and " +
             "   quest.exam_subject=? and " +
+            "   a.option is not null and"+
             "   a.range_type='class' and" +
             "   a.range_id in (select id from class where school_id=?)";
 
