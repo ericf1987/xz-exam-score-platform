@@ -174,7 +174,7 @@ public class ImportProjectService {
         projectService.saveProject(project);
     }
 
-    private void importReportConfig(Context context) {
+    protected void importReportConfig(Context context) {
         Result result = appAuthClient.callApi("QueryProjectReportConfig",
                 new Param().setParameter("projectId", context.getString(PROJECT_ID_KEY)));
 

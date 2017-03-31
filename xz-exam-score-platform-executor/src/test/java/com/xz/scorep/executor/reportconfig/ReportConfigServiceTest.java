@@ -47,4 +47,9 @@ public class ReportConfigServiceTest extends BaseTest {
         reportConfigService.saveReportConfig(reportConfig);
     }
 
+    @Test
+    public void testQueryReportConfig() throws Exception {
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(湘潭20170328联考);
+        System.out.println(JSON.toJSONString(reportConfig, true));
+    }
 }

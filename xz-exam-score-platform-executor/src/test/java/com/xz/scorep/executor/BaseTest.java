@@ -27,6 +27,8 @@ public abstract class BaseTest {
 
     public static final String SCHOOL_NAME = "湘潭市第十八中学";
 
+    public static final String 湘潭20170328联考 = "430300-f39dc20ba0044b8b9cb302d7910c87c4";
+
     static {
         setupProxy();
     }

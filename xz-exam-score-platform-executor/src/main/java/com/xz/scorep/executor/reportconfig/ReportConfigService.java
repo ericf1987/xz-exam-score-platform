@@ -2,19 +2,18 @@ package com.xz.scorep.executor.reportconfig;
 
 import com.hyd.dao.DAO;
 import com.xz.scorep.executor.db.DAOFactory;
-import com.xz.scorep.executor.utils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ReportConfigService {
 
-    public static final String DEFAULT_PROJECT_ID = "[DEFAULT]";
+    private static final String DEFAULT_PROJECT_ID = "[DEFAULT]";
+
+    private static final String DELETE_REPORT_CONFIG = "delete from report_config where project_id=?";
 
     @Autowired
     private DAOFactory daoFactory;
-
-    public static final String DELETE_REPORT_CONFIG = "delete from report_config where project_id=?";
 
     public void saveReportConfig(final ReportConfig reportConfig) {
         DAO.runTransactionWithException(() -> {
@@ -34,7 +33,7 @@ public class ReportConfigService {
     }
 
     // 查询指定项目的报表配置。如果数据库记录不存在，则返回一个只包含 projectId 属性的
-    public ReportConfig queryRawReportConfig(String projectId) {
+    private ReportConfig queryRawReportConfig(String projectId) {
 
         ReportConfig reportConfig = daoFactory.getManagerDao().queryFirst(
                 ReportConfig.class,
@@ -50,10 +49,41 @@ public class ReportConfigService {
 
     // 合并两个 ReportConfig 对象
     private void combine(ReportConfig projectReportConfig, ReportConfig defaultReportConfig) {
-        try {
-            BeanUtils.fillProperties(projectReportConfig, defaultReportConfig);
-        } catch (Exception e) {
-            throw new ReportConfigException(e);
+        if (projectReportConfig.getCollegeEntryLevel() == null) {
+            projectReportConfig.setCollegeEntryLevel(defaultReportConfig.getCollegeEntryLevel());
+        }
+        if (projectReportConfig.getCollegeEntryLevelEnabled() == null) {
+            projectReportConfig.setCollegeEntryLevelEnabled(defaultReportConfig.getCollegeEntryLevelEnabled());
+        }
+        if (projectReportConfig.getCombineCategorySubjects() == null) {
+            projectReportConfig.setCombineCategorySubjects(defaultReportConfig.getCombineCategorySubjects());
+        }
+        if (projectReportConfig.getEntryLevelStatType() == null) {
+            projectReportConfig.setEntryLevelStatType(defaultReportConfig.getEntryLevelStatType());
+        }
+        if (projectReportConfig.getHighScoreRate() == 0) {
+            projectReportConfig.setHighScoreRate(defaultReportConfig.getHighScoreRate());
+        }
+        if (projectReportConfig.getRankLevelCombines() == null) {
+            projectReportConfig.setRankLevelCombines(defaultReportConfig.getRankLevelCombines());
+        }
+        if (projectReportConfig.getRankLevels() == null) {
+            projectReportConfig.setRankLevels(defaultReportConfig.getRankLevels());
+        }
+        if (projectReportConfig.getRankSegmentCount() == 0) {
+            projectReportConfig.setRankSegmentCount(defaultReportConfig.getRankSegmentCount());
+        }
+        if (projectReportConfig.getScoreLevels() == null) {
+            projectReportConfig.setScoreLevels(defaultReportConfig.getScoreLevels());
+        }
+        if (projectReportConfig.getSeparateCategorySubjects() == null) {
+            projectReportConfig.setSeparateCategorySubjects(defaultReportConfig.getSeparateCategorySubjects());
+        }
+        if (projectReportConfig.getShareSchoolReport() == null) {
+            projectReportConfig.setShareSchoolReport(defaultReportConfig.getShareSchoolReport());
+        }
+        if (projectReportConfig.getTopStudentRate() == 0) {
+            projectReportConfig.setTopStudentRate(defaultReportConfig.getTopStudentRate());
         }
     }
 }
