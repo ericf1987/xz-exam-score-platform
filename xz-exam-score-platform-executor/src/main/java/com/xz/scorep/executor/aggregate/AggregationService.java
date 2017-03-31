@@ -7,7 +7,6 @@ import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.Date;
 
 @Service
@@ -15,13 +14,6 @@ public class AggregationService {
 
     @Autowired
     private DAOFactory daoFactory;
-
-    @PostConstruct
-    private void initAggregationService() {
-        daoFactory.getManagerDao().execute(
-                "update aggregation set status=? where status=?",
-                AggregateStatus.Finished.name(), AggregateStatus.Running.name());
-    }
 
     public void insertAggregation(Aggregation aggregation) {
         DAO managerDao = this.daoFactory.getManagerDao();

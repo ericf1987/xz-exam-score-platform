@@ -4,8 +4,11 @@ import com.alibaba.druid.pool.DruidDataSource;
 import com.hyd.dao.DAO;
 import com.hyd.dao.DataSources;
 import com.xz.ajiaedu.common.lang.StringUtil;
+import com.xz.scorep.executor.aggregate.AggregateStatus;
+import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.config.DbConfig;
-import com.xz.scorep.executor.project.ProjectService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,15 +21,14 @@ import javax.sql.DataSource;
 @Component
 public class DAOFactory {
 
+    private static final Logger LOG = LoggerFactory.getLogger(DAOFactory.class);
+
     private static final String DS_ROOT = "root";
 
     private static final String DS_MANAGER = "manager";
 
     @Autowired
     private DbConfig dbConfig;
-
-    @Autowired
-    private ProjectService projectService;
 
     private DataSources dataSources = new DataSources();
 
@@ -35,6 +37,20 @@ public class DAOFactory {
         // 预定义数据库
         dataSources.setDataSource(DS_ROOT, getRootDataSource());
         dataSources.setDataSource(DS_MANAGER, getManagerDataSource());
+
+        resetProjectStatus();
+    }
+
+    private void resetProjectStatus() {
+        LOG.info("恢复项目状态...");
+        getManagerDao().execute("update project set status=? where status<>?",
+                ProjectStatus.Ready.name(), ProjectStatus.Ready.name());
+
+        LOG.info("恢复统计任务状态...");
+        getManagerDao().execute(
+                "update aggregation set status=? where status=?",
+                AggregateStatus.Finished.name(), AggregateStatus.Running.name());
+
     }
 
     // 获得 root 连接

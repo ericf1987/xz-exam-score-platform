@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-
 @Service
 public class ProjectService {
 
@@ -20,17 +18,6 @@ public class ProjectService {
 
     @Autowired
     private DAOFactory daoFactory;
-
-    @PostConstruct
-    private void initProjectService() {
-        resetAllProjectStatus();
-    }
-
-    private void resetAllProjectStatus() {
-        LOG.info("恢复项目状态...");
-        daoFactory.getManagerDao().execute("update project set status=? where status<>?",
-                ProjectStatus.Ready.name(), ProjectStatus.Ready.name());
-    }
 
     public void initProjectDatabase(String projectId) {
         dropProjectDatabase(projectId);
