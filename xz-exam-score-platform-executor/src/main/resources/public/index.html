@@ -58,5 +58,22 @@
         <input type="submit" value="生成报表"/>
     </form>
 </fieldset>
+
+<fieldset>
+    <legend>全科报表打包</legend>
+    <form action="report/archive" method="post">
+        <div><label>项目ID: </label><input type="text" name="projectId"></div>
+        <input type="submit" value="开始打包"/>
+    </form>
+</fieldset>
+
+<fieldset>
+    <legend>单科报表打包</legend>
+    <form action="report/archive" method="post">
+        <div><label>项目ID: </label><input type="text" name="projectId"></div>
+        <div><label>科目ID: </label><input type="text" name="subjectId"></div>
+        <input type="submit" value="开始打包"/>
+    </form>
+</fieldset>
 </body>
 </html>
