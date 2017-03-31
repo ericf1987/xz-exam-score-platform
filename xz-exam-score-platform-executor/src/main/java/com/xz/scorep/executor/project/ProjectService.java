@@ -27,7 +27,9 @@ public class ProjectService {
     }
 
     private void resetAllProjectStatus() {
-        daoFactory.getManagerDao().execute("update project set status=?", ProjectStatus.Ready.name());
+        LOG.info("恢复项目状态...");
+        daoFactory.getManagerDao().execute("update project set status=? where status<>?",
+                ProjectStatus.Ready.name(), ProjectStatus.Ready.name());
     }
 
     public void initProjectDatabase(String projectId) {
