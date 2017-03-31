@@ -44,7 +44,7 @@ public class SchoolDetailReportQuery {
             "WHERE\n" +
             "school.id = scorelevelmap.range_id\n" +
             "and scorelevelmap.range_id = '{{schoolId}}'\n" +
-            "and scorelevelmap.target_type = 'Project'\n" +
+            "and scorelevelmap.target_type = '{{targetType}}'\n" +
             "and scorelevelmap.target_id = '{{targetId}}'\n" +
             "and scorelevelmap.score_level = 'XLNT'\n" +
             ") xlnt on a.class_name = xlnt.class_name\n" +
@@ -56,7 +56,7 @@ public class SchoolDetailReportQuery {
             "from scorelevelmap\n" +
             "WHERE\n" +
             "scorelevelmap.range_id = '{{schoolId}}'\n" +
-            "and scorelevelmap.target_type = 'Project'\n" +
+            "and scorelevelmap.target_type = '{{targetType}}'\n" +
             "and scorelevelmap.target_id = '{{targetId}}'\n" +
             "and scorelevelmap.score_level = 'GOOD'\n" +
             ") good on a.class_name = good.class_name\n" +
@@ -68,7 +68,7 @@ public class SchoolDetailReportQuery {
             "from scorelevelmap\n" +
             "WHERE\n" +
             "scorelevelmap.range_id = '{{schoolId}}'\n" +
-            "and scorelevelmap.target_type = 'Project'\n" +
+            "and scorelevelmap.target_type = '{{targetType}}'\n" +
             "and scorelevelmap.target_id = '{{targetId}}'\n" +
             "and scorelevelmap.score_level = 'PASS'\n" +
             ") pass on pass.class_name = a.class_name\n";
@@ -153,6 +153,7 @@ public class SchoolDetailReportQuery {
     public Row getSchoolSubjectsTotalDetail(String projectId, String schoolId) {
         String sql = QUERY_SCHOOL_TOTAL_DETAIL
                 .replace("{{table}}", "score_project")
+                .replace("{{targetType}}","Project")
                 .replace("{{schoolId}}", schoolId)
                 .replace("{{targetId}}", projectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
@@ -187,6 +188,7 @@ public class SchoolDetailReportQuery {
     public Row getSchoolSubjectTotalDetail(String projectId, String schoolId, String subjectId) {
         String sql = QUERY_SCHOOL_TOTAL_DETAIL
                 .replace("{{table}}", "score_subject_" + subjectId)
+                .replace("{{targetType}}","Subject")
                 .replace("{{schoolId}}", schoolId)
                 .replace("{{targetId}}", subjectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
