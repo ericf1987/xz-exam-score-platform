@@ -3,6 +3,7 @@ package com.xz.scorep.executor.reportconfig;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.hyd.dao.util.StringUtil;
 import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.importproject.ImportProjectService;
@@ -27,7 +28,9 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
 
         JSONObject scoreLevels = result.get("scoreLevels");
         if (scoreLevels != null) {
-            reportConfig.setScoreLevels(scoreLevels.toJSONString());
+            Map<String, Object> newMap = new HashMap<>();
+            scoreLevels.forEach((key, value) -> newMap.put(StringUtil.capitalize(key), value)); // key 改为首字母大写
+            reportConfig.setScoreLevels(JSON.toJSONString(newMap));
         }
 
         String splitUnionSubject = result.getString("splitUnionSubject");
