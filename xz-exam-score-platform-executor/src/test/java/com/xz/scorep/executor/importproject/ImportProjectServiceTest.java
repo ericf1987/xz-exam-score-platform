@@ -26,4 +26,9 @@ public class ImportProjectServiceTest extends BaseTest {
         context.put(PROJECT_ID_KEY, 湘潭20170328联考);
         importProjectService.importReportConfig(context);
     }
+
+    @Test
+    public void testImportStudent() throws Exception {
+
+    }
 }
