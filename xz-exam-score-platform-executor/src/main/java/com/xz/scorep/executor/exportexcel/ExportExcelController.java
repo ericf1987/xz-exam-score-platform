@@ -18,6 +18,7 @@ public class ExportExcelController {
 
     @PostMapping("/export/excel")
     @ResponseBody
+    //该接口  网页平台并没直接调用,(只在测试页面有过调用)
     public Result exportExcel(@RequestParam("projectId") String projectId) {
         try {
             excelReportManager.generateReports(projectId, true, false);
@@ -30,6 +31,7 @@ public class ExportExcelController {
 
     @GetMapping("/export/status/{projectId}")
     @ResponseBody
+    //该接口  网页平台并没直接调用
     public Result queryStatus(@PathVariable("projectId") String projectId) {
         AsyncCounter counter = excelReportManager.getCounter(projectId);
         if (counter == null) {

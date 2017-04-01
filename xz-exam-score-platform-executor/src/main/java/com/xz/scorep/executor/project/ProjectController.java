@@ -42,7 +42,6 @@ public class ProjectController {
                 aggregationService.getAggregateByStatus(projectId, "Running") != null;
 
         boolean canRunAggregation = !generatingReport && !runningAggregation;
-        LOG.info("projectImported={}, canRunAggregation={}", projectImported, canRunAggregation);
 
         boolean canQuery = project != null && project.canQuery();
 
