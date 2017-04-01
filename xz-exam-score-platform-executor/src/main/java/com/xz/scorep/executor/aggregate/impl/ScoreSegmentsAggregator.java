@@ -5,6 +5,7 @@ import com.hyd.dao.Row;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
+import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
@@ -103,6 +104,9 @@ public class ScoreSegmentsAggregator extends Aggregator {
     @Autowired
     private SubjectService subjectService;
 
+    @Autowired
+    private AggregateConfig aggregateConfig;
+
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
         String projectId = aggregateParameter.getProjectId();
@@ -116,7 +120,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
     }
 
     private void aggrSubjectScoreSegments(String projectId, DAO projectDao) throws InterruptedException {
-        ThreadPools.createAndRunThreadPool(10, 100, pool ->
+        ThreadPools.createAndRunThreadPool(aggregateConfig.getSegmentsPoolSize(), 100, pool ->
                 subjectService.listSubjects(projectId).forEach(subject -> {
                     String subjectId = subject.getId();
                     pool.submit(() -> aggrSubjectScoreSegments0(projectId, projectDao, subjectId));
