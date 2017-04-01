@@ -61,6 +61,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         for (ExamSubject subject : subjects) {
             String sql = DEL_ABS_SCORE.replace("{{subject}}", subject.getId());
+            LOG.info("删除科目 {} 缺考考生...", subject.getId());
             projectDao.execute(sql);
         }
     }
