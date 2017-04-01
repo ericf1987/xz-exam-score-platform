@@ -5,6 +5,7 @@ import com.hyd.dao.DAOException;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.ExamSubject;
+import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
@@ -40,6 +41,9 @@ public class StudentSubjectScoreAggregator extends Aggregator {
     @Autowired
     private DAOFactory daoFactory;
 
+    @Autowired
+    private AggregateConfig aggregateConfig;
+
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
         String projectId = aggregateParameter.getProjectId();
@@ -47,7 +51,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         List<ExamSubject> subjects = getSubjects(aggregateParameter);
 
-        ThreadPools.createAndRunThreadPool(20, 1,
+        ThreadPools.createAndRunThreadPool(aggregateConfig.getSubjectPoolSize(), 1,
                 pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
 
         LOG.info("删除项目 {} 缺考考生...", projectId);

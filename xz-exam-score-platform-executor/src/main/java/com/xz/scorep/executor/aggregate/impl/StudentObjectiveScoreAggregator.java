@@ -5,6 +5,7 @@ import com.hyd.dao.DAOException;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.ExamSubject;
+import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
@@ -37,6 +38,9 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
     @Autowired
     private SubjectService subjectService;
 
+    @Autowired
+    private AggregateConfig aggregateConfig;
+
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
         String projectId = aggregateParameter.getProjectId();
@@ -56,7 +60,7 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
         LOG.info("主客观题成绩表已清空。");
 
         ThreadPools.createAndRunThreadPool(
-                20, 1, (pool) -> startAggregation(projectId, pool));
+                aggregateConfig.getObjectivePoolSize(), 1, (pool) -> startAggregation(projectId, pool));
     }
 
     private void startAggregation(String projectId, ThreadPoolExecutor pool) {

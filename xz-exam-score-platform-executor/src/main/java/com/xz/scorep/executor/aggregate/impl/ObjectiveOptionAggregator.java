@@ -5,6 +5,7 @@ import com.hyd.dao.DAOException;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.Range;
+import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.utils.AsyncCounter;
@@ -95,13 +96,16 @@ public class ObjectiveOptionAggregator extends Aggregator {
     private QuestService questService;
 
     @Autowired
+    private AggregateConfig aggregateConfig;
+
+    @Autowired
     private DAOFactory daoFactory;
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
         String projectId = aggregateParameter.getProjectId();
 
-        ThreadPools.createAndRunThreadPool(20, 1, pool -> {
+        ThreadPools.createAndRunThreadPool(aggregateConfig.getOptionPoolSize(), 1, pool -> {
             try {
                 aggregate0(pool, projectId);
             } catch (Exception e) {

@@ -6,6 +6,7 @@ import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.ProjectClass;
 import com.xz.scorep.executor.bean.ProjectSchool;
+import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.SchoolService;
@@ -54,10 +55,6 @@ public class RankAggregator extends Aggregator {
             "  order by score desc\n" +
             ") tmp2";
 
-    public static final int POOL_SIZE = 20;
-
-    public static final int QUEUE_SIZE = 1;
-
     @Autowired
     private SubjectService subjectService;
 
@@ -69,6 +66,9 @@ public class RankAggregator extends Aggregator {
 
     @Autowired
     private DAOFactory daoFactory;
+
+    @Autowired
+    private AggregateConfig aggregateConfig;
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
@@ -82,7 +82,7 @@ public class RankAggregator extends Aggregator {
         LOG.info("排名表清空完毕。");
 
         ThreadPools.createAndRunThreadPool(
-                POOL_SIZE, QUEUE_SIZE,
+                aggregateConfig.getRankPoolSize(), 1,
                 pool -> startAggregation(projectId, projectDao, pool));
 
     }

@@ -92,9 +92,9 @@ public class ReportArchiveService {
                 runBasicAggregate(projectId);
             }
 
-            //生成excel
             //上次生成Excel之后无统计记录直接跳过
             if (hasAggrAfterGenerate(projectId)) {
+                LOG.info("...上次统计之后并无生成记录............");
                 excelReportManager.generateReports(projectId, false, true);
             }
 
@@ -116,6 +116,13 @@ public class ReportArchiveService {
         }
     }
 
+    /**
+     * 该判断并无逻辑问题,问题在于测试页面调用  "/export/excel"接口只生成Excel,
+     * 并无后续压缩打包操作,而数据库 则在压缩之后记录在 report_archive 表中
+     *
+     * @param projectId 项目ID
+     * @return 上次统计之后是否生成过Excel报表  (生成压缩报表)
+     */
     private boolean hasAggrAfterGenerate(String projectId) {
 
         Row aggrRow = daoFactory.getManagerDao()
@@ -135,6 +142,7 @@ public class ReportArchiveService {
         long generateTime = generateRow
                 .getLong("last_generate", 0);
 
+        LOG.info("上次统计时间:{} , 上次生成报表时间:{} ", aggrTime, generateTime);
         //上次生成Excel之后再无统计记录
         if (generateTime >= aggrTime) {
             return false;
@@ -198,7 +206,6 @@ public class ReportArchiveService {
                 runBasicAggregate(projectId);
             }
 
-            //生成excel
             //上次生成Excel之后无统计记录直接跳过
             if (hasAggrAfterGenerate(projectId)) {
                 excelReportManager.generateReports(projectId, false, true);
