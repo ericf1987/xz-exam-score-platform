@@ -57,6 +57,20 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
             }
         }
 
+        //总分、单科分数步长
+        JSONObject scoreStep = result.get("scoreStep");
+        if (scoreStep != null) {
+            Double subjectStep = scoreStep.getDouble("subject");
+            if (subjectStep != null) {
+                reportConfig.setSubjectSegment(subjectStep);
+            }
+
+            Double totalStep = scoreStep.getDouble("total");
+            if (totalStep != null) {
+                reportConfig.setTotalSegment(totalStep);
+            }
+        }
+
         String highScoreRatio = result.getString("highScoreRatio");
         if (highScoreRatio != null) {
             reportConfig.setHighScoreRate(Double.parseDouble(highScoreRatio));
