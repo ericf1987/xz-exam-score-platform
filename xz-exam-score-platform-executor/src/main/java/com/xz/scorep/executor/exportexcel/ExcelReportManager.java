@@ -22,10 +22,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import static com.xz.ajiaedu.common.concurrent.Executors.newBlockingThreadPoolExecutor;
 
 /**
  * (description)
@@ -65,7 +64,7 @@ public class ExcelReportManager implements ApplicationContextAware {
     @PostConstruct
     public void init() {
         int poolSize = excelConfig.getPoolSize();
-        this.executionPool = newBlockingThreadPoolExecutor(poolSize, poolSize, QUEUE_SIZE);
+        this.executionPool = createThreadPool(poolSize);
         this.reportConfig = XmlNodeReader.read(getClass().getResourceAsStream("/report/config/report-config.xml"));
         if (StringUtil.isEmpty(excelConfig.getSavePath())) {
             throw new IllegalStateException("报表输出路径为空");
@@ -121,7 +120,7 @@ public class ExcelReportManager implements ApplicationContextAware {
         AsyncCounter counter = new AsyncCounter("生成报表", reportTasks.size(), 20);
         counterMap.put(projectId, counter);
 
-        ThreadPoolExecutor pool = async ? executionPool : newBlockingThreadPoolExecutor(poolSize, poolSize, QUEUE_SIZE);
+        ThreadPoolExecutor pool = async ? executionPool : createThreadPool(poolSize);
 
         for (final ReportTask reportTask : reportTasks) {
             Runnable runnable = () -> {
@@ -153,6 +152,10 @@ public class ExcelReportManager implements ApplicationContextAware {
                 throw new ExcelReportException(e);
             }
         }
+    }
+
+    private ThreadPoolExecutor createThreadPool(int poolSize) {
+        return (ThreadPoolExecutor) Executors.newFixedThreadPool(poolSize);
     }
 
     private boolean isUnitTesting() {
