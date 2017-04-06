@@ -77,7 +77,7 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
             String questScoreTableName = "score_" + questId;
 
             String combineSql = "update " + accumulateTableName + " p \n" +
-                    "  left join `" + questScoreTableName + "` q on p.student_id=q.student_id\n" +
+                    "  inner join `" + questScoreTableName + "` q using(student_id)\n" +
                     "  set p.score=p.score+ifnull(q.score,0)";
 
             pool.submit(() -> {

@@ -7,6 +7,8 @@ import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
 import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.project.SubjectService;
+import com.xz.scorep.executor.reportconfig.ReportConfig;
+import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,29 +109,36 @@ public class ScoreSegmentsAggregator extends Aggregator {
     @Autowired
     private AggregateConfig aggregateConfig;
 
+    @Autowired
+    private ReportConfigService reportConfigService;
+
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
         String projectId = aggregateParameter.getProjectId();
         DAO projectDao = daoFactory.getProjectDao(projectId);
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
 
         projectDao.execute("truncate table segments");
         LOG.info("成绩分段统计结果已清空。");
 
-        aggrTotalScoreSegments(projectId, projectDao);
-        aggrSubjectScoreSegments(projectId, projectDao);
+        aggrTotalScoreSegments(projectId, projectDao, reportConfig);
+        aggrSubjectScoreSegments(projectId, projectDao, reportConfig);
     }
 
-    private void aggrSubjectScoreSegments(String projectId, DAO projectDao) throws InterruptedException {
+    private void aggrSubjectScoreSegments(String projectId, DAO projectDao, ReportConfig reportConfig) throws InterruptedException {
         ThreadPools.createAndRunThreadPool(aggregateConfig.getSegmentsPoolSize(), 100, pool ->
                 subjectService.listSubjects(projectId).forEach(subject -> {
                     String subjectId = subject.getId();
-                    pool.submit(() -> aggrSubjectScoreSegments0(projectId, projectDao, subjectId));
+                    pool.submit(() -> aggrSubjectScoreSegments0(projectId, projectDao, subjectId, reportConfig));
                 }));
     }
 
-    private void aggrSubjectScoreSegments0(String projectId, DAO projectDao, String subjectId) {
+    private void aggrSubjectScoreSegments0(String projectId, DAO projectDao, String subjectId, ReportConfig reportConfig) {
+
+        String subjectStep = String.valueOf(reportConfig.getSubjectSegment());
+
         // 总体科目成绩分段
-        String provinceSql = PROVINCE_SUBJECT_SEGMENT.replace("{{step}}", "10").replace("{{subject}}", subjectId);
+        String provinceSql = PROVINCE_SUBJECT_SEGMENT.replace("{{step}}", subjectStep).replace("{{subject}}", subjectId);
         List<Map<String, Object>> provinceSegmentRows = new ArrayList<>();
 
         projectDao.query(provinceSql).forEach(row -> {
@@ -144,7 +153,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
         //////////////////////////////////////////////////////////////
 
         // 学校科目成绩分段
-        String schoolSql = SCHOOL_SUBJECT_SEGMENT.replace("{{step}}", "10").replace("{{subject}}", subjectId);
+        String schoolSql = SCHOOL_SUBJECT_SEGMENT.replace("{{step}}", subjectStep).replace("{{subject}}", subjectId);
         List<Map<String, Object>> schoolSegmentRows = new ArrayList<>();
 
         projectDao.query(schoolSql).forEach(row -> {
@@ -158,7 +167,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
         //////////////////////////////////////////////////////////////
 
         // 班级科目成绩分段
-        String classSql = CLASS_SUBJECT_SEGMENT.replace("{{step}}", "10").replace("{{subject}}", subjectId);
+        String classSql = CLASS_SUBJECT_SEGMENT.replace("{{step}}", subjectStep).replace("{{subject}}", subjectId);
         List<Map<String, Object>> classSegmentRows = new ArrayList<>();
 
         projectDao.query(classSql).forEach(row -> {
@@ -170,10 +179,12 @@ public class ScoreSegmentsAggregator extends Aggregator {
         LOG.info("项目 {} 的科目 {} 班级科目成绩分段统计完成", projectId, subjectId);
     }
 
-    private void aggrTotalScoreSegments(String projectId, DAO projectDao) {
+    private void aggrTotalScoreSegments(String projectId, DAO projectDao, ReportConfig reportConfig) {
+
+        String totalStep = String.valueOf(reportConfig.getTotalSegment());
 
         // 总体总分成绩分段
-        projectDao.query(PROVINCE_PROJECT_SEGMENT.replace("{{step}}", "50")).forEach(row -> {
+        projectDao.query(PROVINCE_PROJECT_SEGMENT.replace("{{step}}", totalStep)).forEach(row -> {
             Map<String, Object> map = createCountMap(row,
                     Range.PROVINCE_RANGE, Target.project(projectId));
             projectDao.insert(map, "segments");
@@ -185,7 +196,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
         // 学校总分成绩分段
         List<Map<String, Object>> schoolSegmentRows = new ArrayList<>();
 
-        projectDao.query(SCHOOL_PROJECT_SEGMENT.replace("{{step}}", "50")).forEach(row -> {
+        projectDao.query(SCHOOL_PROJECT_SEGMENT.replace("{{step}}", totalStep)).forEach(row -> {
             String schoolId = row.getString("school_id");
             schoolSegmentRows.add(createCountMap(row, Range.school(schoolId), Target.project(projectId)));
         });
@@ -198,7 +209,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
         // 班级总分成绩分段
         List<Map<String, Object>> classSegmentRows = new ArrayList<>();
 
-        projectDao.query(CLASS_PROJECT_SEGMENT.replace("{{step}}", "50")).forEach(row -> {
+        projectDao.query(CLASS_PROJECT_SEGMENT.replace("{{step}}", totalStep)).forEach(row -> {
             String classId = row.getString("class_id");
             classSegmentRows.add(createCountMap(row, Range.clazz(classId), Target.project(projectId)));
         });

@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class TotalClassDetailSheet extends SheetGenerator {
 
 
-    public static String QUERY_STUDENT_RANK = "select \n" +
+    public static String QUERY_STUDENT_RANK = "select DISTINCT\n" +
             "student.id as student_id," +
             "{{table}}.score as total_score_{{subjectId}},\n" +
             "rank_class.rank as class_rank_{{subjectId}},\n" +
@@ -33,8 +33,7 @@ public abstract class TotalClassDetailSheet extends SheetGenerator {
             "{{table}},\n" +
             "rank_class,\n" +
             "rank_school,\n" +
-            "rank_province,\n" +
-            "class \n" +
+            "rank_province \n" +
             "where \n" +
             "student.id = {{table}}.student_id \n" +
             "and student.id = rank_class.student_id\n" +
@@ -43,8 +42,34 @@ public abstract class TotalClassDetailSheet extends SheetGenerator {
             "and rank_school.subject_id = '{{subjectId}}'\n" +
             "and student.id = rank_province.student_id\n" +
             "and rank_province.subject_id = '{{subjectId}}'\n" +
-            "and student.school_id = class.school_id\n" +
             "and student.class_id = '{{classId}}'";
+
+
+    private static String QUERY_CLASS_RANK = "select student.id as student_id,\n" +
+            "{{table}}.score as total_score_{{subjectId}},\n" +
+            "rank_class.rank as class_rank_{{subjectId}}\n" +
+            "from student,{{table}},rank_class\n" +
+            "where\n" +
+            "student.id = {{table}}.student_id\n" +
+            "and student.id = rank_class.student_id\n" +
+            "and rank_class.subject_id = '{{subjectId}}'\n" +
+            "and student.class_id = '{{classId}}' ";
+
+    private static String QUERY_SCHOOL_RANK = "select student.id as student_id,\n" +
+            "rank_school.rank as school_rank_{{subjectId}}\n" +
+            "from student,rank_school\n" +
+            "where\n" +
+            "student.id = rank_school.student_id\n" +
+            "and rank_school.subject_id = '{{subjectId}}'\n" +
+            "and student.class_id = '{{classId}}' ";
+
+    private static String QUERY_PROVINCE_RANK = "select student.id as student_id,\n" +
+            "rank_province.rank as province_rank_{{subjectId}}\n" +
+            "from student,rank_province\n" +
+            "where\n" +
+            "student.id = rank_province.student_id\n" +
+            "and rank_province.subject_id = '{{subjectId}}'\n" +
+            "and student.class_id = '{{classId}}' ";
 
 
     @Autowired
@@ -83,9 +108,26 @@ public abstract class TotalClassDetailSheet extends SheetGenerator {
         String totalSql = QUERY_STUDENT_RANK
                 .replace("{{table}}", "score_project")
                 .replace("{{subjectId}}", subjectId)
-                .replace("{{classId}}",classId);
+                .replace("{{classId}}", classId);
         List<Row> rows = dao.query(totalSql);
         sheetContext.rowAdd(rows);
+
+//        String totalProvinceRankSql = QUERY_PROVINCE_RANK
+//                .replace("{{subjectId}}", subjectId)
+//                .replace("{{classId}}", classId);
+//        sheetContext.rowAdd(dao.query(totalProvinceRankSql));
+//
+//        String totalSchoolRankSql = QUERY_SCHOOL_RANK
+//                .replace("{{subjectId}}", subjectId)
+//                .replace("{{classId}}", classId);
+//        sheetContext.rowAdd(dao.query(totalSchoolRankSql));
+//
+//        String totalClassRankSql = QUERY_CLASS_RANK
+//                .replace("{{table}}", "score_project")
+//                .replace("{{subjectId}}", subjectId)
+//                .replace("{{classId}}", classId);
+//        sheetContext.rowAdd(dao.query(totalClassRankSql));
+
 
         List<Row> subjects = dao.query("select id ,name ,card_id from subject ");
         for (Row row : subjects) {
@@ -98,8 +140,25 @@ public abstract class TotalClassDetailSheet extends SheetGenerator {
                     .replace("{{table}}", "score_subject_" + rowId)
                     .replace("{{subjectId}}", rowId)
                     .replace("{{classId}}", classId);
-
             sheetContext.rowAdd(dao.query(eachSql));
+
+//            String subjectProvinceRankSql = QUERY_PROVINCE_RANK
+//                    .replace("{{subjectId}}", rowId)
+//                    .replace("{{classId}}", classId);
+//            sheetContext.rowAdd(dao.query(subjectProvinceRankSql));
+//
+//            String subjectSchoolRankSql = QUERY_SCHOOL_RANK
+//                    .replace("{{subjectId}}", rowId)
+//                    .replace("{{classId}}", classId);
+//            sheetContext.rowAdd(dao.query(subjectSchoolRankSql));
+//
+//            String subjectClassRankSql = QUERY_CLASS_RANK
+//                    .replace("{{table}}", "score_subject_" + rowId)
+//                    .replace("{{subjectId}}", rowId)
+//                    .replace("{{classId}}", classId);
+//            sheetContext.rowAdd(dao.query(subjectClassRankSql));
+
+
         }
     }
 

@@ -18,7 +18,7 @@ public class TotalClassDetailReportTest extends BaseTest {
 
     @Test
     public void testGenerateReport() throws Exception {
-        Range range = Range.clazz("02da6ce6-91fe-4a53-9639-54ba98268c3b", "399班");
+        Range range = Range.clazz("13cd9543-bf69-4290-b09a-b5f8d7b92e98", "399班");
         Target target = Target.subject("000", "全科");
         String savePath = "399班分数排名、得分明细表（全科）.xlsx";
         report.generate(PROJECT_ID, range, target, savePath);

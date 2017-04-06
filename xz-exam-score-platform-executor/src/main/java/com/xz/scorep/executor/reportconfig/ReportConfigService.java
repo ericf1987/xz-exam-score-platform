@@ -85,5 +85,12 @@ public class ReportConfigService {
         if (projectReportConfig.getTopStudentRate() == 0) {
             projectReportConfig.setTopStudentRate(defaultReportConfig.getTopStudentRate());
         }
+        //合并总分、单科分数步长
+        if (projectReportConfig.getTotalSegment() == null) {
+            projectReportConfig.setTotalSegment(defaultReportConfig.getTotalSegment());
+        }
+        if (projectReportConfig.getSubjectSegment() == null) {
+            projectReportConfig.setSubjectSegment(defaultReportConfig.getSubjectSegment());
+        }
     }
 }

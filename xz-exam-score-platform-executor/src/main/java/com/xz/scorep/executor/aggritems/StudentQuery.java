@@ -38,8 +38,7 @@ public class StudentQuery {
             "  s.id=obj.student_id AND\n" +
             "  s.id=rc.student_id AND rc.subject_id='{{subject}}' AND\n" +
             "  s.id=rs.student_id AND rs.subject_id='{{subject}}' AND\n" +
-            "  s.id=rp.student_id AND rp.subject_id='{{subject}}'\n" +
-            "order by ss.score desc";
+            "  s.id=rp.student_id AND rp.subject_id='{{subject}}' ";
 
     @Autowired
     private DAOFactory daoFactory;

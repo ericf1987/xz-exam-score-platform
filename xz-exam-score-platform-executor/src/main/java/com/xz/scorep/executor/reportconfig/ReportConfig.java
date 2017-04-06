@@ -33,6 +33,11 @@ public class ReportConfig {
 
     private String shareSchoolReport;
 
+    private Double subjectSegment;
+
+    private Double totalSegment;
+
+
     public String getProjectId() {
         return projectId;
     }
@@ -135,5 +140,21 @@ public class ReportConfig {
 
     public void setShareSchoolReport(String shareSchoolReport) {
         this.shareSchoolReport = shareSchoolReport;
+    }
+
+    public Double getSubjectSegment() {
+        return subjectSegment;
+    }
+
+    public void setSubjectSegment(Double subjectSegment) {
+        this.subjectSegment = subjectSegment;
+    }
+
+    public Double getTotalSegment() {
+        return totalSegment;
+    }
+
+    public void setTotalSegment(Double totalSegment) {
+        this.totalSegment = totalSegment;
     }
 }
