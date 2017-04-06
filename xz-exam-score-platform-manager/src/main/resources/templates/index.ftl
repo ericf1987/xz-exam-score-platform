@@ -28,11 +28,11 @@
         <td>${agent.port?string["0"]}</td>
         <td>${agent.status}</td>
         <td>
-            <#if agent.aggregatingProjects?size == 0>
+            <#if agent.activeProjects?size == 0>
                 0
             <#else>
                 <a href="aggregating?server=${agent.host}:${agent.port?string["0"]}">
-                ${agent.aggregatingProjects?size}
+                ${agent.activeProjects?size}
                 </a>
             </#if>
         </td>

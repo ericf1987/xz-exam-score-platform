@@ -20,7 +20,7 @@ public class ExecutorAgent {
 
     private long lastHeartBeat;
 
-    private List<String> aggregatingProjects = new ArrayList<>();
+    private List<ProjectStatus> activeProjects = new ArrayList<>();
 
     public ExecutorAgent(String host, int port) {
         this.host = host;
@@ -61,12 +61,12 @@ public class ExecutorAgent {
         this.lastHeartBeat = lastHeartBeat;
     }
 
-    public List<String> getAggregatingProjects() {
-        return aggregatingProjects;
+    public List<ProjectStatus> getActiveProjects() {
+        return activeProjects;
     }
 
-    public void setAggregatingProjects(List<String> aggregatingProjects) {
-        this.aggregatingProjects = aggregatingProjects;
+    public void setActiveProjects(List<ProjectStatus> activeProjects) {
+        this.activeProjects = activeProjects;
     }
 
     //////////////////////////////////////////////////////////////

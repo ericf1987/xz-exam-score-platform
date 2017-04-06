@@ -11,8 +11,8 @@
 <body>
 
 <#if agent??>
-<#list agent.aggregatingProjects as projectId>
-    <p>${projectId}</p>
+<#list agent.activeProjects as project>
+    <p>${project.projectId}</p>
 </#list>
 <#else>
 <p>没有找到指定的服务器</p>
