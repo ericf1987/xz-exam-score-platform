@@ -6,6 +6,7 @@ import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.ajiaedu.common.xml.XmlNode;
 import com.xz.ajiaedu.common.xml.XmlNodeReader;
 import com.xz.scorep.executor.bean.ProjectStatus;
+import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.config.ExcelConfig;
 import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.utils.AsyncCounter;
@@ -37,13 +38,13 @@ public class ExcelReportManager implements ApplicationContextAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExcelReportManager.class);
 
-    public static final int QUEUE_SIZE = 1;
-
     private ThreadPoolExecutor executionPool;
 
     private XmlNode reportConfig;
 
     private ApplicationContext applicationContext;
+
+    private Map<String, AsyncCounter> counterMap = new HashMap<>();  // 方便外部查询生成进度
 
     @Autowired
     private ExcelConfigParser excelConfigParser;
@@ -54,7 +55,8 @@ public class ExcelReportManager implements ApplicationContextAware {
     @Autowired
     private ProjectService projectService;
 
-    private Map<String, AsyncCounter> counterMap = new HashMap<>();
+    @Autowired
+    private CacheFactory cacheFactory;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
@@ -93,7 +95,12 @@ public class ExcelReportManager implements ApplicationContextAware {
         } finally {
             // 如果成功开始生成 Excel，则在结束后恢复项目状态
             projectService.updateProjectStatus(projectId, ProjectStatus.GeneratingReport, ProjectStatus.Ready);
+
+            // 清理进度计数器
             counterMap.remove(projectId);
+
+            // 清理项目对应的 report 缓存
+            cacheFactory.removeReportCache(projectId);
         }
     }
 
