@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -133,6 +134,10 @@ public class AgentDaemonService {
             if (!result.isSuccess()) {
                 LOG.error("心跳请求出错: " + result.getMessage());
             }
+        } catch (ConnectException e) {
+            managerOnline = false;
+            LOG.info("管理服务器(" + managerConfig.getHost() + ":" + managerConfig.getPort() + ")暂时离线");
+
         } catch (IOException e) {
             managerOnline = false;
             throw e;

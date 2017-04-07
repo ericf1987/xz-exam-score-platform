@@ -33,6 +33,7 @@ public class ManagerController {
     ) {
         try {
             List<ProjectStatus> activeProjects = JSON.parseArray(statusJson, ProjectStatus.class);
+            activeProjects.removeIf(ps -> !ps.getStatus().equals("Ready"));
             managerService.updateExecutorAgent(host, port, dataSize, activeProjects);
             return Result.success();
         } catch (Exception e) {
