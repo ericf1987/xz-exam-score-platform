@@ -105,6 +105,7 @@ public class ExcelReportManager implements ApplicationContextAware {
 
             // 清理项目对应的 report 缓存
             cacheFactory.removeReportCache(projectId);
+            LOG.info("项目缓存已清除   {}........",projectId);
         }
     }
 

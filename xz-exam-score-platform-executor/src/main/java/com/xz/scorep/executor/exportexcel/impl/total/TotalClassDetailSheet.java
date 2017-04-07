@@ -4,6 +4,7 @@ import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.scorep.executor.aggritems.StudentQuery;
 import com.xz.scorep.executor.db.DAOFactory;
+import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.impl.subject.SheetContextHelper;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * Author: luckylo
@@ -21,56 +23,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class TotalClassDetailSheet extends SheetGenerator {
 
-
-    public static String QUERY_STUDENT_RANK = "select DISTINCT\n" +
-            "student.id as student_id," +
-            "{{table}}.score as total_score_{{subjectId}},\n" +
-            "rank_class.rank as class_rank_{{subjectId}},\n" +
-            "rank_school.rank as school_rank_{{subjectId}},\n" +
-            "rank_province.rank as province_rank_{{subjectId}}\n" +
+    private static String QUERY_STUDENT_SCORE = "select student.id as student_id,\n" +
+            "{{table}}.score as total_score_{{subjectId}}\n" +
             "from \n" +
-            "student,\n" +
-            "{{table}},\n" +
-            "rank_class,\n" +
-            "rank_school,\n" +
-            "rank_province \n" +
-            "where \n" +
-            "student.id = {{table}}.student_id \n" +
-            "and student.id = rank_class.student_id\n" +
-            "and rank_class.subject_id = '{{subjectId}}'\n" +
-            "and student.id = rank_school.student_id \n" +
-            "and rank_school.subject_id = '{{subjectId}}'\n" +
-            "and student.id = rank_province.student_id\n" +
-            "and rank_province.subject_id = '{{subjectId}}'\n" +
-            "and student.class_id = '{{classId}}'";
-
-
-    private static String QUERY_CLASS_RANK = "select student.id as student_id,\n" +
-            "{{table}}.score as total_score_{{subjectId}},\n" +
-            "rank_class.rank as class_rank_{{subjectId}}\n" +
-            "from student,{{table}},rank_class\n" +
-            "where\n" +
+            "student,{{table}}\n" +
+            "WHERE\n" +
             "student.id = {{table}}.student_id\n" +
-            "and student.id = rank_class.student_id\n" +
-            "and rank_class.subject_id = '{{subjectId}}'\n" +
-            "and student.class_id = '{{classId}}' ";
-
-    private static String QUERY_SCHOOL_RANK = "select student.id as student_id,\n" +
-            "rank_school.rank as school_rank_{{subjectId}}\n" +
-            "from student,rank_school\n" +
-            "where\n" +
-            "student.id = rank_school.student_id\n" +
-            "and rank_school.subject_id = '{{subjectId}}'\n" +
-            "and student.class_id = '{{classId}}' ";
-
-    private static String QUERY_PROVINCE_RANK = "select student.id as student_id,\n" +
-            "rank_province.rank as province_rank_{{subjectId}}\n" +
-            "from student,rank_province\n" +
-            "where\n" +
-            "student.id = rank_province.student_id\n" +
-            "and rank_province.subject_id = '{{subjectId}}'\n" +
-            "and student.class_id = '{{classId}}' ";
-
+            "and student.class_id = '{{classId}}'";
 
     @Autowired
     DAOFactory daoFactory;
@@ -80,6 +39,9 @@ public abstract class TotalClassDetailSheet extends SheetGenerator {
 
     @Autowired
     QuestService questService;
+
+    @Autowired
+    ReportCacheInitializer reportCache;
 
 
     protected void generateTotalSheet(SheetContext sheetContext) {
@@ -101,32 +63,26 @@ public abstract class TotalClassDetailSheet extends SheetGenerator {
     }
 
     private void totalScoreRank(DAO dao, SheetContext sheetContext, AtomicInteger colIndex) {
+        String projectId = sheetContext.getProjectId();
         String subjectId = getSubjectId(sheetContext);
         String classId = getClassId(sheetContext);
         TotalSchoolDetailSheet.fillSubjectTableHeader("总分", sheetContext, subjectId, colIndex);
-        //学生总成绩排名...
-        String totalSql = QUERY_STUDENT_RANK
+
+        //查询学社成绩
+        String totalSql = QUERY_STUDENT_SCORE
                 .replace("{{table}}", "score_project")
                 .replace("{{subjectId}}", subjectId)
                 .replace("{{classId}}", classId);
         List<Row> rows = dao.query(totalSql);
         sheetContext.rowAdd(rows);
 
-//        String totalProvinceRankSql = QUERY_PROVINCE_RANK
-//                .replace("{{subjectId}}", subjectId)
-//                .replace("{{classId}}", classId);
-//        sheetContext.rowAdd(dao.query(totalProvinceRankSql));
-//
-//        String totalSchoolRankSql = QUERY_SCHOOL_RANK
-//                .replace("{{subjectId}}", subjectId)
-//                .replace("{{classId}}", classId);
-//        sheetContext.rowAdd(dao.query(totalSchoolRankSql));
-//
-//        String totalClassRankSql = QUERY_CLASS_RANK
-//                .replace("{{table}}", "score_project")
-//                .replace("{{subjectId}}", subjectId)
-//                .replace("{{classId}}", classId);
-//        sheetContext.rowAdd(dao.query(totalClassRankSql));
+        List<String> studentList = rows.stream()
+                .map(row -> row.getString("student_id"))
+                .collect(Collectors.toList());
+
+        sheetContext.rowAdd(reportCache.queryProvinceRank(projectId,studentList,subjectId));
+        sheetContext.rowAdd(reportCache.querySchoolRank(projectId,studentList,subjectId));
+        sheetContext.rowAdd(reportCache.queryClassRank(projectId,studentList,subjectId));
 
 
         List<Row> subjects = dao.query("select id ,name ,card_id from subject ");
@@ -135,29 +91,16 @@ public abstract class TotalClassDetailSheet extends SheetGenerator {
             String rowName = row.getString("name");
 
             TotalSchoolDetailSheet.fillSubjectTableHeader(rowName, sheetContext, rowId, colIndex);
-            //学生单科成绩排名...
-            String eachSql = QUERY_STUDENT_RANK
+
+            String eachSql = QUERY_STUDENT_SCORE
                     .replace("{{table}}", "score_subject_" + rowId)
                     .replace("{{subjectId}}", rowId)
                     .replace("{{classId}}", classId);
             sheetContext.rowAdd(dao.query(eachSql));
 
-//            String subjectProvinceRankSql = QUERY_PROVINCE_RANK
-//                    .replace("{{subjectId}}", rowId)
-//                    .replace("{{classId}}", classId);
-//            sheetContext.rowAdd(dao.query(subjectProvinceRankSql));
-//
-//            String subjectSchoolRankSql = QUERY_SCHOOL_RANK
-//                    .replace("{{subjectId}}", rowId)
-//                    .replace("{{classId}}", classId);
-//            sheetContext.rowAdd(dao.query(subjectSchoolRankSql));
-//
-//            String subjectClassRankSql = QUERY_CLASS_RANK
-//                    .replace("{{table}}", "score_subject_" + rowId)
-//                    .replace("{{subjectId}}", rowId)
-//                    .replace("{{classId}}", classId);
-//            sheetContext.rowAdd(dao.query(subjectClassRankSql));
-
+            sheetContext.rowAdd(reportCache.queryProvinceRank(projectId,studentList,rowId));
+            sheetContext.rowAdd(reportCache.querySchoolRank(projectId,studentList,rowId));
+            sheetContext.rowAdd(reportCache.queryClassRank(projectId,studentList,rowId));
 
         }
     }

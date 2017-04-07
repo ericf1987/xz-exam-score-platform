@@ -21,7 +21,7 @@ public class ExportExcelController {
     //该接口  网页平台并没直接调用,(只在测试页面有过调用)
     public Result exportExcel(@RequestParam("projectId") String projectId) {
         try {
-            excelReportManager.generateReports(projectId, true, false);
+            excelReportManager.generateReports(projectId, false, false);
             return Result.success();
         } catch (Exception e) {
             LOG.error("", e);
