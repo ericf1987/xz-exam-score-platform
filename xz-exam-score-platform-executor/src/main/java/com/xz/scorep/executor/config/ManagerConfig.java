@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "manager")
 public class ManagerConfig {
 
+    // 心跳请求最小间隔，要保证两次心跳请求之间的时间间隔小于 MIN_INTERVAL
+    public static final int MIN_INTERVAL = 5000;
+
     private String host;
 
     private int port;

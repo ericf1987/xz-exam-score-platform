@@ -10,6 +10,7 @@ import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.config.ExcelConfig;
 import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.utils.AsyncCounter;
+import com.xz.scorep.executor.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,7 +166,7 @@ public class ExcelReportManager implements ApplicationContextAware {
         }
 
         // 满足条件情况下会等待报表生成完毕
-        if (isUnitTesting() || !async) {
+        if (SysUtils.isUnitTesting() || !async) {
             try {
                 pool.shutdown();
                 pool.awaitTermination(1, TimeUnit.DAYS);
@@ -179,10 +180,6 @@ public class ExcelReportManager implements ApplicationContextAware {
 
     private ThreadPoolExecutor createThreadPool(int poolSize) {
         return (ThreadPoolExecutor) Executors.newFixedThreadPool(poolSize);
-    }
-
-    private boolean isUnitTesting() {
-        return System.getProperty("unit_testing") != null;
     }
 
     public List<ReportTask> createReportGenerators(String projectId) {

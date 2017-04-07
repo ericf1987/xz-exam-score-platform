@@ -7,6 +7,7 @@ import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.aggregate.AggregateStatus;
 import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.config.DbConfig;
+import com.xz.scorep.executor.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,12 @@ public class DAOFactory {
     }
 
     private void resetProjectStatus() {
+
+        // 执行单元测试时不修改项目状态
+        if (SysUtils.isUnitTesting()) {
+            return;
+        }
+
         LOG.info("恢复项目状态...");
         getManagerDao().execute("update project set status=? where status<>?",
                 ProjectStatus.Ready.name(), ProjectStatus.Ready.name());
