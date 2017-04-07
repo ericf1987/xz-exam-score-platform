@@ -6,6 +6,7 @@ import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.ajiaedu.common.xml.XmlNode;
 import com.xz.ajiaedu.common.xml.XmlNodeReader;
 import com.xz.scorep.executor.bean.ProjectStatus;
+import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.config.ExcelConfig;
 import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.utils.AsyncCounter;
@@ -37,13 +38,13 @@ public class ExcelReportManager implements ApplicationContextAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExcelReportManager.class);
 
-    public static final int QUEUE_SIZE = 1;
-
     private ThreadPoolExecutor executionPool;
 
     private XmlNode reportConfig;
 
     private ApplicationContext applicationContext;
+
+    private Map<String, AsyncCounter> counterMap = new HashMap<>();  // 方便外部查询生成进度
 
     @Autowired
     private ExcelConfigParser excelConfigParser;
@@ -54,7 +55,11 @@ public class ExcelReportManager implements ApplicationContextAware {
     @Autowired
     private ProjectService projectService;
 
-    private Map<String, AsyncCounter> counterMap = new HashMap<>();
+    @Autowired
+    private CacheFactory cacheFactory;
+
+    @Autowired
+    private ReportCacheInitializer reportCacheInitializer;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
@@ -93,7 +98,12 @@ public class ExcelReportManager implements ApplicationContextAware {
         } finally {
             // 如果成功开始生成 Excel，则在结束后恢复项目状态
             projectService.updateProjectStatus(projectId, ProjectStatus.GeneratingReport, ProjectStatus.Ready);
+
+            // 清理进度计数器
             counterMap.remove(projectId);
+
+            // 清理项目对应的 report 缓存
+            cacheFactory.removeReportCache(projectId);
         }
     }
 
@@ -115,13 +125,26 @@ public class ExcelReportManager implements ApplicationContextAware {
             throw new ExcelReportException("删除旧报表文件失败", e);
         }
 
-        int poolSize = excelConfig.getPoolSize();
+        //////////////////////////////////////////////////////////////
+
+        // 初始化缓存
+        LOG.info("预加载缓存...");
+        reportCacheInitializer.initReportCache(projectId);
+
+        // 初始化任务
+        LOG.info("生成任务列表...");
         List<ReportTask> reportTasks = createReportGenerators(projectId);
+
+        // 初始化计数器
         AsyncCounter counter = new AsyncCounter("生成报表", reportTasks.size(), 20);
         counterMap.put(projectId, counter);
 
+        // 初始化线程池
+        int poolSize = excelConfig.getPoolSize();
         ThreadPoolExecutor pool = async ? executionPool : createThreadPool(poolSize);
 
+        // 提交任务到线程池
+        LOG.info("开始生成报表...");
         for (final ReportTask reportTask : reportTasks) {
             Runnable runnable = () -> {
                 try {
