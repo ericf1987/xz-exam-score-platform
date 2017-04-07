@@ -57,7 +57,11 @@ public class CacheFactory {
     }
 
     public synchronized void removeReportCache(String projectId) {
-        reportCache.remove(projectId);
+        SimpleCacheWrapper cacheWrapper = reportCache.get(projectId);
+        if (cacheWrapper != null) {
+            cacheWrapper.close();
+            reportCache.remove(projectId);
+        }
     }
 
     private SimpleCacheWrapper createCache(String cacheName) {
