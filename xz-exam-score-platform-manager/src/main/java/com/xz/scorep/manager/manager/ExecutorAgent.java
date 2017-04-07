@@ -2,6 +2,7 @@ package com.xz.scorep.manager.manager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * 表示正在执行的服务实例
@@ -20,6 +21,8 @@ public class ExecutorAgent {
 
     private long lastHeartBeat;
 
+    private long dataSize;
+
     private List<ProjectStatus> activeProjects = new ArrayList<>();
 
     public ExecutorAgent(String host, int port) {
@@ -27,6 +30,14 @@ public class ExecutorAgent {
         this.port = port;
 
         registerTime = lastHeartBeat = System.currentTimeMillis();
+    }
+
+    public long getDataSize() {
+        return dataSize;
+    }
+
+    public void setDataSize(long dataSize) {
+        this.dataSize = dataSize;
     }
 
     public String getHost() {
@@ -74,5 +85,9 @@ public class ExecutorAgent {
     public ExecutorAgentStatus getStatus() {
         return System.currentTimeMillis() - lastHeartBeat > HEARTBEAT_TIMEOUT ?
                 ExecutorAgentStatus.Disconnected : ExecutorAgentStatus.Alive;
+    }
+
+    public static Predicate<ExecutorAgent> EQUALS(String host, int port) {
+        return a -> a.getHost().equals(host) && a.getPort() == port;
     }
 }

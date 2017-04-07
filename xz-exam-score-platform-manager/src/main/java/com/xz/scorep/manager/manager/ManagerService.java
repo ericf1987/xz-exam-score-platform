@@ -2,9 +2,12 @@ package com.xz.scorep.manager.manager;
 
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static com.xz.scorep.manager.manager.ExecutorAgent.EQUALS;
 
 @Service
 public class ManagerService {
@@ -32,16 +35,38 @@ public class ManagerService {
 
     public synchronized ExecutorAgent getExecutorAgent(String host, int port) {
         return listExecutorAgents().stream()
-                .filter(a -> a.getHost().equals(host) && a.getPort() == port)
+                .filter(EQUALS(host, port))
                 .findFirst().orElse(null);
     }
 
-    public synchronized void updateExecutorAgent(String host, int port, List<ProjectStatus> activeProjects) {
+    @NotNull
+    public synchronized ExecutorAgent getOrCreateExecutorAgent(String host, int port) {
+        return listExecutorAgents().stream()
+                .filter(EQUALS(host, port))
+                .findFirst().orElse(createExecutorAgent(host, port));
+    }
+
+    private ExecutorAgent createExecutorAgent(String host, int port) {
+        ExecutorAgent executorAgent = new ExecutorAgent(host, port);
+        executorAgents.add(executorAgent);
+        return executorAgent;
+    }
+
+    public synchronized void updateExecutorAgent(
+            String host, int port, long dataSize, List<ProjectStatus> activeProjects) {
+
         ExecutorAgent executorAgent = getExecutorAgent(host, port);
+
         if (executorAgent == null) {
             executorAgent = new ExecutorAgent(host, port);
             executorAgents.add(executorAgent);
         }
+
+        executorAgent.setDataSize(dataSize);
         executorAgent.setActiveProjects(activeProjects);
+    }
+
+    public ExecutorAgent assignProject(String projectId) {
+        return null;
     }
 }
