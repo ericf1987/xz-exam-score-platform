@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.exportexcel.impl.subject;
 
 import com.xz.scorep.executor.aggritems.StudentQuery;
+import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.project.QuestService;
@@ -16,8 +17,11 @@ public class SubjectClassDetailSheet0 extends SheetGenerator {
     @Autowired
     private QuestService questService;
 
+    @Autowired
+    private ReportCacheInitializer reportCache;
+
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {
-        SubjectSchoolDetailSheet0.generateSheet0(sheetContext, studentQuery, questService);
+        SubjectSchoolDetailSheet0.generateSheet0(sheetContext, studentQuery, questService,reportCache);
     }
 }

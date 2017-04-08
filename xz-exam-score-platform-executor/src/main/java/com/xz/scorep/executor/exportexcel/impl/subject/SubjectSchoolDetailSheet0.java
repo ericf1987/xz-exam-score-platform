@@ -7,6 +7,7 @@ import com.xz.scorep.executor.aggritems.StudentQuery;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
+import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetTask;
@@ -34,12 +35,15 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
     @Autowired
     private QuestService questService;
 
+    @Autowired
+    private ReportCacheInitializer reportCache;
+
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {
-        generateSheet0(sheetContext, studentQuery, questService);
+        generateSheet0(sheetContext, studentQuery, questService,reportCache);
     }
 
-    public static void generateSheet0(SheetContext sheetContext, StudentQuery studentQuery, QuestService questService) {
+    public static void generateSheet0(SheetContext sheetContext, StudentQuery studentQuery, QuestService questService,ReportCacheInitializer reportCache) {
         SheetTask sheetTask = sheetContext.getSheetTask();
         Target target = sheetTask.getTarget();
         String subjectId = String.valueOf(target.getId());
@@ -55,7 +59,7 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         fillStudentSubjectInfo(sheetContext, studentQuery);
 
         // 填充题目成绩信息
-        fillStudentScoreInfo(sheetContext, questService, studentQuery);
+        fillStudentScoreInfo(sheetContext, questService, studentQuery,reportCache);
 
         //////////////////////////////////////////////////////////////
 
@@ -64,7 +68,7 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         sheetContext.freeze(2, 3);
     }
 
-    private static void fillStudentScoreInfo(SheetContext sheetContext, QuestService questService, StudentQuery studentQuery) {
+    private static void fillStudentScoreInfo(SheetContext sheetContext, QuestService questService, StudentQuery studentQuery, ReportCacheInitializer reportCache) {
         String projectId = sheetContext.getProjectId();
         SheetTask sheetTask = sheetContext.getSheetTask();
         Target target = sheetTask.getTarget();
@@ -81,17 +85,43 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
 
         sheetContext.headerPut("客观题得分明细", 1, objectiveQuests.size());
         sheetContext.headerMove(Direction.DOWN);
+
+        Range range = sheetContext.getSheetTask().getRange();
+        List<String> studentList = studentQuery.getStudentList(projectId, range);
+
         objectiveQuests.forEach(quest -> {
-            fillStudentQuestScore(sheetContext, colIndex, quest, studentQuery);
+            fillStudentQuestScoreByCache(sheetContext,colIndex,quest,studentList,reportCache);
         });
 
         sheetContext.headerMove(Direction.UP);
         sheetContext.headerPut("主观题得分明细", 1, subjectiveQuests.size());
         sheetContext.headerMove(Direction.DOWN);
         subjectiveQuests.forEach(quest -> {
-            fillStudentQuestScore(sheetContext, colIndex, quest, studentQuery);
+            fillStudentQuestScoreByCache(sheetContext,colIndex,quest,studentList,reportCache);
         });
     }
+
+    private static void fillStudentQuestScoreByCache(SheetContext sheetContext, AtomicInteger colIndex, ExamQuest quest, List<String> studentList, ReportCacheInitializer reportCache) {
+        String projectId = sheetContext.getProjectId();
+        String scoreColName = "score_" + quest.getId();
+
+        sheetContext.headerPut(quest.getQuestNo());
+        sheetContext.headerMove(Direction.RIGHT);
+        sheetContext.columnSet(colIndex.incrementAndGet(), scoreColName);
+
+        //////////////////////////////////////////////////////////////////////////
+        List<Row> rows = reportCache.queryQuestCache(projectId, studentList, quest.getId());
+        if (quest.isObjective()) {
+            rows.forEach(row -> {
+                String answer = row.getString("objective_answer");
+                String score = StringUtil.removeEnd(row.getString(scoreColName), ".0");
+                row.put(scoreColName, score + "[" + answer + "]");
+            });
+        }
+        sheetContext.rowAdd(rows);
+
+    }
+
 
     private static void fillStudentQuestScore(SheetContext sheetContext, AtomicInteger colIndex, ExamQuest quest, StudentQuery studentQuery) {
         String projectId = sheetContext.getProjectId();
@@ -103,13 +133,13 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         sheetContext.columnSet(colIndex.incrementAndGet(), scoreColName);
 
         List<Row> rows = studentQuery.listStudentQuestScore(projectId, quest.getId(), range);
-        if (quest.isObjective()) {
-            rows.forEach(row -> {
-                String answer = row.getString("objective_answer");
-                String score = StringUtil.removeEnd(row.getString(scoreColName), ".0");
-                row.put(scoreColName, score + "[" + answer + "]");
-            });
-        }
+//        if (quest.isObjective()) {
+//            rows.forEach(row -> {
+//                String answer = row.getString("objective_answer");
+//                String score = StringUtil.removeEnd(row.getString(scoreColName), ".0");
+//                row.put(scoreColName, score + "[" + answer + "]");
+//            });
+//        }
 
         sheetContext.rowAdd(rows);
     }

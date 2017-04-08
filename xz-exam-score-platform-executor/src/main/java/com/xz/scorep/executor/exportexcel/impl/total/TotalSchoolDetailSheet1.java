@@ -2,9 +2,10 @@ package com.xz.scorep.executor.exportexcel.impl.total;
 
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
+import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.exportexcel.SheetContext;
-import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetTask;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -13,7 +14,11 @@ import org.springframework.stereotype.Component;
  * 全校分数排名、得分明细表(每一个科目)
  */
 @Component
-public class TotalSchoolDetailSheet1 extends TotalSchoolDetailSheet{
+public class TotalSchoolDetailSheet1 extends TotalSchoolDetailSheet {
+
+    @Autowired
+    ReportCacheInitializer reportCache;
+
 
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {
@@ -30,7 +35,7 @@ public class TotalSchoolDetailSheet1 extends TotalSchoolDetailSheet{
         sheetContext.getProperties().put("subjectId", subjectId);
         sheetContext.getProperties().put("subjectName", subjectName);
 
-        generateEachSubjectSheet(sheetContext);
+        generateEachSubjectSheet(sheetContext, reportCache);
     }
 
     @Override
