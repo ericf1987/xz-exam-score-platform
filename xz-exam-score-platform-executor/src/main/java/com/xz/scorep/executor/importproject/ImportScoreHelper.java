@@ -238,7 +238,7 @@ public class ImportScoreHelper {
         }
 
         // 按照答案或给分规则打分
-        String questAnswer = defaultString(quest.getScoreRule(), quest.getAnswer());
+        String questAnswer = quest.effectiveScoreRule().toUpperCase();
         ScorePattern scorePattern = new ScorePattern(questAnswer, fullScore);
 
         double score = scorePattern.getScore(studentAnswer.toUpperCase());

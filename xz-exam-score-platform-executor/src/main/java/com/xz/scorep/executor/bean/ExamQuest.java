@@ -204,4 +204,8 @@ public class ExamQuest {
     private String fixId(String id) {
         return id == null ? id : (id.contains(".") ? id.replace(".", "-") : id);
     }
+
+    public String effectiveScoreRule() {
+        return StringUtil.or(this.scoreRule, this.answer);
+    }
 }
