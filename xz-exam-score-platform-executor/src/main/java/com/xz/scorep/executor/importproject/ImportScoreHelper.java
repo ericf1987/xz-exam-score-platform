@@ -241,7 +241,7 @@ public class ImportScoreHelper {
         String questAnswer = defaultString(quest.getScoreRule(), quest.getAnswer());
         ScorePattern scorePattern = new ScorePattern(questAnswer, fullScore);
 
-        double score = scorePattern.getScore(studentAnswer);
+        double score = scorePattern.getScore(studentAnswer.toUpperCase());
         return new ScoreValue(score, studentAnswer, score == fullScore);
     }
 
