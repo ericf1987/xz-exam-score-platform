@@ -177,6 +177,7 @@ public class ReportArchiveService {
 
     private String uploadZipArchive(String projectId, File tempFile, final String uploadFileName) {
         String uploadPath = "report-archives/" + projectId + "/" + uploadFileName;
+        ossFileClient.deleteFile(uploadPath);    // 文件上传完成到可用期间存在延时，因此删除旧文件，以免旧文件被误下载
         ossFileClient.uploadFile(tempFile, uploadPath);
         return uploadPath;
     }

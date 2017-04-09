@@ -37,6 +37,15 @@ public class ReportConfig {
 
     private Double totalSegment;
 
+    private String removeZeroScores;
+
+    public String getRemoveZeroScores() {
+        return removeZeroScores;
+    }
+
+    public void setRemoveZeroScores(String removeZeroScores) {
+        this.removeZeroScores = removeZeroScores;
+    }
 
     public String getProjectId() {
         return projectId;

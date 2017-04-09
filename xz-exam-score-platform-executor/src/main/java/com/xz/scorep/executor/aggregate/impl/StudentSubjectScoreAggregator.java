@@ -9,6 +9,8 @@ import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
+import com.xz.scorep.executor.reportconfig.ReportConfig;
+import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +29,9 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentSubjectScoreAggregator.class);
 
-    public static final String DEL_ABS_SCORE = "delete from score_subject_{{subject}} " +
+    private static final String DEL_ZERO_SCORE = "delete from score_subject_{{subject}} where score=0";
+
+    private static final String DEL_ABS_SCORE = "delete from score_subject_{{subject}} " +
             "where student_id in (\n" +
             "  select a.student_id from absent a where a.subject_id='{{subject}}'  \n" +
             ")";
@@ -44,9 +48,13 @@ public class StudentSubjectScoreAggregator extends Aggregator {
     @Autowired
     private AggregateConfig aggregateConfig;
 
+    @Autowired
+    private ReportConfigService reportConfigService;
+
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
         String projectId = aggregateParameter.getProjectId();
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
         List<ExamSubject> subjects = getSubjects(aggregateParameter);
@@ -57,6 +65,20 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         LOG.info("删除项目 {} 缺考考生...", projectId);
         removeAbsentStudents(projectId, subjects);
         LOG.info("项目 {} 缺考考生删除完毕。", projectId);
+
+        if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
+            removeZeroScores(projectId, subjects);
+        }
+    }
+
+    private void removeZeroScores(String projectId, List<ExamSubject> subjects) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        subjects.forEach(subject -> {
+            String sql = DEL_ZERO_SCORE.replace("{{subject}}", subject.getId());
+            LOG.info("删除科目 {} 零分记录...", subject.getId());
+            projectDao.execute(sql);
+        });
+        LOG.info("项目 {} 的科目零分记录删除完毕。", projectId);
     }
 
     // 删除科目分数表中被标记为缺考的考生记录

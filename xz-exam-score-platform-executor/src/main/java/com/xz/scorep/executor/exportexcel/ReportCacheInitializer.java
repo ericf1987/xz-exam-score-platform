@@ -77,14 +77,13 @@ public class ReportCacheInitializer {
         List<ExamQuest> quests = questService.queryQuests(projectId);
 
         Map<String, List<Row>> result = new HashMap<>();
-        quests.stream()
-                .forEach(quest -> {
-                    String questId = quest.getId();
-                    String cacheKey = "quest_" + questId;
-                    String sql = "select * from `score_" + questId + "`";
-                    ArrayList<Row> rows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query(sql)));
-                    result.put(cacheKey, rows);
-                });
+        quests.forEach(quest -> {
+            String questId = quest.getId();
+            String cacheKey = "quest_" + questId;
+            String sql = "select * from `score_" + questId + "`";
+            ArrayList<Row> rows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query(sql)));
+            result.put(cacheKey, rows);
+        });
         return result;
     }
 
