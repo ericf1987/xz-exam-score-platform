@@ -80,9 +80,9 @@ public abstract class TotalClassDetailSheet extends SheetGenerator {
                 .map(row -> row.getString("student_id"))
                 .collect(Collectors.toList());
 
-        sheetContext.rowAdd(reportCache.queryProvinceRank(projectId,studentList,subjectId));
-        sheetContext.rowAdd(reportCache.querySchoolRank(projectId,studentList,subjectId));
-        sheetContext.rowAdd(reportCache.queryClassRank(projectId,studentList,subjectId));
+        sheetContext.rowAdd(reportCache.queryProvinceRank(projectId, studentList, subjectId));
+        sheetContext.rowAdd(reportCache.querySchoolRank(projectId, studentList, subjectId));
+        sheetContext.rowAdd(reportCache.queryClassRank(projectId, studentList, subjectId));
 
 
         List<Row> subjects = dao.query("select id ,name ,card_id from subject ");
@@ -98,16 +98,16 @@ public abstract class TotalClassDetailSheet extends SheetGenerator {
                     .replace("{{classId}}", classId);
             sheetContext.rowAdd(dao.query(eachSql));
 
-            sheetContext.rowAdd(reportCache.queryProvinceRank(projectId,studentList,rowId));
-            sheetContext.rowAdd(reportCache.querySchoolRank(projectId,studentList,rowId));
-            sheetContext.rowAdd(reportCache.queryClassRank(projectId,studentList,rowId));
+            sheetContext.rowAdd(reportCache.queryProvinceRank(projectId, studentList, rowId));
+            sheetContext.rowAdd(reportCache.querySchoolRank(projectId, studentList, rowId));
+            sheetContext.rowAdd(reportCache.queryClassRank(projectId, studentList, rowId));
 
         }
     }
 
 
-    protected void generateEachSubjectSheet(SheetContext sheetContext) {
-        SubjectSchoolDetailSheet0.generateSheet0(sheetContext, studentQuery, questService);
+    protected void generateEachSubjectSheet(SheetContext sheetContext, ReportCacheInitializer reportCache) {
+        SubjectSchoolDetailSheet0.generateSheet0(sheetContext, studentQuery, questService, reportCache);
     }
 
     protected abstract String getSubjectId(SheetContext sheetContext);

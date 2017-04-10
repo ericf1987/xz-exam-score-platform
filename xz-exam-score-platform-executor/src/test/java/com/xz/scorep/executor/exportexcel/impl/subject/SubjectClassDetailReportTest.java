@@ -19,10 +19,10 @@ public class SubjectClassDetailReportTest extends BaseTest {
 
     @Test
     public void getSheetTasks() throws Exception {
-        Range range = Range.clazz("02da6ce6-91fe-4a53-9639-54ba98268c3b", "399班");
-        Target target = Target.subject("002", "数学");
+        Range range = Range.clazz("42f66486-e24c-4ea7-bf1a-28bbd7313c72", "399班");
+        Target target = Target.subject("001", "语文");
         String savePath = "target/399班分数排名、得分明细表（数学）.xlsx";
-        subjectClassDetailReport.generate(PROJECT_ID, range, target, savePath);
+        subjectClassDetailReport.generate("430100-5d2142085fc747c9b5b230203bbfd402", range, target, savePath);
     }
 
 }

@@ -87,8 +87,8 @@ public class ReportArchiveService {
         LOG.info("开始给项目 " + projectId + " 打全科报表...");
 
         try {
-            Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic);
-            if (status == null) {
+            //是否有过basic统计
+            if (!hasBasicAggregate(projectId)) {
                 runBasicAggregate(projectId);
             }
 
@@ -97,6 +97,7 @@ public class ReportArchiveService {
                 LOG.info("...上次统计之后并无生成记录............");
                 excelReportManager.generateReports(projectId, false, true);
             }
+
 
             LOG.info("项目 " + projectId + " 开始打包报表...");
             String excelPath = excelConfig.getSavePath();
@@ -116,6 +117,22 @@ public class ReportArchiveService {
         }
     }
 
+    private boolean hasBasicAggregate(String projectId) {
+        Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic);
+        if (status == null) {
+            LOG.info("项目ID:{}  尚未有过Basic统计记录......", projectId);
+            return false;
+        }
+        Row aggrRow = daoFactory.getManagerDao().queryFirst(AGGR_SQL, projectId);
+        long aggrTime = aggrRow.getLong("start_time", 0);//上次统计时间
+        long lastBasicTime = status.getLong("start_time", 0);//上次basic统计时间
+        if (lastBasicTime < aggrTime) {//上次basic统计之后  还有统计记录，则需要重新basic统计一次
+            LOG.info("项目ID:{}  上次Basic统计记录之后还有过统计记录......", projectId);
+            return false;
+        }
+        return true;
+    }
+
     /**
      * 该判断并无逻辑问题,问题在于测试页面调用  "/export/excel"接口只生成Excel,
      * 并无后续压缩打包操作,而数据库 则在压缩之后记录在 report_archive 表中
@@ -125,22 +142,18 @@ public class ReportArchiveService {
      */
     private boolean hasAggrAfterGenerate(String projectId) {
 
-        Row aggrRow = daoFactory.getManagerDao()
-                .queryFirst(AGGR_SQL, projectId);
+        Row aggrRow = daoFactory.getManagerDao().queryFirst(AGGR_SQL, projectId);
 
-        Row generateRow = daoFactory.getManagerDao()
-                .queryFirst(GENERATE_SQL, projectId);
+        Row generateRow = daoFactory.getManagerDao().queryFirst(GENERATE_SQL, projectId);
 
         //没有统计过或者没有生成过报表,则必须生成
         if (aggrRow == null || generateRow == null) {
             return true;
         }
 
-        long aggrTime = aggrRow
-                .getLong("start_time", 0);
+        long aggrTime = aggrRow.getLong("start_time", 0);
 
-        long generateTime = generateRow
-                .getLong("last_generate", 0);
+        long generateTime = generateRow.getLong("last_generate", 0);
 
         LOG.info("上次统计时间:{} , 上次生成报表时间:{} ", aggrTime, generateTime);
         //上次生成Excel之后再无统计记录
@@ -164,6 +177,7 @@ public class ReportArchiveService {
 
     private String uploadZipArchive(String projectId, File tempFile, final String uploadFileName) {
         String uploadPath = "report-archives/" + projectId + "/" + uploadFileName;
+        ossFileClient.deleteFile(uploadPath);    // 文件上传完成到可用期间存在延时，因此删除旧文件，以免旧文件被误下载
         ossFileClient.uploadFile(tempFile, uploadPath);
         return uploadPath;
     }
@@ -200,9 +214,8 @@ public class ReportArchiveService {
         LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 开始打包报表...");
 
         try {
-            //查该项目该科目是有有过Basic统计记录
-            Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic, subjectId);
-            if (status == null) {
+            //查该项目该科目是否有过Basic统计记录
+            if (!hasBasicAggregate(projectId)) {
                 runBasicAggregate(projectId);
             }
 

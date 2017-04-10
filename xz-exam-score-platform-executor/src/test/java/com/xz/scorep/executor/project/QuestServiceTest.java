@@ -48,4 +48,13 @@ public class QuestServiceTest extends BaseTest {
         Assert.assertFalse(quest2.isObjective());
 
     }
+
+    @Test
+    public void testEffectiveScoreRule() throws Exception {
+        String projectId = "430300-29c4d40d93bf41a5a82baffe7e714dd9";
+        String questId = "58e730b52d560287557a45b8";
+        ExamQuest quest = questService.findQuest(projectId, questId);
+        Assert.assertNotNull(quest);
+        Assert.assertEquals("A3B3C3D3AB3AC3AD3BC3BD3CD3ABC3ABD3BCD3ABCD3", quest.effectiveScoreRule());
+    }
 }

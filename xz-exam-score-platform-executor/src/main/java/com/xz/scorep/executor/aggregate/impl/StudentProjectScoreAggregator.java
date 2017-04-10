@@ -4,6 +4,8 @@ import com.hyd.dao.DAO;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.project.SubjectService;
+import com.xz.scorep.executor.reportconfig.ReportConfig;
+import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +25,13 @@ public class StudentProjectScoreAggregator extends Aggregator {
     @Autowired
     private SubjectService subjectService;
 
+    @Autowired
+    private ReportConfigService reportConfigService;
+
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
         String projectId = aggregateParameter.getProjectId();
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
         projectDao.execute("truncate table score_project");
@@ -43,6 +49,21 @@ public class StudentProjectScoreAggregator extends Aggregator {
         });
 
 
+        removeAbsent(projectDao, subjectIds);
+
+        if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
+            removeZeroScores(projectId);
+        }
+    }
+
+    private void removeZeroScores(String projectId) {
+        String sql = "delete from score_project where score=0";
+        LOG.info("删除项目零分记录...");
+        daoFactory.getProjectDao(projectId).execute(sql);
+        LOG.info("项目 {} 的总分零分记录删除完毕。", projectId);
+    }
+
+    private void removeAbsent(DAO projectDao, List<String> subjectIds) {
         String where = String.join(" and ", subjectIds.stream().map(
                 subjectId -> "student_id not in (select student_id from score_subject_" + subjectId + ")")
                 .collect(Collectors.toList()));

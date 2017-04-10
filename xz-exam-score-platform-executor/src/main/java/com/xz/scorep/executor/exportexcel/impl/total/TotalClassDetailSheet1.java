@@ -2,8 +2,10 @@ package com.xz.scorep.executor.exportexcel.impl.total;
 
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
+import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetTask;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -13,6 +15,9 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class TotalClassDetailSheet1 extends TotalClassDetailSheet {
+
+    @Autowired
+    private ReportCacheInitializer reportCache;
 
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {
@@ -28,7 +33,7 @@ public class TotalClassDetailSheet1 extends TotalClassDetailSheet {
         sheetContext.getProperties().put("classId", classId);
         sheetContext.getProperties().put("subjectId", subjectId);
 
-        generateEachSubjectSheet(sheetContext);
+        generateEachSubjectSheet(sheetContext, reportCache);
     }
 
     @Override

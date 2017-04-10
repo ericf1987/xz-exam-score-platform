@@ -92,5 +92,8 @@ public class ReportConfigService {
         if (projectReportConfig.getSubjectSegment() == null) {
             projectReportConfig.setSubjectSegment(defaultReportConfig.getSubjectSegment());
         }
+        if (projectReportConfig.getRemoveZeroScores() == null) {
+            projectReportConfig.setRemoveZeroScores(defaultReportConfig.getRemoveZeroScores());
+        }
     }
 }

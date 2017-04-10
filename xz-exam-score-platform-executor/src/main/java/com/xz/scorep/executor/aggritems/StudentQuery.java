@@ -111,6 +111,16 @@ public class StudentQuery {
         return daoFactory.getProjectDao(projectId).query(sql);
     }
 
+    public List<String> getStudentList(String projectId, Range range) {
+        String tmp = "select student.id as student_id from student\n" +
+                "where student.{{type}} = '{{id}}'";
+        String sql = buildRangeCondition(range, tmp);
+        List<Row> rows = daoFactory.getProjectDao(projectId).query(sql);
+        return rows.stream()
+                .map(row -> row.getString("student_id"))
+                .collect(Collectors.toList());
+    }
+
     private String buildRangeCondition(Range range, String template) {
         String type = range.getType().toLowerCase() + "_id";
         String id = range.getId();

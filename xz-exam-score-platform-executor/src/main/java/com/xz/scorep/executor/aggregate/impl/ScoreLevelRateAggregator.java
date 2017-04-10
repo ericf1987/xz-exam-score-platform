@@ -97,7 +97,9 @@ public class ScoreLevelRateAggregator extends Aggregator {
 
         LOG.info("统计整体成绩四率...");
         aggregateProjectScoreLevels(projectId, scoreLevels);
-        LOG.info("统计科目成绩四率...,科目列表:{}", subjects.toString());
+
+        List<String> subjectIdList = subjects.stream().map(ExamSubject::getId).collect(Collectors.toList());
+        LOG.info("统计科目成绩四率...,科目列表:{}", subjectIdList);
         aggregateSubjectScoreLevels(projectId, scoreLevels, subjects);
     }
 
@@ -121,7 +123,7 @@ public class ScoreLevelRateAggregator extends Aggregator {
 
         String rangeId = StringUtil.or(row.getString("range_id"), "430000");
         int count = row.getInteger("count", 0);
-        int total = totalMap.containsKey(rangeId) ? totalMap.get(rangeId) : 0;
+        int total = totalMap.getOrDefault(rangeId, 0);
 
         Map<String, Object> map = new HashMap<>();
         map.put("target_type", targetType);
