@@ -60,6 +60,14 @@ public class ManagerController {
         }
     }
 
+    /**
+     * 获取项目所属的服务器
+     *
+     * @param projectId  项目ID
+     * @param autoAssign 当项目不存在时，是否自动指派一个。如果为 false，则当项目不存在时返回 exists=false
+     *
+     * @return exists=是否有返回结果；host=服务器地址；port=服务器端口
+     */
     @PostMapping("/getProjectServer")
     @ResponseBody
     public Result getProjectServer(

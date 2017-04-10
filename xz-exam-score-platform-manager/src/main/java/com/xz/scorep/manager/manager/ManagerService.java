@@ -51,7 +51,15 @@ public class ManagerService {
         executorAgent.setActiveProjects(activeProjects);
     }
 
-    public ExecutorAgent assignProject(String projectId) {
-        return null;
+    public synchronized ExecutorAgent assignProject(String projectId) {
+        if (executorAgents.isEmpty()) {
+            return null;
+        }
+
+        // 取状态为 Alive 且 dataSize 最小的元素
+        return executorAgents.stream()
+                .filter(a -> a.getStatus() == ExecutorAgentStatus.Alive)
+                .sorted((a1, a2) -> Long.signum(a1.getDataSize() - a2.getDataSize()))
+                .findFirst().orElse(null);
     }
 }
