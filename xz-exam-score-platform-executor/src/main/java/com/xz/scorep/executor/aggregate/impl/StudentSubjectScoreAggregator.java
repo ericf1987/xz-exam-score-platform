@@ -62,9 +62,11 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         ThreadPools.createAndRunThreadPool(aggregateConfig.getSubjectPoolSize(), 1,
                 pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
 
-        LOG.info("删除项目 {} 缺考考生...", projectId);
-        removeAbsentStudents(projectId, subjects);
-        LOG.info("项目 {} 缺考考生删除完毕。", projectId);
+        if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
+            LOG.info("删除项目 {} 缺考考生...", projectId);
+            removeAbsentStudents(projectId, subjects);
+            LOG.info("项目 {} 缺考考生删除完毕。", projectId);
+        }
 
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
             removeZeroScores(projectId, subjects);

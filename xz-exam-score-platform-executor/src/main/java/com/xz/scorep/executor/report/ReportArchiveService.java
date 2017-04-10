@@ -29,7 +29,7 @@ public class ReportArchiveService {
     private static final Logger LOG = LoggerFactory.getLogger(ReportArchiveService.class);
 
 
-    private static final String AGGR_SQL = "select start_time from aggregation " +
+    private static final String AGGR_SQL = "select * from aggregation " +
             " where project_id = ? " +
             " ORDER BY start_time desc limit 1";
 
@@ -118,15 +118,21 @@ public class ReportArchiveService {
     }
 
     private boolean hasBasicAggregate(String projectId) {
-        Row status = aggregationService.getAggregateStatus(projectId, AggregateType.Basic);
-        if (status == null) {
+        Row lastBasicAggr = aggregationService.getAggregateStatus(projectId, AggregateType.Basic);
+        if (lastBasicAggr == null) {
             LOG.info("项目ID:{}  尚未有过Basic统计记录......", projectId);
             return false;
         }
-        Row aggrRow = daoFactory.getManagerDao().queryFirst(AGGR_SQL, projectId);
-        long aggrTime = aggrRow.getLong("start_time", 0);//上次统计时间
-        long lastBasicTime = status.getLong("start_time", 0);//上次basic统计时间
-        if (lastBasicTime < aggrTime) {//上次basic统计之后  还有统计记录，则需要重新basic统计一次
+
+        Row lastAggr = daoFactory.getManagerDao().queryFirst(AGGR_SQL, projectId);
+        if (lastAggr.getString("aggr_type").equals(AggregateType.Basic.name())) {
+            LOG.info("项目ID:{}  上次统计记录为Basic统计.....", projectId);
+            return true;
+        }
+
+        long lastAggrTime = lastAggr.getLong("start_time", 0);//上次统计时间
+        long lastBasicTime = lastBasicAggr.getLong("start_time", 0);//上次basic统计时间
+        if (lastBasicTime < lastAggrTime) {//上次basic统计之后  还有统计记录，则需要重新basic统计一次
             LOG.info("项目ID:{}  上次Basic统计记录之后还有过统计记录......", projectId);
             return false;
         }

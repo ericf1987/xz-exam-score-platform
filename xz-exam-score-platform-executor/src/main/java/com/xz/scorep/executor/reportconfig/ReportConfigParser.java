@@ -71,6 +71,10 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
             }
         }
 
+        // TODO: 2017-04-10   接口返回是否删除缺考学生
+
+        // TODO: 2017-04-10   接口返回是否统计0分  属性 
+
         String highScoreRatio = result.getString("highScoreRatio");
         if (highScoreRatio != null) {
             reportConfig.setHighScoreRate(Double.parseDouble(highScoreRatio));

@@ -39,6 +39,16 @@ public class ReportConfig {
 
     private String removeZeroScores;
 
+    private String removeAbsentStudent;
+
+    public String getRemoveAbsentStudent() {
+        return removeAbsentStudent;
+    }
+
+    public void setRemoveAbsentStudent(String removeAbsentStudent) {
+        this.removeAbsentStudent = removeAbsentStudent;
+    }
+
     public String getRemoveZeroScores() {
         return removeZeroScores;
     }
