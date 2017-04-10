@@ -29,7 +29,7 @@ public class ReportArchiveService {
     private static final Logger LOG = LoggerFactory.getLogger(ReportArchiveService.class);
 
 
-    private static final String AGGR_SQL = "select start_time from aggregation " +
+    private static final String AGGR_SQL = "select * from aggregation " +
             " where project_id = ? " +
             " ORDER BY start_time desc limit 1";
 
@@ -124,6 +124,10 @@ public class ReportArchiveService {
             return false;
         }
         Row aggrRow = daoFactory.getManagerDao().queryFirst(AGGR_SQL, projectId);
+        if (aggrRow.getString("aggr_type").equals(AggregateType.Basic.name())) {
+            LOG.info("项目ID:{}  上次统计记录为Basic统计.....", projectId);
+            return true;
+        }
         long aggrTime = aggrRow.getLong("start_time", 0);//上次统计时间
         long lastBasicTime = status.getLong("start_time", 0);//上次basic统计时间
         if (lastBasicTime < aggrTime) {//上次basic统计之后  还有统计记录，则需要重新basic统计一次
