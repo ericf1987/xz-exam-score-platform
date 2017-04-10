@@ -35,9 +35,9 @@ public class ReportCacheInitializer {
     public void initReportCache(String projectId) {
         initReportRankCache(projectId);
 
-        LOG.info("开始缓存项目题目信息......");
-        initReportQuestCache(projectId);
-        LOG.info("缓存项目题目信息成功......");
+        LOG.info("开始缓存项目得分信息......");
+        initReportScoreCache(projectId);
+        LOG.info("缓存项目得分信息成功......");
     }
 
 
@@ -71,7 +71,7 @@ public class ReportCacheInitializer {
     }
 
 
-    private Map<String, List<Row>> initReportQuestCache(String projectId) {
+    private Map<String, List<Row>> initReportScoreCache(String projectId) {
         SimpleCache cache = cacheFactory.getReportCache(projectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<ExamQuest> quests = questService.queryQuests(projectId);
@@ -129,7 +129,7 @@ public class ReportCacheInitializer {
 
 
     public List<Row> queryQuestCache(String projectId, List<String> student, String questId) {
-        Map<String, List<Row>> result = initReportQuestCache(projectId);
+        Map<String, List<Row>> result = initReportScoreCache(projectId);
         String cacheKey = "quest_" + questId;
         return result.get(cacheKey)
                 .stream()
