@@ -92,8 +92,13 @@ public class ReportConfigService {
         if (projectReportConfig.getSubjectSegment() == null) {
             projectReportConfig.setSubjectSegment(defaultReportConfig.getSubjectSegment());
         }
+        //0分是否计入统计
         if (projectReportConfig.getRemoveZeroScores() == null) {
             projectReportConfig.setRemoveZeroScores(defaultReportConfig.getRemoveZeroScores());
+        }
+        //缺考学生是否计入统计
+        if (projectReportConfig.getRemoveAbsentStudent() == null) {
+            projectReportConfig.setRemoveAbsentStudent(defaultReportConfig.getRemoveAbsentStudent());
         }
     }
 }
