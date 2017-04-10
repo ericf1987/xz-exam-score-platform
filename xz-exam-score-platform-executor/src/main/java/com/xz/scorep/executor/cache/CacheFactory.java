@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -112,6 +113,13 @@ public class CacheFactory {
     //////////////////////////////////////////////////////////////
 
     private void shrink(Map<String, SimpleCacheWrapper> cacheMap) {
-        cacheMap.entrySet().removeIf(entry -> entry.getValue().expired());
+        Iterator<Map.Entry<String, SimpleCacheWrapper>> iterator = cacheMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, SimpleCacheWrapper> entry = iterator.next();
+            if (entry.getValue().expired()) {
+                entry.getValue().getSimpleCache().close();
+                iterator.remove();
+            }
+        }
     }
 }
