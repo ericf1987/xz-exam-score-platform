@@ -111,14 +111,7 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
 
         //////////////////////////////////////////////////////////////////////////
         List<Row> rows = reportCache.queryQuestCache(projectId, studentList, quest.getId());
-        if (quest.isObjective()) {
-            rows.forEach(row -> {
-                String answer = row.getString("objective_answer");
-                String score = StringUtil.removeEnd(row.getString(scoreColName), ".0");
-                row.put(scoreColName, score + "[" + answer + "]");
-            });
-        }
-        sheetContext.rowAdd(rows);
+        fillScore(sheetContext, quest, scoreColName, rows);
 
     }
 
@@ -133,13 +126,17 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         sheetContext.columnSet(colIndex.incrementAndGet(), scoreColName);
 
         List<Row> rows = studentQuery.listStudentQuestScore(projectId, quest.getId(), range);
-//        if (quest.isObjective()) {
-//            rows.forEach(row -> {
-//                String answer = row.getString("objective_answer");
-//                String score = StringUtil.removeEnd(row.getString(scoreColName), ".0");
-//                row.put(scoreColName, score + "[" + answer + "]");
-//            });
-//        }
+        fillScore(sheetContext, quest, scoreColName, rows);
+    }
+
+    private static void fillScore(SheetContext sheetContext, ExamQuest quest, String scoreColName, List<Row> rows) {
+        if (quest.isObjective()) {
+            rows.forEach(row -> {
+                String answer = row.getString("objective_answer");
+                String score = StringUtil.removeEnd(row.getString(scoreColName), ".0");
+                row.put(scoreColName, score + "[" + answer + "]");
+            });
+        }
 
         sheetContext.rowAdd(rows);
     }
