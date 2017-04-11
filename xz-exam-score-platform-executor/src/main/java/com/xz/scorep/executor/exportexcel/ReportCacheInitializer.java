@@ -128,7 +128,7 @@ public class ReportCacheInitializer {
     }
 
 
-    public List<Row> queryQuestCache(String projectId, List<String> student, String questId) {
+    public List<Row> queryObjectiveQuestScore(String projectId, List<String> student, String questId) {
         Map<String, List<Row>> result = initReportQuestCache(projectId);
         String cacheKey = "quest_" + questId;
         return result.get(cacheKey)
@@ -143,4 +143,18 @@ public class ReportCacheInitializer {
 
     }
 
+
+    public List<Row> queryObjectiveQuestAllStudentScore(String projectId,String questId) {
+        Map<String, List<Row>> result = initReportQuestCache(projectId);
+        String cacheKey = "quest_" + questId;
+        return result.get(cacheKey)
+                .stream()
+                .map(row -> {
+                    String key = "score_" + questId;
+                    row.put(key, row.get("score"));
+                    return row;
+                })
+                .collect(Collectors.toList());
+
+    }
 }
