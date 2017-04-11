@@ -16,6 +16,12 @@ public class StudentService {
     @Autowired
     private DAOFactory daoFactory;
 
+    @Autowired
+    private ClassService classService;
+
+    @Autowired
+    private SchoolService schoolService;
+
     private Map<String, MultipleBatchExecutor> executorMap = new HashMap<>();
 
     public void clearStudents(String projectId) {

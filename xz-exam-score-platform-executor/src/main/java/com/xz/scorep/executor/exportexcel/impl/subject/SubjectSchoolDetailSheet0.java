@@ -110,7 +110,7 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         sheetContext.columnSet(colIndex.incrementAndGet(), scoreColName);
 
         //////////////////////////////////////////////////////////////////////////
-        List<Row> rows = reportCache.queryQuestCache(projectId, studentList, quest.getId());
+        List<Row> rows = reportCache.queryQuestScoreCache(projectId, studentList, quest.getId());
         fillScore(sheetContext, quest, scoreColName, rows);
 
     }
