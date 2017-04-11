@@ -7,39 +7,116 @@ package com.xz.scorep.executor.reportconfig;
  */
 public class ReportConfig {
 
+    /**
+     * 项目ID
+     */
     private String projectId;
 
+    /**
+     * 是否合并独立的文理科目
+     */
     private String combineCategorySubjects;
 
+    /**
+     * 是否将文综和理综拆分
+     */
     private String separateCategorySubjects;
 
+    /**
+     * 是否拟定录取分数线
+     */
     private String collegeEntryLevelEnabled;
 
+    /**
+     * 等第配置
+     */
     private String rankLevels;
 
+    /**
+     *
+     */
     private int rankSegmentCount;
 
-    private String scoreLevels;
-
+    /**
+     * 等第组合配置
+     */
     private String rankLevelCombines;
 
+    /**
+     * 四率（优/良/及格/不及格）的得分率标准
+     */
+    private String scoreLevels;
+
+    /**
+     * 尖子生比例
+     */
     private double topStudentRate;
 
+    /**
+     * 高分比例
+     */
     private double highScoreRate;
 
+    /**
+     * 拟定录取分数线配置
+     */
     private String collegeEntryLevel;
 
+    /**
+     *
+     */
     private String entryLevelStatType;
 
+    /**
+     *
+     */
     private String shareSchoolReport;
 
+    /**
+     * 科目分数分段大小
+     */
     private Double subjectSegment;
 
+    /**
+     * 总分分段大小
+     */
     private Double totalSegment;
 
+    /**
+     * 是否排除所有零分
+     */
     private String removeZeroScores;
 
+    /**
+     * 是否排除所有缺考考生
+     */
     private String removeAbsentStudent;
+
+    /**
+     * 是否将接近及格的考生分数修改为及格分数
+     */
+    private String fillAlmostPass;
+
+    /**
+     * 比及格分数低多少分以内算作接近及格
+     */
+    private Double almostPassOffset;
+
+    public String getFillAlmostPass() {
+        return fillAlmostPass;
+    }
+
+    public void setFillAlmostPass(String fillAlmostPass) {
+        this.fillAlmostPass = fillAlmostPass;
+    }
+
+    public Double getAlmostPassOffset() {
+        return almostPassOffset;
+    }
+
+    public void setAlmostPassOffset(Double almostPassOffset) {
+        this.almostPassOffset = almostPassOffset;
+    }
 
     public String getRemoveAbsentStudent() {
         return removeAbsentStudent;

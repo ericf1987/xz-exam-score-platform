@@ -68,16 +68,6 @@ public class ProjectService {
         // 考试项目总分表（科目总分表和题目得分表分别在 SubjectService 和 ScoreService）
         dao.execute("create table score_project(student_id VARCHAR(40) primary key,score decimal(5,1))");
 
-/*
-        // 平均分表（暂时无用）
-        dao.execute("create table average_project(range_type varchar(20), range_id varchar(40), score decimal(4,1))");
-        dao.execute("create index idxavgpri on average_project(range_id)");
-        dao.execute("create table average_subject(range_type varchar(20), range_id varchar(40), subject_id varchar(20), score decimal(4,1))");
-        dao.execute("create index idxavgsri on average_subject(range_id)");
-        dao.execute("create table average_quest(range_type varchar(20), range_id varchar(40), quest_id varchar(40), score decimal(4,1))");
-        dao.execute("create index idxavgqri on average_quest(range_id)");
-*/
-
         dao.execute("create table all_pass_or_fail (range_type varchar(20), range_id varchar(40),all_pass_count int(11),all_pass_rate decimal(5,2),all_fail_count int(11),all_fail_rate decimal(5,2))");
         dao.execute("create index idxapfri on all_pass_or_fail(range_id)");
 

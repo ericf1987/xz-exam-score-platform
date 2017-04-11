@@ -73,10 +73,12 @@ public class SubjectService {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         projectDao.execute("create table if not exists " +
                 "score_subject_" + subjectId +
-                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)");
+                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0,real_score decimal(4,1) not null default 0)");
+
         projectDao.execute("create table if not exists " +
                 "score_objective_" + subjectId +
                 "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)");
+
         projectDao.execute("create table if not exists " +
                 "score_subjective_" + subjectId +
                 "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)");

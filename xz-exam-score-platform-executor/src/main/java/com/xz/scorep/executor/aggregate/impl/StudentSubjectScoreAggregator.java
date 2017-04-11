@@ -132,19 +132,24 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             LOG.info("项目 {} 的科目 {} 总分已清空", projectId, subjectId);
 
             // 累加分数
-            List<ExamQuest> examQuests = questService.queryQuests(projectId, subjectId);
-            final AtomicInteger counter = new AtomicInteger(0);
+            accumulateQuestScores(projectId, projectDao, executor, subjectId, tableName);
 
-            Runnable accumulateTip = () -> LOG.info(
-                    "项目 {} 的科目 {} 总分合计已完成 {}/{}", projectId, subjectId, counter.incrementAndGet(), examQuests.size());
-
-            examQuests.forEach(
-                    examQuest -> executor.submit(
-                            () -> accumulateQuestScores(projectDao, tableName, examQuest, accumulateTip)));
         });
     }
 
-    private void accumulateQuestScores(DAO projectDao, String tableName, ExamQuest examQuest, Runnable tip) {
+    private void accumulateQuestScores(String projectId, DAO projectDao, ThreadPoolExecutor executor, String subjectId, String tableName) {
+        List<ExamQuest> examQuests = questService.queryQuests(projectId, subjectId);
+        final AtomicInteger counter = new AtomicInteger(0);
+
+        Runnable accumulateTip = () -> LOG.info(
+                "项目 {} 的科目 {} 总分合计已完成 {}/{}", projectId, subjectId, counter.incrementAndGet(), examQuests.size());
+
+        examQuests.forEach(
+                examQuest -> executor.submit(
+                        () -> accumulateQuestScores0(projectDao, tableName, examQuest, accumulateTip)));
+    }
+
+    private void accumulateQuestScores0(DAO projectDao, String tableName, ExamQuest examQuest, Runnable tip) {
         try {
             String questId = examQuest.getId();
 
