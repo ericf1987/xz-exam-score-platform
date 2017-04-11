@@ -1,5 +1,11 @@
 package com.xz.scorep.executor.reportconfig;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 报表的项目个性化配置
  *
@@ -252,5 +258,19 @@ public class ReportConfig {
 
     public void setTotalSegment(Double totalSegment) {
         this.totalSegment = totalSegment;
+    }
+
+    //////////////////////////////////////////////////////////////
+
+    public Map<String, Double> scoreLevelMap() {
+        JSONObject scoreLevels = JSON.parseObject(getScoreLevels());
+        Map<String, Double> result = new HashMap<>();
+
+        result.put("Excellent", scoreLevels.getDouble("Excellent"));
+        result.put("Good", scoreLevels.getDouble("Good"));
+        result.put("Pass", scoreLevels.getDouble("Pass"));
+        result.put("Fail", scoreLevels.getDouble("Fail"));
+
+        return result;
     }
 }

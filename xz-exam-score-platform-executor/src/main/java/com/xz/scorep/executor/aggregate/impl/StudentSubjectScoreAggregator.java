@@ -62,15 +62,53 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         ThreadPools.createAndRunThreadPool(aggregateConfig.getSubjectPoolSize(), 1,
                 pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
 
+        // 根据报表配置删除缺考考生记录
         if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
             LOG.info("删除项目 {} 缺考考生...", projectId);
             removeAbsentStudents(projectId, subjects);
             LOG.info("项目 {} 缺考考生删除完毕。", projectId);
         }
 
+        // 根据报表配置删除零分记录
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
             removeZeroScores(projectId, subjects);
         }
+
+        // 将 score 拷贝到 real_score
+        LOG.info("拷贝项目 {} 的科目分数 score 到 real_score...", projectId);
+        copyToRealScore(projectId, subjects);
+
+        // 根据报表配置补完接近及格的分数
+        if (Boolean.valueOf(reportConfig.getFillAlmostPass())) {
+            LOG.info("提升项目 {} 的接近及格分数...", projectId);
+            Double almostPassOffset = reportConfig.getAlmostPassOffset();
+            Double passRate = reportConfig.scoreLevelMap().get("Pass");
+            fillAlmostPass(projectId, subjects, almostPassOffset, passRate);
+        }
+    }
+
+    private void copyToRealScore(String projectId, List<ExamSubject> subjects) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        subjects.forEach(subject -> {
+            try {
+                String tableName = "score_subject_" + subject.getId();
+                projectDao.execute("update " + tableName + " set real_score=score");
+            } catch (DAOException e) {
+                // 如果报错说明表结构是旧版本，忽略此类错误
+            }
+        });
+    }
+
+    private void fillAlmostPass(String projectId, List<ExamSubject> subjects, Double almostPassOffset, Double passRate) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+
+        subjects.forEach(subject -> {
+            String tableName = "score_subject_" + subject.getId();
+            double passScore = subject.getFullScore() * passRate;
+            double almostPassScore = passScore - Math.abs(almostPassOffset);   // 用 abs() 是以防万一 offset 被设置了一个负数
+            projectDao.execute("update " + tableName + " set score=? where score>=? and score<?",
+                    passScore, almostPassScore, passScore);
+        });
     }
 
     private void removeZeroScores(String projectId, List<ExamSubject> subjects) {
@@ -133,7 +171,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
             // 累加分数
             accumulateQuestScores(projectId, projectDao, executor, subjectId, tableName);
-
         });
     }
 
