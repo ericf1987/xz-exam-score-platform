@@ -3,6 +3,7 @@ package com.xz.scorep.executor.exportexcel;
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.hyd.simplecache.SimpleCache;
+import com.xz.ajiaedu.common.lang.CollectionUtils;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.db.DAOFactory;
@@ -13,9 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -35,9 +34,9 @@ public class ReportCacheInitializer {
     public void initReportCache(String projectId) {
         initReportRankCache(projectId);
 
-        LOG.info("开始缓存项目题目信息......");
-        initReportQuestCache(projectId);
-        LOG.info("缓存项目题目信息成功......");
+        LOG.info("缓存项目 {} 分数详情...", projectId);
+        initReportScoreCache(projectId, false);
+        LOG.info("项目 {} 分数详情已缓存", projectId);
     }
 
 
@@ -70,21 +69,28 @@ public class ReportCacheInitializer {
         return cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from rank_class")));
     }
 
-
-    private Map<String, List<Row>> initReportQuestCache(String projectId) {
-        SimpleCache cache = cacheFactory.getReportCache(projectId);
+    /**
+     * 缓存分数记录
+     *
+     * @param projectId     项目ID
+     * @param objectiveOnly 是否只缓存客观题
+     */
+    public void initReportScoreCache(String projectId, boolean objectiveOnly) {
+        SimpleCache reportCache = cacheFactory.getReportCache(projectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
-        List<ExamQuest> quests = questService.queryQuests(projectId);
 
-        Map<String, List<Row>> result = new HashMap<>();
+        List<ExamQuest> quests = objectiveOnly ?
+                questService.queryQuests(projectId, true) : questService.queryQuests(projectId);
+
         quests.forEach(quest -> {
             String questId = quest.getId();
             String cacheKey = "quest_" + questId;
             String sql = "select * from `score_" + questId + "`";
-            ArrayList<Row> rows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query(sql)));
-            result.put(cacheKey, rows);
+
+            if (reportCache.get(cacheKey) == null) {
+                reportCache.put(cacheKey, CollectionUtils.asArrayList(projectDao.query(sql)));
+            }
         });
-        return result;
     }
 
 
@@ -128,27 +134,14 @@ public class ReportCacheInitializer {
     }
 
 
-    public List<Row> queryObjectiveQuestScore(String projectId, List<String> student, String questId) {
-        Map<String, List<Row>> result = initReportQuestCache(projectId);
+    public List<Row> queryObjectiveQuestScore(String projectId, List<String> studentIds, String questId) {
         String cacheKey = "quest_" + questId;
-        return result.get(cacheKey)
+        SimpleCache reportCache = cacheFactory.getReportCache(projectId);
+        List<Row> scoreList = reportCache.get(cacheKey);
+
+        return scoreList
                 .stream()
-                .filter(row -> student.contains(row.getString("student_id")))
-                .map(row -> {
-                    String key = "score_" + questId;
-                    row.put(key, row.get("score"));
-                    return row;
-                })
-                .collect(Collectors.toList());
-
-    }
-
-
-    public List<Row> queryObjectiveQuestAllStudentScore(String projectId,String questId) {
-        Map<String, List<Row>> result = initReportQuestCache(projectId);
-        String cacheKey = "quest_" + questId;
-        return result.get(cacheKey)
-                .stream()
+                .filter(row -> studentIds.contains(row.getString("student_id")))
                 .map(row -> {
                     String key = "score_" + questId;
                     row.put(key, row.get("score"));
