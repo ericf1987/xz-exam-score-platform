@@ -48,7 +48,7 @@ public class ObjectiveOptionAggregator extends Aggregator {
             "GROUP BY student.school_id";
 
     private static String QUERY_CLASS_STUDENT_COUNT = "select student.class_id as class_id,\n" +
-            "COUNT(`score_objective_001`.student_id) as student_count\n" +
+            "COUNT(`score_objective_{{subjectId}}`.student_id) as student_count\n" +
             "from student\n" +
             "LEFT JOIN\n" +
             "`score_objective_{{subjectId}}` on `score_objective_{{subjectId}}`.student_id = student.id\n" +
