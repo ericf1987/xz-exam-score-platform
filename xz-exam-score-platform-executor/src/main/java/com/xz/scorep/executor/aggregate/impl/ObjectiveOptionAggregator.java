@@ -5,6 +5,7 @@ import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.CounterMap;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamQuest;
+import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
@@ -12,7 +13,7 @@ import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SchoolService;
-import com.xz.scorep.executor.utils.AsyncCounter;
+import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,67 +38,21 @@ public class ObjectiveOptionAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(ObjectiveOptionAggregator.class);
 
-    private static final String PROVINCE_OPTION_RATE_TEMPLATE = "insert into objective_option_rate\n" +
-            "select\n" +
-            "  '{{quest}}' as quest_id,\n" +
-            "  a.`option`,\n" +
-            "  'province' as range_type,\n" +
-            "  '{{province}}' as range_id,\n" +
-            "  a.option_count,\n" +
-            "  a.option_count/b.total as option_rate\n" +
-            "from (\n" +
-            "  select \n" +
-            "    objective_answer as `option`, \n" +
-            "    count(1) as option_count\n" +
-            "  from `score_{{quest}}` score\n" +
-            "  group by objective_answer\n" +
-            ") a, (\n" +
-            "  select count(1) as total from student\n" +
-            ") b";
+    private static String QUERY_PROVINCE_STUDENT_COUNT = "select COUNT(1) as student_count from `score_objective_{{subjectId}}`";
 
-    private static final String SCHOOL_OPTION_RATE_TEMPLATE = "insert into objective_option_rate\n" +
-            "select\n" +
-            "  '{{quest}}' as quest_id,\n" +
-            "  a.`option`,\n" +
-            "  'school' as range_type,\n" +
-            "  a.school_id as range_id,\n" +
-            "  a.option_count,\n" +
-            "  a.option_count/b.total as option_rate\n" +
-            "from (\n" +
-            "  select\n" +
-            "    student.school_id,\n" +
-            "    objective_answer as `option`, \n" +
-            "    count(1) as option_count\n" +
-            "  from `score_{{quest}}` score,student\n" +
-            "  where score.student_id=student.id\n" +
-            "  group by school_id, objective_answer\n" +
-            ") a, (\n" +
-            "  select school_id, count(1) as total from student\n" +
-            "  group by school_id\n" +
-            ") b\n" +
-            "where a.school_id=b.school_id";
+    private static String QUERY_SCHOOL_STUDENT_COUNT = "select student.school_id as school_id,\n" +
+            "COUNT(`score_objective_{{subjectId}}`.student_id) as student_count\n" +
+            "from student\n" +
+            "LEFT JOIN\n" +
+            "`score_objective_{{subjectId}}` on `score_objective_{{subjectId}}`.student_id = student.id\n" +
+            "GROUP BY student.school_id";
 
-    private static final String CLASS_OPTION_RATE_TEMPLATE = "insert into objective_option_rate\n" +
-            "select\n" +
-            "  '{{quest}}' as quest_id,\n" +
-            "  a.`option`,\n" +
-            "  'class' as range_type,\n" +
-            "  a.class_id as range_id,\n" +
-            "  a.option_count,\n" +
-            "  a.option_count/b.total as option_rate\n" +
-            "from (\n" +
-            "  select\n" +
-            "    student.class_id,\n" +
-            "    objective_answer as `option`, \n" +
-            "    count(1) as option_count\n" +
-            "  from `score_{{quest}}` score,student\n" +
-            "  where score.student_id=student.id\n" +
-            "  group by class_id, objective_answer\n" +
-            ") a, (\n" +
-            "  select class_id, count(1) as total from student\n" +
-            "  group by class_id\n" +
-            ") b\n" +
-            "where a.class_id=b.class_id";
+    private static String QUERY_CLASS_STUDENT_COUNT = "select student.class_id as class_id,\n" +
+            "COUNT(`score_objective_001`.student_id) as student_count\n" +
+            "from student\n" +
+            "LEFT JOIN\n" +
+            "`score_objective_{{subjectId}}` on `score_objective_{{subjectId}}`.student_id = student.id\n" +
+            "GROUP BY student.class_id";
 
 
     private static String QUERY_PROVINCE_STUDENT_LIST = "select student.id as student_id from student";
@@ -125,6 +80,9 @@ public class ObjectiveOptionAggregator extends Aggregator {
     private ReportCacheInitializer reportCache;
 
     @Autowired
+    private SubjectService subjectService;
+
+    @Autowired
     private SchoolService schoolService;
 
     @Autowired
@@ -134,7 +92,10 @@ public class ObjectiveOptionAggregator extends Aggregator {
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
         String projectId = aggregateParameter.getProjectId();
 
-        //<省(校,班),学生列表>
+        //<科目,<省(校,班),学生数>>
+        Map<String, Map<String, Integer>> subjectsStudentCount = getSubjectsStudentCount(projectId);
+
+        //<省(校,班),<id,学生列表>>
         Map<String, Map<String, List<String>>> studentList = getStudentList(projectId);
 
         //初始化缓存.....
@@ -142,12 +103,57 @@ public class ObjectiveOptionAggregator extends Aggregator {
 
         ThreadPools.createAndRunThreadPool(aggregateConfig.getOptionPoolSize(), 1, pool -> {
             try {
-                aggregate0(pool, projectId, studentList);
+                aggregate0(pool, projectId, subjectsStudentCount, studentList);
             } catch (Exception e) {
                 LOG.error("客观题选项统计失败", e);
             }
         });
 
+    }
+
+    /**
+     * 每个科目的参考学生数
+     *
+     * @param projectId
+     * @return
+     */
+    private Map<String, Map<String, Integer>> getSubjectsStudentCount(String projectId) {
+        Map<String, Map<String, Integer>> result = new HashMap<>();
+        String province = Range.PROVINCE_RANGE.getId();
+
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        subjectService.listSubjects(projectId)
+                .forEach(subject -> {
+                    String subjectId = subject.getId();
+                    Map<String, Integer> map = new HashMap<>();
+                    //总体参考人数
+                    int provinceCount = projectDao.queryFirst(QUERY_PROVINCE_STUDENT_COUNT
+                            .replace("{{subjectId}}", subjectId))
+                            .getInteger("student_count", 0);
+                    map.put(province, provinceCount);
+
+                    //学校学生参考人数
+                    projectDao.query(QUERY_SCHOOL_STUDENT_COUNT
+                            .replace("{{subjectId}}", subjectId))
+                            .forEach(row -> {
+                                String schoolId = row.getString("school_id");
+                                map.put(schoolId, row.getInteger("student_count", 0));
+                            });
+
+                    //班级学生参考人数
+                    projectDao.query(QUERY_CLASS_STUDENT_COUNT
+                            .replace("{{subjectId}}", subjectId))
+                            .forEach(row -> {
+                                String classId = row.getString("class_id");
+                                map.put(classId, row.getInteger("student_count", 0));
+                            });
+
+                    result.put(subjectId, map);
+
+                });
+
+
+        return result;
     }
 
     private Map<String, Map<String, List<String>>> getStudentList(String projectId) {
@@ -198,8 +204,10 @@ public class ObjectiveOptionAggregator extends Aggregator {
     }
 
 
-    private void aggregate0(ThreadPoolExecutor pool, String projectId, Map<String, Map<String, List<String>>> studentList) {
-        List<ExamQuest> objectiveQuest = questService.queryQuests(projectId, true);
+    private void aggregate0(ThreadPoolExecutor pool, String projectId, Map<String, Map<String, Integer>> subjectsStudentCount, Map<String, Map<String, List<String>>> studentList) {
+        List<ExamSubject> subjects = subjectService.listSubjects(projectId);
+
+
         String province = Range.PROVINCE_RANGE.getId();
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
@@ -208,109 +216,83 @@ public class ObjectiveOptionAggregator extends Aggregator {
 
         //所有客观题
         LOG.info("客观题选率统计开始........");
-        AsyncCounter asyncCounter = new AsyncCounter("客观题选项统计", objectiveQuest.size());
 
-        for (ExamQuest quest : objectiveQuest) {
-            String questId = quest.getId();
+        subjects.forEach(subject -> {
 
-            pool.submit(() -> {
-                try {
-                    aggregateObjectiveOptions(projectId, studentList, province, projectDao, questId);
-                } catch (Exception e) {
-                    LOG.error("客观题选项统计失败", e);
-                } finally {
-                    asyncCounter.count();
-                }
+            String subjectId = subject.getId();
+            Map<String, Integer> studentCount = subjectsStudentCount.get(subjectId);
+
+            List<ExamQuest> objectiveQuest = questService.queryQuests(projectId, subjectId, true);
+            LOG.info("正在统计项目ID{},科目ID{}客观题选率.....", projectId, subjectId);
+
+            objectiveQuest.forEach(quest -> {
+                String questId = quest.getId();
+                aggregateObjectiveOptions(pool, projectId, studentList, province, projectDao, questId, studentCount);
             });
 
+            LOG.info("统计项目ID{},科目ID{}客观题选率完成.....", projectId, subjectId);
 
+        });
 
-//        for (ExamQuest quest : examQuests) {
-//
-//            String provinceSql = PROVINCE_OPTION_RATE_TEMPLATE.replace("{{quest}}", quest.getId()).replace("{{province}}", province);
-//            String schoolSql = SCHOOL_OPTION_RATE_TEMPLATE.replace("{{quest}}", quest.getId());
-//            String classSql = CLASS_OPTION_RATE_TEMPLATE.replace("{{quest}}", quest.getId());
-//
-//            pool.submit(() -> {
-//                try {
-//                    projectDao.execute(provinceSql);
-//                    projectDao.execute(schoolSql);
-//                    projectDao.execute(classSql);
-//                } catch (DAOException e) {
-//                    LOG.error("客观题选项统计失败", e);
-//                } finally {
-//                    counter.count();
-//                }
-//            });
-//        }
-        }
         LOG.info("客观题选率统计完成........");
     }
 
-    private void aggregateObjectiveOptions(String projectId, Map<String, Map<String, List<String>>> studentList, String province, DAO projectDao, String questId) {
+    private void aggregateObjectiveOptions(ThreadPoolExecutor pool, String projectId, Map<String, Map<String, List<String>>> studentList, String province, DAO projectDao, String questId, Map<String, Integer> studentCountMap) {
         for (Map.Entry<String, Map<String, List<String>>> entry : studentList.entrySet()) {
             String key = entry.getKey();
             Map<String, List<String>> value = entry.getValue();
 
             if (key.equals("province")) {
-                List<String> provinceStudent = value.get(province);
-                List<Row> rows = reportCache.queryObjectiveQuestAllStudentScore(projectId, questId);
+                pool.submit(() -> {
+                    List<Row> rows = reportCache.queryObjectiveQuestAllStudentScore(projectId, questId);
 
-                CounterMap<String> counterMap = new CounterMap();
+                    CounterMap<String> counterMap = new CounterMap();
 
-                calculateOptionsCount(rows, counterMap);
-
-                int studentCount = provinceStudent.size();
-                for (Map.Entry<String, Integer> counter : counterMap.entrySet()) {
-                    String counterKey = counter.getKey();
-                    int counterValue = counter.getValue();
-                    double rate = (counterValue * 1.0) / studentCount;
-                    projectDao.execute(INSERT_RECORD, questId, counterKey, "province", province, counterValue, rate);
-
-                }
+                    calculateOptionsCount(rows, counterMap);
+                    calculateOptionsRate(province, projectDao, questId, studentCountMap, counterMap, "province");
+                });
 
             }
 
             if (key.equals("school")) {
                 for (Map.Entry<String, List<String>> schoolStudentList : value.entrySet()) {
-                    String schoolId = schoolStudentList.getKey();
-                    List<String> schoolStudent = schoolStudentList.getValue();
-                    List<Row> rows = reportCache.queryObjectiveQuestScore(projectId, schoolStudent, questId);
-                    CounterMap<String> schoolCounterMap = new CounterMap();
+                    pool.submit(() -> {
+                        String schoolId = schoolStudentList.getKey();
+                        List<String> schoolStudent = schoolStudentList.getValue();
+                        List<Row> rows = reportCache.queryObjectiveQuestScore(projectId, schoolStudent, questId);
+                        CounterMap<String> schoolCounterMap = new CounterMap();
 
-                    calculateOptionsCount(rows, schoolCounterMap);
+                        calculateOptionsCount(rows, schoolCounterMap);
+                        calculateOptionsRate(schoolId, projectDao, questId, studentCountMap, schoolCounterMap, "school");
 
-                    int studentCount = schoolStudent.size();
-                    for (Map.Entry<String, Integer> counter : schoolCounterMap.entrySet()) {
-                        String counterKey = counter.getKey();
-                        int counterValue = counter.getValue();
-                        double rate = (counterValue * 1.0) / studentCount;
-                        projectDao.execute(INSERT_RECORD, questId, counterKey, "school", schoolId, counterValue, rate);
-
-                    }
-
+                    });
                 }
             }
 
             if (key.equals("class")) {
                 for (Map.Entry<String, List<String>> classStudentList : value.entrySet()) {
-                    String classId = classStudentList.getKey();
-                    List<String> claSSStudent = classStudentList.getValue();
-                    List<Row> rows = reportCache.queryObjectiveQuestScore(projectId, claSSStudent, questId);
-                    CounterMap<String> classCounterMap = new CounterMap();
+                    pool.submit(() -> {
+                        String classId = classStudentList.getKey();
+                        List<String> claSSStudent = classStudentList.getValue();
+                        List<Row> rows = reportCache.queryObjectiveQuestScore(projectId, claSSStudent, questId);
+                        CounterMap<String> classCounterMap = new CounterMap();
 
-                    calculateOptionsCount(rows, classCounterMap);
-
-                    int studentCount = claSSStudent.size();
-                    for (Map.Entry<String, Integer> counter : classCounterMap.entrySet()) {
-                        String counterKey = counter.getKey();
-                        int counterValue = counter.getValue();
-                        double rate = (counterValue * 1.0) / studentCount;
-                        projectDao.execute(INSERT_RECORD, questId, counterKey, "class", classId, counterValue, rate);
-
-                    }
+                        calculateOptionsCount(rows, classCounterMap);
+                        calculateOptionsRate(classId, projectDao, questId, studentCountMap, classCounterMap, "class");
+                    });
                 }
             }
+        }
+    }
+
+    private void calculateOptionsRate(String rangId, DAO projectDao, String questId, Map<String, Integer> studentCountMap, CounterMap<String> counterMap, String rangType) {
+        int studentCount = studentCountMap.get(rangId);
+        for (Map.Entry<String, Integer> counter : counterMap.entrySet()) {
+            String option = counter.getKey();
+            int optionCount = counter.getValue();
+            double rate = (optionCount * 1.0) / studentCount;
+            projectDao.execute(INSERT_RECORD, questId, option, rangType, rangId, optionCount, rate);
+
         }
     }
 
