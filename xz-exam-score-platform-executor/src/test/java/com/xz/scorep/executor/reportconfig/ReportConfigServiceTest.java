@@ -49,7 +49,7 @@ public class ReportConfigServiceTest extends BaseTest {
 
     @Test
     public void testQueryReportConfig() throws Exception {
-        ReportConfig reportConfig = reportConfigService.queryReportConfig(湘潭20170328联考);
+        ReportConfig reportConfig = reportConfigService.queryReportConfig("430900-9e8f3c054d72414b81cdd99bd48da695");
         System.out.println(JSON.toJSONString(reportConfig, true));
     }
 }

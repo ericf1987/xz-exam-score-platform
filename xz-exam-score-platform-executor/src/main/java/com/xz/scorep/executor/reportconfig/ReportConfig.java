@@ -9,6 +9,8 @@ import java.util.Map;
 /**
  * 报表的项目个性化配置
  *
+ * 注意：所有的数字类型的属性必须是基本型别，例如 int/long/double，不能是 Integer/Long/Double
+ *
  * @author yiding_he
  */
 public class ReportConfig {
@@ -81,12 +83,12 @@ public class ReportConfig {
     /**
      * 科目分数分段大小
      */
-    private Double subjectSegment;
+    private double subjectSegment;
 
     /**
      * 总分分段大小
      */
-    private Double totalSegment;
+    private double totalSegment;
 
     /**
      * 是否排除所有零分
@@ -106,7 +108,7 @@ public class ReportConfig {
     /**
      * 比及格分数低多少分以内算作接近及格
      */
-    private Double almostPassOffset;
+    private double almostPassOffset;
 
     public String getFillAlmostPass() {
         return fillAlmostPass;
@@ -116,11 +118,11 @@ public class ReportConfig {
         this.fillAlmostPass = fillAlmostPass;
     }
 
-    public Double getAlmostPassOffset() {
+    public double getAlmostPassOffset() {
         return almostPassOffset;
     }
 
-    public void setAlmostPassOffset(Double almostPassOffset) {
+    public void setAlmostPassOffset(double almostPassOffset) {
         this.almostPassOffset = almostPassOffset;
     }
 
@@ -244,19 +246,19 @@ public class ReportConfig {
         this.shareSchoolReport = shareSchoolReport;
     }
 
-    public Double getSubjectSegment() {
+    public double getSubjectSegment() {
         return subjectSegment;
     }
 
-    public void setSubjectSegment(Double subjectSegment) {
+    public void setSubjectSegment(double subjectSegment) {
         this.subjectSegment = subjectSegment;
     }
 
-    public Double getTotalSegment() {
+    public double getTotalSegment() {
         return totalSegment;
     }
 
-    public void setTotalSegment(Double totalSegment) {
+    public void setTotalSegment(double totalSegment) {
         this.totalSegment = totalSegment;
     }
 

@@ -85,20 +85,23 @@ public class ReportConfigService {
         if (projectReportConfig.getTopStudentRate() == 0) {
             projectReportConfig.setTopStudentRate(defaultReportConfig.getTopStudentRate());
         }
-        //合并总分、单科分数步长
-        if (projectReportConfig.getTotalSegment() == null) {
+        if (projectReportConfig.getTotalSegment() == 0) {
             projectReportConfig.setTotalSegment(defaultReportConfig.getTotalSegment());
         }
-        if (projectReportConfig.getSubjectSegment() == null) {
+        if (projectReportConfig.getSubjectSegment() == 0) {
             projectReportConfig.setSubjectSegment(defaultReportConfig.getSubjectSegment());
         }
-        //0分是否计入统计
         if (projectReportConfig.getRemoveZeroScores() == null) {
             projectReportConfig.setRemoveZeroScores(defaultReportConfig.getRemoveZeroScores());
         }
-        //缺考学生是否计入统计
         if (projectReportConfig.getRemoveAbsentStudent() == null) {
             projectReportConfig.setRemoveAbsentStudent(defaultReportConfig.getRemoveAbsentStudent());
+        }
+        if (projectReportConfig.getFillAlmostPass() == null) {
+            projectReportConfig.setFillAlmostPass(defaultReportConfig.getFillAlmostPass());
+        }
+        if (projectReportConfig.getAlmostPassOffset() == 0) {
+            projectReportConfig.setAlmostPassOffset(defaultReportConfig.getAlmostPassOffset());
         }
     }
 }
