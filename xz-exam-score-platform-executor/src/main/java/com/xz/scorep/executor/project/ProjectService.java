@@ -52,12 +52,6 @@ public class ProjectService {
         dao.execute("drop database if exists `" + projectId + "`");
         dao.execute("drop user if exists `" + username + "`");
 
-        try {
-            throw new NullPointerException();
-        } catch (NullPointerException e) {
-            LOG.error("删除数据库的调用来源", e);
-        }
-
         LOG.info("数据库 " + projectId + " 已删除。");
     }
 
