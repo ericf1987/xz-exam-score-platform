@@ -121,8 +121,9 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
             optionCounts.add(options.size());
 
             for (String option : options) {
-                String optionName = option.equals("*") ? "不选" : option;
-                String key = objQuest.getId() + ":" + option;
+                String op = option.toUpperCase();
+                String optionName = option.equals("*") ? "不选" : op;
+                String key = objQuest.getId() + ":" + op;
                 sheetContext.tablePutValue(key, "quest_no", objQuest.getQuestNo());
                 sheetContext.tablePutValue(key, "option_name", optionName + "率");
             }
@@ -132,8 +133,10 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
+        String s = QUERY_TEMPLATE.replace("{{rateAlias}}", "province_rate");
+        System.out.println(s);
         List<Row> provinceOptionRates = fixKey(projectDao.query(
-                QUERY_TEMPLATE.replace("{{rateAlias}}", "province_rate"), subjectId));
+                s, subjectId));
         sheetContext.rowAdd(provinceOptionRates);
 
         List<Row> schoolOptionRates = fixKey(projectDao.query(
