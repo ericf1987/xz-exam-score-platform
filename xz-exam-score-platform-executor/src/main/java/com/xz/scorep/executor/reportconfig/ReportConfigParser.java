@@ -71,9 +71,25 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
             }
         }
 
-        // TODO: 2017-04-10   接口返回是否删除缺考学生
+        String removeAbsentStudent = result.getString("removeAbsentStudent");
+        if (removeAbsentStudent != null) {
+            reportConfig.setRemoveAbsentStudent(removeAbsentStudent);
+        }
 
-        // TODO: 2017-04-10   接口返回是否统计0分  属性 
+        String removeZeroScores = result.getString("removeZeroScores");
+        if (rankLevelSettings != null) {
+            reportConfig.setRemoveZeroScores(removeZeroScores);
+        }
+
+        Double almostPassOffset = result.getDouble("almostPassOffset");
+        if (almostPassOffset != null) {
+            reportConfig.setAlmostPassOffset(almostPassOffset);
+        }
+
+        String fillAlmostPass = result.getString("fillAlmostPass");
+        if (fillAlmostPass != null) {
+            reportConfig.setFillAlmostPass(fillAlmostPass);
+        }
 
         String highScoreRatio = result.getString("highScoreRatio");
         if (highScoreRatio != null) {
