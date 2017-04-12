@@ -10,19 +10,16 @@ import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.cache.CacheFactory;
-import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.db.MultipleBatchExecutor;
 import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.project.*;
-import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /**
@@ -53,9 +50,6 @@ public class ObjectiveOptionAggregator extends Aggregator {
     private CacheFactory cacheFactory;
 
     @Autowired
-    private AggregateConfig aggregateConfig;
-
-    @Autowired
     private DAOFactory daoFactory;
 
     @Autowired
@@ -72,14 +66,11 @@ public class ObjectiveOptionAggregator extends Aggregator {
         reportCache.initReportScoreCache(projectId, true); // 缓存客观题分数详情
         studentService.cacheStudents(projectId);                        // 缓存学生列表
 
-        ThreadPools.createAndRunThreadPool(aggregateConfig.getOptionPoolSize(), 1, pool -> {
-            try {
-                aggregate0(pool, projectId);
-            } catch (Exception e) {
-                LOG.error("客观题选项统计失败", e);
-            }
-        });
-
+        try {
+            aggregate0(projectId);
+        } catch (Exception e) {
+            LOG.error("客观题选项统计失败", e);
+        }
     }
 
     private CounterMap<List<String>> createCounterMap(String projectId) {
@@ -92,7 +83,7 @@ public class ObjectiveOptionAggregator extends Aggregator {
         return new CounterMap<>(approximateCounterMapSize);
     }
 
-    private void aggregate0(ThreadPoolExecutor pool, String projectId) {
+    private void aggregate0(String projectId) {
 
         CounterMap<List<String>> objectiveCounterMap = createCounterMap(projectId);
         CounterMap<List<String>> studentCounterMap = new CounterMap<>();
