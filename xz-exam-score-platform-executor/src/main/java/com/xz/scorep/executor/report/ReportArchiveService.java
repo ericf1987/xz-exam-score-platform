@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.report;
 
+import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.aliyun.OSSFileClient;
 import com.xz.ajiaedu.common.io.FileUtils;
@@ -89,6 +90,8 @@ public class ReportArchiveService {
         try {
             //是否有过basic统计
             if (!hasBasicAggregate(projectId)) {
+                //删除之前的url记录
+                deleteLastUrl(projectId, null);
                 runBasicAggregate(projectId);
             }
 
@@ -222,6 +225,8 @@ public class ReportArchiveService {
         try {
             //查该项目该科目是否有过Basic统计记录
             if (!hasBasicAggregate(projectId)) {
+                //如果需要重新进行basic统计,则需要删除之前的url记录
+                deleteLastUrl(projectId, subjectId);
                 runBasicAggregate(projectId);
             }
 
@@ -244,6 +249,15 @@ public class ReportArchiveService {
             LOG.error("", e);
         } finally {
             LOG.info("项目 " + projectId + " 的科目 " + subjectId + " 报表打包结束。");
+        }
+    }
+
+    private void deleteLastUrl(String projectId, String subjectId) {
+        DAO managerDao = daoFactory.getManagerDao();
+        if (subjectId == null) {
+            managerDao.execute("delete from report_archive where project_id = ? and subject_id = ?", projectId, "000");
+        } else {
+            managerDao.execute("delete from report_archive where project_id = ? and subject_id = ?", projectId, subjectId);
         }
     }
 
