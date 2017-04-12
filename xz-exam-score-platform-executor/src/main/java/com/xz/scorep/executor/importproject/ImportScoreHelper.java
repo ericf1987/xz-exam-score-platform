@@ -23,9 +23,9 @@ import static org.apache.commons.lang.StringUtils.defaultString;
 
 /**
  * 从网阅数据库导入成绩记录
- *
+ * <p>
  * 关于缺考和作弊的处理：
- *
+ * <p>
  * 缺考：缺考考生的成绩会在合并科目分数之后进行删除，详见 {@link com.xz.scorep.executor.aggregate.impl.StudentSubjectScoreAggregator}
  * 作弊：作弊考生的成绩在这里不会导入，于是在进行统计时，该考生所有科目都为零分
  *
@@ -196,6 +196,7 @@ public class ImportScoreHelper {
                 saveScore(studentId, quest, new ScoreValue(0, false), true);
 
             } else {
+
                 boolean giveFullScore = quest.isGiveFullScore();
                 ScoreValue scoreValue = calculateObjScore(
                         quest, studentAnswer, giveFullScore);
@@ -228,7 +229,6 @@ public class ImportScoreHelper {
      * @param quest         客观题题目
      * @param studentAnswer 考生作答
      * @param giveFullScore 是否强制给分（缺考作弊除外）
-     *
      * @return 得分
      */
     private static ScoreValue calculateObjScore(
@@ -264,12 +264,24 @@ public class ImportScoreHelper {
     //////////////////////////////////////////////////////////////
 
     private static String readStudentAnswer(ExamQuest quest, Document scoreDoc) {
-        String s = defaultString(scoreDoc.getString("answerContent"), "*");
+        String s = defaultString(scoreDoc.getString("answerContent"), "*").toUpperCase();
 
         // 单选题出现多个选择时，一律置为 "*"
         // 旧版答题卡可能没有 multiChoice 属性，此时根据答案的长度来判断
         if (!quest.isMultiChoice() && quest.getAnswer().length() == 1 && s.length() > 1) {
             s = "*";
+        }
+
+        //判断答案  是否在选项列表中......
+        String options = quest.getOptions();
+        if (!StringUtil.isBlank(s)) {
+            char[] chars = s.toCharArray();
+            for (Character ch : chars) {
+                if (!options.contains(String.valueOf(ch))) {
+                    s = "*";
+                    break;
+                }
+            }
         }
 
         char[] chars = s.toCharArray();
