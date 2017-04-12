@@ -77,7 +77,7 @@ public class MultipleBatchExecutor {
                 try {
                     dao.insert(rows, table);
                 } catch (DAOException e) {
-                    LOG.error("保存分数失败", e);
+                    LOG.error("批量插入到 " + table + " 失败", e);
                 }
             });
             tableRowListMap.put(table, new ArrayList<>());
