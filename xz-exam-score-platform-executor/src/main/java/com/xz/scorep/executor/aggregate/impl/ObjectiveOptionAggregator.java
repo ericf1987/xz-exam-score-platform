@@ -3,16 +3,18 @@ package com.xz.scorep.executor.aggregate.impl;
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.hyd.simplecache.SimpleCache;
+import com.xz.ajiaedu.common.lang.CounterMap;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.ExamSubject;
+import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
+import com.xz.scorep.executor.db.MultipleBatchExecutor;
 import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
-import com.xz.scorep.executor.project.QuestService;
-import com.xz.scorep.executor.project.SubjectService;
+import com.xz.scorep.executor.project.*;
 import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,15 @@ import java.util.stream.Collectors;
 public class ObjectiveOptionAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(ObjectiveOptionAggregator.class);
+
+    @Autowired
+    private SchoolService schoolService;
+
+    @Autowired
+    private ClassService classService;
+
+    @Autowired
+    private StudentService studentService;
 
     @Autowired
     private QuestService questService;
@@ -58,7 +69,8 @@ public class ObjectiveOptionAggregator extends Aggregator {
 
         String projectId = aggregateParameter.getProjectId();
 
-        reportCache.initReportScoreCache(projectId, true);  // 缓存客观题分数详情
+        reportCache.initReportScoreCache(projectId, true); // 缓存客观题分数详情
+        studentService.cacheStudents(projectId);                        // 缓存学生列表
 
         ThreadPools.createAndRunThreadPool(aggregateConfig.getOptionPoolSize(), 1, pool -> {
             try {
@@ -70,7 +82,21 @@ public class ObjectiveOptionAggregator extends Aggregator {
 
     }
 
+    private CounterMap<List<String>> createCounterMap(String projectId) {
+        int classCount = classService.listClasses(projectId).size();
+        int schoolCount = schoolService.listSchool(projectId).size();
+        int questCount = questService.queryQuests(projectId).size();
+
+        // 算出近似有多少个计数器
+        int approximateCounterMapSize = (classCount + schoolCount) * questCount * 4;
+        return new CounterMap<>(approximateCounterMapSize);
+    }
+
     private void aggregate0(ThreadPoolExecutor pool, String projectId) {
+
+        CounterMap<List<String>> objectiveCounterMap = createCounterMap(projectId);
+        CounterMap<List<String>> studentCounterMap = new CounterMap<>();
+
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
         //////////////////////////////////////////////////////////////
@@ -97,30 +123,75 @@ public class ObjectiveOptionAggregator extends Aggregator {
 
         quests.forEach(quest -> {
             String subjectId = quest.getExamSubject();
-            String cacheKey = "quest_" + quest.getId();
+            String questId = quest.getId();
+            String cacheKey = "quest_" + questId;
             List<Row> scoreList = reportCache.get(cacheKey);
 
             scoreList.forEach(score -> {
                 String studentId = score.getString("student_id");
+                Row student = studentService.findStudent(projectId, studentId);
+
+                // 如果考生在该科目没有分数记录（因缺考或得零分而被排除），则忽略
                 Set<String> ignoreStudents = ignoreSubjectStudentMap.get(subjectId);
                 if (ignoreStudents.contains(studentId)) {
                     return;
                 }
 
+                // 如果考生答题内容非法，则忽略
                 String stuAnswer = score.getString("objective_answer");
                 if (StringUtil.isBlank(stuAnswer) || stuAnswer.trim().equals("*")) {
                     return;
                 }
 
+                // 提取考生答题选项
                 List<String> options = new ArrayList<>();
                 char[] chars = stuAnswer.toCharArray();
                 for (char c : chars) {
                     options.add(Character.toString(c));
                 }
 
-                // TODO 添加到计数器中
+                // 添加到计数器
+                String classId = student.getString("class_id");
+                String schoolId = student.getString("school_id");
+                String provinceId = student.getString("province");
+
+                studentCounterMap.incre(Arrays.asList(questId, Range.CLASS, classId));
+                studentCounterMap.incre(Arrays.asList(questId, Range.SCHOOL, schoolId));
+                studentCounterMap.incre(Arrays.asList(questId, Range.PROVINCE, provinceId));
+
+                options.forEach(option -> {
+                    objectiveCounterMap.incre(Arrays.asList(questId, option, Range.CLASS, classId));
+                    objectiveCounterMap.incre(Arrays.asList(questId, option, Range.SCHOOL, schoolId));
+                    objectiveCounterMap.incre(Arrays.asList(questId, option, Range.PROVINCE, provinceId));
+                });
             });
         });
+
+        //////////////////////////////////////////////////////////////
+
+        projectDao.execute("truncate table objective_option_rate");  // 清空数据
+
+        //////////////////////////////////////////////////////////////
+
+        MultipleBatchExecutor insertExecutor = new MultipleBatchExecutor(projectDao, 2000);
+
+        objectiveCounterMap.forEach((key, count) -> {
+            int studentCount = studentCounterMap.getCount(Arrays.asList(key.get(0), key.get(2), key.get(3)));
+            int optionCount = objectiveCounterMap.getCount(key);
+            double optionRate = (double) optionCount / studentCount;
+
+            Map<String, Object> row = new HashMap<>();
+            row.put("quest_id", key.get(0));
+            row.put("option", key.get(1));
+            row.put("range_type", key.get(2));
+            row.put("range_id", key.get(3));
+            row.put("option_count", optionCount);
+            row.put("option_rate", optionRate);
+
+            insertExecutor.push("objective_option_rate", row);
+        });
+
+        insertExecutor.finish();
     }
 
 }
