@@ -93,6 +93,10 @@ public class ImportScoreHelper {
 
         scoreBatchExecutor.finish();
         counter.finish();
+
+        if (counter.getValue() == 0) {
+            throw new IllegalStateException("网阅库没有项目 " + getProjectId() + " 的分数记录。");
+        }
     }
 
     // 查询项目信息

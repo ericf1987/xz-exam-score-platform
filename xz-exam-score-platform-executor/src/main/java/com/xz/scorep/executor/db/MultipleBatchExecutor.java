@@ -33,6 +33,8 @@ public class MultipleBatchExecutor {
 
     private int batchSize = DEFAULT_BATCH_SIZE;
 
+    private boolean hasInsertedData;
+
     private Map<String, List<Object>> tableRowListMap = new HashMap<>();
 
     private ExecutorService pool;
@@ -69,6 +71,8 @@ public class MultipleBatchExecutor {
         List<Object> rows = tableRowListMap.get(table);
 
         if (rows != null && !rows.isEmpty()) {
+            this.hasInsertedData = true;
+
             this.pool.submit(() -> {
                 try {
                     dao.insert(rows, table);
@@ -78,6 +82,10 @@ public class MultipleBatchExecutor {
             });
             tableRowListMap.put(table, new ArrayList<>());
         }
+    }
+
+    public boolean hasInsertedData() {
+        return this.hasInsertedData;
     }
 
     public void finish() {
@@ -91,8 +99,10 @@ public class MultipleBatchExecutor {
 
     private void shutdownThreadPool() {
         try {
-            this.pool.shutdown();
-            this.pool.awaitTermination(1, TimeUnit.DAYS);
+            if (this.pool != null) {
+                this.pool.shutdown();
+                this.pool.awaitTermination(1, TimeUnit.DAYS);
+            }
         } catch (InterruptedException e) {
             throw new BatchExecutorException(e);
         }
