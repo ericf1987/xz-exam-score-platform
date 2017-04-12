@@ -34,7 +34,7 @@ public class ImportScoreHelperTest extends BaseTest {
 
     @Test
     public void importScore() throws Exception {
-        String projectId = "430300-29c4d40d93bf41a5a82baffe7e714dd9";
+        String projectId = "430500-d9497f79c88540518a5a272a97af750c";
 
         Context context = new Context();
         context.put("projectId", projectId);

@@ -73,6 +73,9 @@ public class ImportProjectService {
     private CheatService cheatService;
 
     @Autowired
+    private LostService lostService;
+
+    @Autowired
     private DAOFactory daoFactory;
 
     public void importProject(ImportProjectParameters parameters) {
@@ -139,8 +142,13 @@ public class ImportProjectService {
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
         ImportScoreHelper helper = new ImportScoreHelper(context, mongoClient, projectDao);
+
+        //////////////////////////////////////////////////////////////////////////
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
         helper.setAbsentService(absentService);
         helper.setCheatService(cheatService);
+        helper.setLostService(lostService);
+        helper.setReportConfig(reportConfig);
         helper.importScore();
     }
 
@@ -201,7 +209,7 @@ public class ImportProjectService {
         questService.clearQuests(projectId);
 
         JSONArray quests = result.get("quests");
-        List<ExamQuest>  questList = new ArrayList<>();
+        List<ExamQuest> questList = new ArrayList<>();
 
         JSONUtils.<JSONObject>forEach(quests, quest -> {
             ExamQuest examQuest = new ExamQuest(quest);

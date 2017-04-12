@@ -7,6 +7,9 @@ import com.hyd.dao.util.StringUtil;
 import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.importproject.ImportProjectService;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,10 +24,13 @@ import static com.xz.scorep.executor.importproject.ImportProjectService.PROJECT_
  */
 public class ReportConfigParser implements ImportProjectService.ResultParser<ReportConfig> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ReportConfigParser.class);
+
     @Override
     public ReportConfig parse(Context context, Result result) {
         ReportConfig reportConfig = new ReportConfig();
-        reportConfig.setProjectId(context.getString(PROJECT_ID_KEY));
+        String projectId = context.getString(PROJECT_ID_KEY);
+        reportConfig.setProjectId(projectId);
 
         JSONObject scoreLevels = result.get("scoreLevels");
         if (scoreLevels != null) {
@@ -76,14 +82,24 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
             reportConfig.setRemoveAbsentStudent(removeAbsentStudent);
         }
 
+        String removeCheatStudent = result.getString("removeCheatStudent");
+        if (removeCheatStudent != null) {
+            reportConfig.setRemoveCheatStudent(removeCheatStudent);
+        }
+
         String removeZeroScores = result.getString("removeZeroScores");
         if (rankLevelSettings != null) {
             reportConfig.setRemoveZeroScores(removeZeroScores);
         }
 
-        Double almostPassOffset = result.getDouble("almostPassOffset");
-        if (almostPassOffset != null) {
-            reportConfig.setAlmostPassOffset(almostPassOffset);
+        String almostPassOffset = result.getString("almostPassOffset");
+        if (!StringUtils.isBlank(almostPassOffset)) {
+            try {
+                reportConfig.setAlmostPassOffset(Double.parseDouble(almostPassOffset));
+            } catch (NumberFormatException e) {
+                LOG.info("项目ID:{}报表 almostPassOffset{} 配置有误....", projectId, almostPassOffset);
+                reportConfig.setAlmostPassOffset(0);
+            }
         }
 
         String fillAlmostPass = result.getString("fillAlmostPass");
