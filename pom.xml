@@ -95,6 +95,12 @@
                 <version>${ehcache-core.version}</version>
             </dependency>
 
+            <!-- JSON -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>1.2.28</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -128,7 +134,6 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.8</version>
         </dependency>
 
         <!-- Cache -->
