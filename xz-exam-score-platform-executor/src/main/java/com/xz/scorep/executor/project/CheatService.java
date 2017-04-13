@@ -25,4 +25,10 @@ public class CheatService {
             projectDao.insert(map, "cheat");
         }
     }
+
+    public void clearCheat(String projectId){
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+
+        projectDao.execute("truncate table cheat");
+    }
 }

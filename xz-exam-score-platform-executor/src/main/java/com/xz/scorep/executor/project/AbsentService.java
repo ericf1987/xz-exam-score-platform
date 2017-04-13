@@ -25,4 +25,11 @@ public class AbsentService {
             projectDao.insert(map, "absent");
         }
     }
+
+    public void clearAbsent(String projectId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+
+        projectDao.execute("truncate table absent");
+    }
+
 }

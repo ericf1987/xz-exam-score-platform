@@ -28,4 +28,10 @@ public class LostService {
             projectDao.insert(map, "lost");
         }
     }
+
+    public void clearLost(String projectId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+
+        projectDao.execute("truncate table lost");
+    }
 }

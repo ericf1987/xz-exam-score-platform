@@ -3,7 +3,6 @@ package com.xz.scorep.executor.mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import com.xz.scorep.executor.config.MongoConfig;
-import com.xz.scorep.executor.importproject.ImportProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.xz.ajiaedu.common.mongo.MongoUtils.doc;
 
@@ -68,11 +66,5 @@ public class MongoClientFactory {
                 .count(doc("projectId", project)) > 0;
     }
 
-
-    public List<MongoClient> getScannerMongoClients(String projectId) {
-        return this.scannerMongoClients.stream()
-                .filter(client -> projectExists(client, projectId))
-                .collect(Collectors.toList());
-    }
 
 }

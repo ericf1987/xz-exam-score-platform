@@ -2,7 +2,6 @@ package com.xz.scorep.executor.importproject;
 
 import com.hyd.dao.DAO;
 import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoDatabase;
 import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.Counter;
@@ -102,8 +101,8 @@ public class ImportScoreHelper {
         Document subjectCodes = projectDoc.get("subjectcodes", Document.class);
         ArrayList<String> subjectIds = new ArrayList<>(subjectCodes.keySet());
 
+
         for (String subjectId : subjectIds) {
-            LOG.info("项目ID{}开始导入科目ID{}分数", getProjectId(), subjectId);
             importSubjectScore(subjectId);
         }
 
@@ -128,10 +127,8 @@ public class ImportScoreHelper {
         String subjectDbName = projectId + "_" + subjectId;
         MongoDatabase subjectDb = mongoClient.getDatabase(subjectDbName);
 
-        LOG.info("开始从{}库获取学生成绩", subjectDbName);
-        FindIterable<Document> findIterable = subjectDb.getCollection("students").find(doc());
-//        LOG.info("document 大小{}",findIterable.);
-        findIterable.forEach((Consumer<Document>) doc -> importStudentScore(projectId, doc, subjectId));
+        subjectDb.getCollection("students").find(doc())
+                .forEach((Consumer<Document>) doc -> importStudentScore(projectId, doc, subjectId));
     }
 
     // 导入单个考生的单科成绩
@@ -142,6 +139,7 @@ public class ImportScoreHelper {
         boolean cheat = studentScoreDoc.getBoolean("isCheating", false);
         boolean absent = studentScoreDoc.getBoolean("isAbsent", false);
         boolean lost = studentScoreDoc.getBoolean("isLost", false);
+
 
         if (cheat) {
             cheatService.saveCheat(projectId, studentId, subjectId);
@@ -161,8 +159,8 @@ public class ImportScoreHelper {
             if (cheat) {
                 importStudentSubjectiveScore(subjectId, studentScoreDoc, true, false);
                 importStudentObjectiveScore(subjectId, studentScoreDoc, true, false);
+                return;
             }
-            return;
         }
 
         //缺考缺卷纳入统计处理
@@ -170,8 +168,8 @@ public class ImportScoreHelper {
             if (absent || lost) {
                 importStudentSubjectiveScore(subjectId, studentScoreDoc, false, true);
                 importStudentObjectiveScore(subjectId, studentScoreDoc, false, true);
+                return;
             }
-            return;
         }
 
         //无缺考、缺卷、作弊学生
