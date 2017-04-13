@@ -37,7 +37,7 @@ public class ManagerService {
     }
 
     public synchronized void updateExecutorAgent(
-            String host, int port, long dataSize, List<ProjectStatus> activeProjects) {
+            String host, int port, long dataSize, List<ProjectStatus> projects) {
 
         ExecutorAgent executorAgent = getExecutorAgent(host, port);
 
@@ -45,6 +45,9 @@ public class ManagerService {
             executorAgent = new ExecutorAgent(host, port);
             executorAgents.add(executorAgent);
         }
+
+        List<ProjectStatus> activeProjects = new ArrayList<>(projects);
+        activeProjects.removeIf(p -> p.getStatus().equals("Ready"));
 
         executorAgent.setLastHeartBeat(System.currentTimeMillis());
         executorAgent.setDataSize(dataSize);
