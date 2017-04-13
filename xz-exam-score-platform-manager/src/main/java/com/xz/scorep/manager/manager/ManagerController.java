@@ -56,17 +56,19 @@ public class ManagerController {
             @RequestParam("projectId") String projectId,
             @RequestParam("autoAssign") String autoAssign
     ) {
+
         ExecutorAgent executorAgent = projectService.getProjectExecutorAgent(projectId);
+        boolean exists = executorAgent != null;
 
         if (executorAgent == null && autoAssign.equalsIgnoreCase("true")) {
             executorAgent = managerService.assignProject(projectId);
         }
 
         if (executorAgent != null) {
-            return Result.success().set("exists", true)
+            return Result.success().set("exists", exists)
                     .set("host", executorAgent.getHost()).set("port", executorAgent.getPort());
         } else {
-            return Result.success().set("exists", false);
+            return Result.success().set("exists", exists);
         }
     }
 }
