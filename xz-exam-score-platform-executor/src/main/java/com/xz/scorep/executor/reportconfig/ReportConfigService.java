@@ -97,6 +97,9 @@ public class ReportConfigService {
         if (projectReportConfig.getRemoveAbsentStudent() == null) {
             projectReportConfig.setRemoveAbsentStudent(defaultReportConfig.getRemoveAbsentStudent());
         }
+        if (projectReportConfig.getRemoveCheatStudent() == null) {
+            projectReportConfig.setRemoveCheatStudent(defaultReportConfig.getRemoveCheatStudent());
+        }
         if (projectReportConfig.getFillAlmostPass() == null) {
             projectReportConfig.setFillAlmostPass(defaultReportConfig.getFillAlmostPass());
         }

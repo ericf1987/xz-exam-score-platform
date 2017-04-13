@@ -8,6 +8,7 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.mongo.MongoClientFactory;
 import com.xz.scorep.executor.project.AbsentService;
 import com.xz.scorep.executor.project.CheatService;
+import com.xz.scorep.executor.project.LostService;
 import com.xz.scorep.executor.project.QuestService;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +33,12 @@ public class ImportScoreHelperTest extends BaseTest {
     @Autowired
     private CheatService cheatService;
 
+    @Autowired
+    private LostService lostService;
+
     @Test
     public void importScore() throws Exception {
-        String projectId = "430300-29c4d40d93bf41a5a82baffe7e714dd9";
+        String projectId = "430300-c582131e66b64fe38da7d0510c399ec4";
 
         Context context = new Context();
         context.put("projectId", projectId);
@@ -46,6 +50,7 @@ public class ImportScoreHelperTest extends BaseTest {
         ImportScoreHelper helper = new ImportScoreHelper(context, mongoClient, dao);
         helper.setAbsentService(absentService);
         helper.setCheatService(cheatService);
+        helper.setLostService(lostService);
 
         helper.importScore();
     }

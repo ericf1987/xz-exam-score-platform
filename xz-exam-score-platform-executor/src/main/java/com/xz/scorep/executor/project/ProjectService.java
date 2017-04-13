@@ -106,8 +106,9 @@ public class ProjectService {
         dao.execute("create index idxstuc on student(class_id)");
         dao.execute("create index idxstus on student(school_id)");
         dao.execute("create table subject(id varchar(9)  primary key, name varchar(20), full_score decimal(4,1) default 0, card_id varchar(20))");
-        dao.execute("create table absent (student_id varchar(40), subject_id varchar(9))");
-        dao.execute("create table cheat  (student_id varchar(40), subject_id varchar(9))");
+        dao.execute("create table absent (student_id varchar(40), subject_id varchar(9), PRIMARY KEY(student_id, subject_id))");
+        dao.execute("create table cheat  (student_id varchar(40), subject_id varchar(9), PRIMARY KEY(student_id, subject_id))");
+        dao.execute("create table lost   (student_id varchar(40), subject_id varchar(9), PRIMARY KEY(student_id, subject_id))");
         dao.execute("create table quest  (" +
                 "  id varchar(40) primary key, " +
                 "  exam_subject varchar(10), " +

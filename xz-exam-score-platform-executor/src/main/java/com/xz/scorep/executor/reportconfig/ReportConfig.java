@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * 报表的项目个性化配置
- *
+ * <p>
  * 注意：所有的数字类型的属性必须是基本型别，例如 int/long/double，不能是 Integer/Long/Double
  *
  * @author yiding_he
@@ -96,6 +96,11 @@ public class ReportConfig {
     private String removeZeroScores;
 
     /**
+     * 是否排除违纪学生(默认不排除)
+     */
+    private String removeCheatStudent;
+
+    /**
      * 是否排除所有缺考考生
      */
     private String removeAbsentStudent;
@@ -109,6 +114,14 @@ public class ReportConfig {
      * 比及格分数低多少分以内算作接近及格
      */
     private double almostPassOffset;
+
+    public String getRemoveCheatStudent() {
+        return removeCheatStudent;
+    }
+
+    public void setRemoveCheatStudent(String removeCheatStudent) {
+        this.removeCheatStudent = removeCheatStudent;
+    }
 
     public String getFillAlmostPass() {
         return fillAlmostPass;

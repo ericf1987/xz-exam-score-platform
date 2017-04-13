@@ -11,6 +11,8 @@ import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.db.MultipleBatchExecutor;
 import com.xz.scorep.executor.project.AbsentService;
 import com.xz.scorep.executor.project.CheatService;
+import com.xz.scorep.executor.project.LostService;
+import com.xz.scorep.executor.reportconfig.ReportConfig;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +25,9 @@ import static org.apache.commons.lang.StringUtils.defaultString;
 
 /**
  * 从网阅数据库导入成绩记录
- *
+ * <p>
  * 关于缺考和作弊的处理：
- *
+ * <p>
  * 缺考：缺考考生的成绩会在合并科目分数之后进行删除，详见 {@link com.xz.scorep.executor.aggregate.impl.StudentSubjectScoreAggregator}
  * 作弊：作弊考生的成绩在这里不会导入，于是在进行统计时，该考生所有科目都为零分
  *
@@ -49,6 +51,10 @@ public class ImportScoreHelper {
 
     private CheatService cheatService;
 
+    private LostService lostService;
+
+    private ReportConfig reportConfig;
+
     private Counter counter = new Counter(5000,
             count -> LOG.info("已导入成绩 {} 条", count));
 
@@ -68,6 +74,14 @@ public class ImportScoreHelper {
         this.cheatService = cheatService;
     }
 
+    public void setLostService(LostService lostService) {
+        this.lostService = lostService;
+    }
+
+    public void setReportConfig(ReportConfig reportConfig) {
+        this.reportConfig = reportConfig;
+    }
+
     private void prepare() {
 
         // 构建 questMap 供将来查询
@@ -79,13 +93,14 @@ public class ImportScoreHelper {
 
     public void importScore() {
 
-        if (absentService == null || cheatService == null) {
-            throw new IllegalStateException("请先设置 absentService 和 cheatService");
+        if (absentService == null || cheatService == null || lostService == null) {
+            throw new IllegalStateException("请先设置 absentService 、cheatService 、lostService");
         }
 
         Document projectDoc = findProject();
         Document subjectCodes = projectDoc.get("subjectcodes", Document.class);
         ArrayList<String> subjectIds = new ArrayList<>(subjectCodes.keySet());
+
 
         for (String subjectId : subjectIds) {
             importSubjectScore(subjectId);
@@ -123,6 +138,8 @@ public class ImportScoreHelper {
         String studentId = studentScoreDoc.getString("studentId");
         boolean cheat = studentScoreDoc.getBoolean("isCheating", false);
         boolean absent = studentScoreDoc.getBoolean("isAbsent", false);
+        boolean lost = studentScoreDoc.getBoolean("isLost", false);
+
 
         if (cheat) {
             cheatService.saveCheat(projectId, studentId, subjectId);
@@ -132,17 +149,39 @@ public class ImportScoreHelper {
             absentService.saveAbsent(projectId, studentId, subjectId);
         }
 
-        // 仅当考生当科没有缺考和作弊时才会导入成绩
-        if (!cheat && !absent) {
-            importStudentSubjectiveScore(subjectId, studentScoreDoc);
-            importStudentObjectiveScore(subjectId, studentScoreDoc);
+        if (lost) {
+            lostService.saveLost(projectId, studentId, subjectId);
         }
+
+        // 同一学生不可能同时有存在两种及以上的状态
+        //作弊纳入统计处理
+        if (!Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
+            if (cheat) {
+                importStudentSubjectiveScore(subjectId, studentScoreDoc, true, false);
+                importStudentObjectiveScore(subjectId, studentScoreDoc, true, false);
+                return;
+            }
+        }
+
+        //缺考缺卷纳入统计处理
+        if (!Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
+            if (absent || lost) {
+                importStudentSubjectiveScore(subjectId, studentScoreDoc, false, true);
+                importStudentObjectiveScore(subjectId, studentScoreDoc, false, true);
+                return;
+            }
+        }
+
+        //无缺考、缺卷、作弊学生
+        importStudentSubjectiveScore(subjectId, studentScoreDoc, false, false);
+        importStudentObjectiveScore(subjectId, studentScoreDoc, false, false);
+
     }
 
     // 导入单个考生的单科主观题成绩
     @SuppressWarnings("unchecked")
     private void importStudentSubjectiveScore(
-            String subjectId, Document studentScoreDoc) {
+            String subjectId, Document studentScoreDoc, boolean cheat, boolean absent) {
 
         String studentId = studentScoreDoc.getString("studentId");
         List<Document> subjectiveList = (List<Document>) studentScoreDoc.get("subjectiveList");
@@ -155,8 +194,13 @@ public class ImportScoreHelper {
 
             ExamQuest quest = getQuest(subjectId, questNo);
             score = calculateSbjScore(quest, fullScore, score, effective);
+            ScoreValue scoreValue;
+            if (cheat || absent) {    //作弊、缺考、缺卷强行置为0分
+                scoreValue = new ScoreValue(0, false);
+            } else {
+                scoreValue = new ScoreValue(score, score == fullScore);
+            }
 
-            ScoreValue scoreValue = new ScoreValue(score, score == fullScore);
             saveScore(studentId, quest, scoreValue, false);
         }
     }
@@ -180,7 +224,7 @@ public class ImportScoreHelper {
     // 导入单个考生的单科客观题成绩
     @SuppressWarnings("unchecked")
     private void importStudentObjectiveScore(
-            String subjectId, Document studentScoreDoc) {
+            String subjectId, Document studentScoreDoc, boolean cheat, boolean absent) {
 
         String studentId = studentScoreDoc.getString("studentId");
         List<Document> objectiveList = (List<Document>) studentScoreDoc.get("objectiveList");
@@ -191,16 +235,20 @@ public class ImportScoreHelper {
 
             String studentAnswer = readStudentAnswer(quest, scoreDoc);
 
-            // 客观题必须要有作答，如未作答也应该是 “*”
-            if (StringUtil.isBlank(studentAnswer)) {
+            if (cheat || absent) {//作弊强、缺考、缺卷强行置为0分
                 saveScore(studentId, quest, new ScoreValue(0, false), true);
-
+                continue;
             } else {
-                boolean giveFullScore = quest.isGiveFullScore();
-                ScoreValue scoreValue = calculateObjScore(
-                        quest, studentAnswer, giveFullScore);
+                // 客观题必须要有作答，如未作答也应该是 “*”
+                if (StringUtil.isBlank(studentAnswer)) {
+                    saveScore(studentId, quest, new ScoreValue(0, false), true);
+                    continue;
+                } else {
+                    boolean giveFullScore = quest.isGiveFullScore();
 
-                saveScore(studentId, quest, scoreValue, false);
+                    ScoreValue scoreValue = calculateObjScore(quest, studentAnswer, giveFullScore);
+                    saveScore(studentId, quest, scoreValue, false);
+                }
             }
         }
 
@@ -228,7 +276,6 @@ public class ImportScoreHelper {
      * @param quest         客观题题目
      * @param studentAnswer 考生作答
      * @param giveFullScore 是否强制给分（缺考作弊除外）
-     *
      * @return 得分
      */
     private static ScoreValue calculateObjScore(
@@ -264,12 +311,24 @@ public class ImportScoreHelper {
     //////////////////////////////////////////////////////////////
 
     private static String readStudentAnswer(ExamQuest quest, Document scoreDoc) {
-        String s = defaultString(scoreDoc.getString("answerContent"), "*");
+        String s = defaultString(scoreDoc.getString("answerContent"), "*").toUpperCase();
 
         // 单选题出现多个选择时，一律置为 "*"
         // 旧版答题卡可能没有 multiChoice 属性，此时根据答案的长度来判断
         if (!quest.isMultiChoice() && quest.getAnswer().length() == 1 && s.length() > 1) {
             s = "*";
+        }
+
+        //判断答案  是否在选项列表中......
+        String options = quest.getOptions();
+        if (!StringUtil.isBlank(s)) {
+            char[] chars = s.toCharArray();
+            for (Character ch : chars) {
+                if (!options.contains(String.valueOf(ch))) {
+                    s = "*";
+                    break;
+                }
+            }
         }
 
         char[] chars = s.toCharArray();
