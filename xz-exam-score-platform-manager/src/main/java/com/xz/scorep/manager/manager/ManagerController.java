@@ -42,24 +42,6 @@ public class ManagerController {
         }
     }
 
-    @PostMapping("/agent/projects")
-    @ResponseBody
-    public Result pushProjectList(
-            @RequestParam("host") String host,
-            @RequestParam("port") int port,
-            @RequestParam("projects") String projectsJson
-    ) {
-        try {
-            ExecutorAgent executorAgent = managerService.getOrCreateExecutorAgent(host, port);
-            List<String> projectIds = JSON.parseArray(projectsJson, String.class);
-            projectService.setProjects(executorAgent, projectIds);
-            return Result.success();
-        } catch (Exception e) {
-            LOG.error("", e);
-            return Result.fail(e.toString());
-        }
-    }
-
     /**
      * 获取项目所属的服务器
      *
@@ -78,7 +60,6 @@ public class ManagerController {
 
         if (executorAgent == null && autoAssign.equalsIgnoreCase("true")) {
             executorAgent = managerService.assignProject(projectId);
-            projectService.setProjects(executorAgent, projectId);
         }
 
         if (executorAgent != null) {

@@ -35,9 +35,7 @@ public class AgentDaemonService {
 
     private Thread daemonThread;
 
-    private String heartbeatUrl, projectListUrl;
-
-    private boolean managerOnline;
+    private String heartbeatUrl;
 
     @Autowired
     private ManagerConfig managerConfig;
@@ -70,11 +68,6 @@ public class AgentDaemonService {
         }, 10);
     }
 
-    protected List<String> getProjectIdList() {
-        return daoFactory.getManagerDao().query("select id from project")
-                .stream().map(row -> row.getString("id")).collect(Collectors.toList());
-    }
-
     private Map<String, Object> row2Status(Row row) {
         return new MapBuilder<String, Object>()
                 .and("projectId", row.getString("id"))
@@ -91,7 +84,6 @@ public class AgentDaemonService {
         }
 
         this.heartbeatUrl = "http://" + managerConfig.getHost() + ":" + managerConfig.getPort() + "/agent/heartbeat";
-        this.projectListUrl = "http://" + managerConfig.getHost() + ":" + managerConfig.getPort() + "/agent/projects";
 
         this.daemonThread = new Thread(this::run);
         this.daemonThread.setDaemon(true);
@@ -101,9 +93,10 @@ public class AgentDaemonService {
     private void run() {
         while (true) {
             try {
+                Thread.sleep(Math.max(managerConfig.getInterval(), ManagerConfig.MIN_INTERVAL));
                 run0();
-                Thread.sleep(Math.max(
-                        managerConfig.getInterval(), ManagerConfig.MIN_INTERVAL));
+            } catch (ConnectException e) {
+                LOG.info("管理服务器(" + managerConfig.getHost() + ":" + managerConfig.getPort() + ")暂时离线");
             } catch (Exception e) {
                 LOG.error("后台保持进程错误", e);
             }
@@ -111,37 +104,7 @@ public class AgentDaemonService {
     }
 
     private void run0() throws IOException {
-
-        boolean managerOnlineBefore = managerOnline;
         sendHeartbeat();
-
-        // 如果管理服务器从之前的下线状态恢复，则主动推送一波项目列表
-        if (!managerOnlineBefore && managerOnline) {
-            pushProjectList();
-        }
-    }
-
-    private void pushProjectList() throws IOException {
-        try {
-            HttpRequest httpRequest = new HttpRequest(projectListUrl)
-                    .setParameter("host", System.getProperty("server.address"))
-                    .setParameter("port", System.getProperty("server.port"))
-                    .setParameter("projects", JSON.toJSONString(getProjectIdList()));
-
-            String resultJson = httpRequest.requestPost();
-            Result result = JSON.parseObject(resultJson, Result.class);
-
-            if (!result.isSuccess()) {
-                LOG.error("心跳请求出错: " + result.getMessage());
-            }
-        } catch (ConnectException e) {
-            managerOnline = false;
-            LOG.info("管理服务器(" + managerConfig.getHost() + ":" + managerConfig.getPort() + ")暂时离线");
-
-        } catch (IOException e) {
-            managerOnline = false;
-            throw e;
-        }
     }
 
     private void sendHeartbeat() throws IOException {

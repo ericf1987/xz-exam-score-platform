@@ -1,5 +1,6 @@
 package com.xz.scorep.manager.manager;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -9,7 +10,7 @@ import java.util.function.Predicate;
  *
  * @author yidin
  */
-public class ExecutorAgent {
+public class ExecutorAgent implements Serializable {
 
     public static int HEARTBEAT_TIMEOUT = 10000;
 
@@ -85,6 +86,18 @@ public class ExecutorAgent {
     public ExecutorAgentStatus getStatus() {
         return System.currentTimeMillis() - lastHeartBeat > HEARTBEAT_TIMEOUT ?
                 ExecutorAgentStatus.Disconnected : ExecutorAgentStatus.Alive;
+    }
+
+    public String getDbSize() {
+        if (dataSize < 1024) {
+            return dataSize + " bytes";
+        } else if (dataSize < 1024 * 1024) {
+            return String.format("%.3f KB", (double) dataSize / 1024);
+        } else if (dataSize < 1024 * 1024 * 1024) {
+            return String.format("%.3f MB", (double) dataSize / (1024 * 1024));
+        } else {
+            return String.format("%.3f GB", (double) dataSize / (1024 * 1024 * 1024));
+        }
     }
 
     public static Predicate<ExecutorAgent> EQUALS(String host, int port) {

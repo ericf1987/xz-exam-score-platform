@@ -18,6 +18,7 @@
         <td>地址</td>
         <td>端口</td>
         <td>状态</td>
+        <td>数据库大小</td>
         <td>正在统计项目</td>
     </tr>
     </thead>
@@ -27,15 +28,8 @@
         <td>${agent.host}</td>
         <td>${agent.port?string["0"]}</td>
         <td>${agent.status}</td>
-        <td>
-            <#if agent.activeProjects?size == 0>
-                0
-            <#else>
-                <a href="aggregating?server=${agent.host}:${agent.port?string["0"]}">
-                ${agent.activeProjects?size}
-                </a>
-            </#if>
-        </td>
+        <td>${agent.dbSize}</td>
+        <td>${agent.activeProjects?size}</td>
     </tr>
     </#list>
     </tbody>
