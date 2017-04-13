@@ -4,6 +4,8 @@ import com.xz.ajiaedu.common.http.HttpRequest;
 import com.xz.scorep.manager.BaseTest;
 import org.junit.Test;
 
+import java.io.IOException;
+
 /**
  * (description)
  * created at 2017/4/6
@@ -25,9 +27,14 @@ public class ManagerControllerTest extends BaseTest {
 
     @Test
     public void testGetProjectServer() throws Exception {
+        getProjectServer("430100-62fb00af4f04407e9e4383aa7cd4fdf0", false);
+        getProjectServer("1111111111", true);
+    }
+
+    private void getProjectServer(String projectId, boolean autoAssign) throws IOException {
         HttpRequest httpRequest = new HttpRequest("http://10.10.22.154:8280/getProjectServer")
-                .setParameter("projectId", "430100-62fb00af4f04407e9e4383aa7cd4fdf0")
-                .setParameter("autoAssign", "false");
+                .setParameter("projectId", projectId)
+                .setParameter("autoAssign", String.valueOf(autoAssign));
 
         System.out.println(httpRequest.requestPost());
     }
