@@ -96,6 +96,8 @@ public class TotalDistributionSheet extends SheetGenerator {
         }
 
         // 填充分数段的表头
+        sheetContext.headerMove(Direction.UP);
+
         colSuffixes.sort(new NaturalOrderComparator().reversed());
         for (int i = 0; i < colSuffixes.size(); i++) {
             String colSuffix = colSuffixes.get(i);
