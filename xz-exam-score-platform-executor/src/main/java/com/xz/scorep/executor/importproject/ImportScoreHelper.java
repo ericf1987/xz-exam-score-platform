@@ -101,6 +101,9 @@ public class ImportScoreHelper {
         Document subjectCodes = projectDoc.get("subjectcodes", Document.class);
         ArrayList<String> subjectIds = new ArrayList<>(subjectCodes.keySet());
 
+        //重新导数据之前清空cheat absent lost 表
+        String projectId = getProjectId();
+        clearCALData(projectId);
 
         for (String subjectId : subjectIds) {
             importSubjectScore(subjectId);
@@ -110,8 +113,14 @@ public class ImportScoreHelper {
         counter.finish();
 
         if (counter.getValue() == 0) {
-            throw new IllegalStateException("网阅库没有项目 " + getProjectId() + " 的分数记录。");
+            throw new IllegalStateException("网阅库没有项目 " + projectId + " 的分数记录。");
         }
+    }
+
+    private void clearCALData(String projectId) {
+        cheatService.clearCheat(projectId);
+        absentService.clearAbsent(projectId);
+        lostService.clearLost(projectId);
     }
 
     // 查询项目信息
