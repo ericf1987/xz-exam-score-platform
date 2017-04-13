@@ -213,6 +213,13 @@ public class ImportProjectService {
 
         JSONUtils.<JSONObject>forEach(quests, quest -> {
             ExamQuest examQuest = new ExamQuest(quest);
+
+            if (examQuest.isObjective()) {
+                examQuest.setAnswer(examQuest.getAnswer().toUpperCase());
+                examQuest.setScoreRule(examQuest.getScoreRule().toUpperCase());
+                examQuest.setOptions(examQuest.getOptions().toUpperCase());
+            }
+
             questList.add(examQuest);
             scoreService.createQuestScoreTable(projectId, examQuest);
         });

@@ -329,7 +329,7 @@ public class ImportScoreHelper {
         }
 
         //判断答案  是否在选项列表中......
-        String options = quest.getOptions();
+        String options = quest.getOptions().toUpperCase();
         if (!StringUtil.isBlank(s)) {
             char[] chars = s.toCharArray();
             for (Character ch : chars) {

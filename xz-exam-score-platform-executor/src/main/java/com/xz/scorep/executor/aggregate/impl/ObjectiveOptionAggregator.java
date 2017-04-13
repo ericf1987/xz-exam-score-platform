@@ -85,6 +85,7 @@ public class ObjectiveOptionAggregator extends Aggregator {
 
     private void aggregate0(String projectId) {
 
+        LOG.info("开始统计客观题选项选率....");
         CounterMap<List<String>> objectiveCounterMap = createCounterMap(projectId);
         CounterMap<List<String>> studentCounterMap = new CounterMap<>();
 
@@ -122,23 +123,29 @@ public class ObjectiveOptionAggregator extends Aggregator {
                 String studentId = score.getString("student_id");
                 Row student = studentService.findStudent(projectId, studentId);
 
+                //该学生在基础表有无数据,但在分数表有(建项目只有该学生被删除)
+                if (student == null) {
+                    return;
+                }
+
                 // 如果考生在该科目没有分数记录（因缺考或得零分而被排除），则忽略
                 Set<String> ignoreStudents = ignoreSubjectStudentMap.get(subjectId);
                 if (ignoreStudents.contains(studentId)) {
                     return;
                 }
 
-                // 如果考生答题内容非法，则忽略
-                String stuAnswer = score.getString("objective_answer");
-                if (StringUtil.isBlank(stuAnswer) || stuAnswer.trim().equals("*")) {
-                    return;
-                }
-
                 // 提取考生答题选项
                 List<String> options = new ArrayList<>();
-                char[] chars = stuAnswer.toCharArray();
-                for (char c : chars) {
-                    options.add(Character.toString(c));
+
+                // 如果考生答题内容非法(或"*") 则为不选率
+                String stuAnswer = score.getString("objective_answer");
+                if (StringUtil.isBlank(stuAnswer) || stuAnswer.trim().equals("*")) {
+                    options.add("*");
+                } else {
+                    char[] chars = stuAnswer.toCharArray();
+                    for (char c : chars) {
+                        options.add(Character.toString(c));
+                    }
                 }
 
                 // 添加到计数器
@@ -183,6 +190,7 @@ public class ObjectiveOptionAggregator extends Aggregator {
         });
 
         insertExecutor.finish();
+        LOG.info("客观题选项选率统计完成.....");
     }
 
 }
