@@ -15,8 +15,8 @@ public class TotalSchoolDetailReportTest extends BaseTest {
 
     @Test
     public void testGenerateReport() throws Exception {
-        String projectId = "430300-29c4d40d93bf41a5a82baffe7e714dd9";
-        Range range = Range.school("");
+        String projectId = "430600-ae428b84d0d64e2f90e213e56b83b869";
+        Range range = Range.school("5266e03d-bc8a-4c6e-b2e0-45b6bad9357f");
         String savePath = "target/全校分数排名、得分明细表(全科).xlsx";
 
         totalSchoolDetailReport.generate(projectId, range, null, savePath);

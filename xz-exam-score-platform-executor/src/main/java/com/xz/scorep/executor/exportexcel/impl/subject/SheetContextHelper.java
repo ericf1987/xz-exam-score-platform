@@ -2,6 +2,7 @@ package com.xz.scorep.executor.exportexcel.impl.subject;
 
 import com.xz.scorep.executor.aggritems.StudentQuery;
 import com.xz.scorep.executor.bean.Range;
+import com.xz.scorep.executor.bean.Target;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetTask;
 import com.xz.scorep.executor.utils.Direction;
@@ -18,6 +19,7 @@ public class SheetContextHelper {
         String projectId = sheetContext.getProjectId();
         SheetTask sheetTask = sheetContext.getSheetTask();
         Range range = sheetTask.getRange();
+        Target target = sheetTask.getTarget();
 
         sheetContext.headerPut("学校名称", 2, 1);
         sheetContext.headerMove(Direction.RIGHT);

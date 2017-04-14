@@ -40,10 +40,10 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
 
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {
-        generateSheet0(sheetContext, studentQuery, questService,reportCache);
+        generateSheet0(sheetContext, studentQuery, questService, reportCache);
     }
 
-    public static void generateSheet0(SheetContext sheetContext, StudentQuery studentQuery, QuestService questService,ReportCacheInitializer reportCache) {
+    public static void generateSheet0(SheetContext sheetContext, StudentQuery studentQuery, QuestService questService, ReportCacheInitializer reportCache) {
         SheetTask sheetTask = sheetContext.getSheetTask();
         Target target = sheetTask.getTarget();
         String subjectId = String.valueOf(target.getId());
@@ -59,7 +59,7 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         fillStudentSubjectInfo(sheetContext, studentQuery);
 
         // 填充题目成绩信息
-        fillStudentScoreInfo(sheetContext, questService, studentQuery,reportCache);
+        fillStudentScoreInfo(sheetContext, questService, studentQuery, reportCache);
 
         //////////////////////////////////////////////////////////////
 
@@ -87,17 +87,17 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         sheetContext.headerMove(Direction.DOWN);
 
         Range range = sheetContext.getSheetTask().getRange();
-        List<String> studentList = studentQuery.getStudentList(projectId, range);
+        List<String> studentList = studentQuery.getSubejctStudentList(projectId, range, subjectId);
 
         objectiveQuests.forEach(quest -> {
-            fillStudentQuestScoreByCache(sheetContext,colIndex,quest,studentList,reportCache);
+            fillStudentQuestScoreByCache(sheetContext, colIndex, quest, studentList, reportCache);
         });
 
         sheetContext.headerMove(Direction.UP);
         sheetContext.headerPut("主观题得分明细", 1, subjectiveQuests.size());
         sheetContext.headerMove(Direction.DOWN);
         subjectiveQuests.forEach(quest -> {
-            fillStudentQuestScoreByCache(sheetContext,colIndex,quest,studentList,reportCache);
+            fillStudentQuestScoreByCache(sheetContext, colIndex, quest, studentList, reportCache);
         });
     }
 
@@ -133,6 +133,7 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         if (quest.isObjective()) {
             rows.forEach(row -> {
                 String answer = row.getString("objective_answer");
+                answer = answer == null ? "*" : answer;//避免学生题目表中答案为null
                 String score = StringUtil.removeEnd(row.getString(scoreColName), ".0");
                 row.put(scoreColName, score + "[" + answer + "]");
             });

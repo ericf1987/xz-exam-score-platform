@@ -16,7 +16,7 @@ public class TotalAverageReportTest extends BaseTest {
     public void testGenerateReport() throws Exception {
         String savePath = "./target/联考学校平均分统计分析.xlsx";
 
-        report.generate("430100-4bc2ffbf50214ebc8ec34dd5166ef5b5",
+        report.generate("430600-ae428b84d0d64e2f90e213e56b83b869",
                 null, null,
                 savePath);
     }

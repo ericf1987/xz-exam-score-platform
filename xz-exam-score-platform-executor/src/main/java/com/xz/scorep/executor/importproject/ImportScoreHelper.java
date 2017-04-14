@@ -151,14 +151,17 @@ public class ImportScoreHelper {
 
 
         if (cheat) {
+            //添加到作弊表
             cheatService.saveCheat(projectId, studentId, subjectId);
         }
 
         if (absent) {
+            //添加到缺考表
             absentService.saveAbsent(projectId, studentId, subjectId);
         }
 
         if (lost) {
+            //添加到缺卷表
             lostService.saveLost(projectId, studentId, subjectId);
         }
 

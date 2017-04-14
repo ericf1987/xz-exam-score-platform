@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class StudentQuery {
 
     private static final String SUBJECT_SCORE_RANK_TEMPLATE = "select \n" +
-            "  s.id as student_id,\n" +
+            "  ss.student_id as student_id,\n" +
             "  ss.score as total_{{subject}},\n" +
             "  sbj.score as subjective_{{subject}},\n" +
             "  obj.score as objective_{{subject}},\n" +
@@ -33,7 +33,7 @@ public class StudentQuery {
             "  rank_province rp\n" +
             "where \n" +
             "  {{range}}" +
-            "  s.id=ss.student_id AND\n" +
+            "  ss.student_id= s.id AND\n" +
             "  s.id=sbj.student_id AND\n" +
             "  s.id=obj.student_id AND\n" +
             "  s.id=rc.student_id AND rc.subject_id='{{subject}}' AND\n" +
@@ -73,8 +73,9 @@ public class StudentQuery {
                 "  school.name as school_name," +
                 "  school.area as area " +
                 "from " +
-                "  student, class, school " +
+                "  score_project,student, class, school " +
                 "where " +
+                "  score_project.student_id = student.id and" +
                 "  student.class_id=class.id and" +
                 "  class.school_id=school.id ";
 
@@ -115,6 +116,19 @@ public class StudentQuery {
         String tmp = "select student.id as student_id from student\n" +
                 "where student.{{type}} = '{{id}}'";
         String sql = buildRangeCondition(range, tmp);
+        List<Row> rows = daoFactory.getProjectDao(projectId).query(sql);
+        return rows.stream()
+                .map(row -> row.getString("student_id"))
+                .collect(Collectors.toList());
+    }
+
+    public List<String> getSubejctStudentList(String projectId, Range range, String subjectId) {
+        String tmp = "select {{table}}.student_id as student_id from {{table}} ,student\n" +
+                "where {{table}}.student_id = student.id and student.{{type}} = '{{id}}'";
+
+        String sqlTemp = buildRangeCondition(range, tmp);
+        String sql = sqlTemp.replace("{{table}}", "score_subject_" + subjectId);
+
         List<Row> rows = daoFactory.getProjectDao(projectId).query(sql);
         return rows.stream()
                 .map(row -> row.getString("student_id"))
