@@ -87,7 +87,7 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         sheetContext.headerMove(Direction.DOWN);
 
         Range range = sheetContext.getSheetTask().getRange();
-        List<String> studentList = studentQuery.getSubejctStudentList(projectId, range, subjectId);
+        List<String> studentList = studentQuery.getSubjectStudentList(projectId, range, subjectId);
 
         objectiveQuests.forEach(quest -> {
             fillStudentQuestScoreByCache(sheetContext, colIndex, quest, studentList, reportCache);

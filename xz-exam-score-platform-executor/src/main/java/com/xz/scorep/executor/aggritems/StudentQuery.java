@@ -122,7 +122,7 @@ public class StudentQuery {
                 .collect(Collectors.toList());
     }
 
-    public List<String> getSubejctStudentList(String projectId, Range range, String subjectId) {
+    public List<String> getSubjectStudentList(String projectId, Range range, String subjectId) {
         String tmp = "select {{table}}.student_id as student_id from {{table}} ,student\n" +
                 "where {{table}}.student_id = student.id and student.{{type}} = '{{id}}'";
 
