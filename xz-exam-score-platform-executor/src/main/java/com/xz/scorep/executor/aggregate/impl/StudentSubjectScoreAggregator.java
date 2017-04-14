@@ -36,6 +36,11 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             "  select a.student_id from absent a where a.subject_id='{{subject}}'  \n" +
             ")";
 
+    private static final String DEL_LOST_SCORE = "delete from score_subject_{{subject}} " +
+            "where student_id in (\n" +
+            "  select a.student_id from lost a where a.subject_id='{{subject}}'  \n" +
+            ")";
+
     @Autowired
     private QuestService questService;
 
@@ -62,11 +67,16 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         ThreadPools.createAndRunThreadPool(aggregateConfig.getSubjectPoolSize(), 1,
                 pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
 
-        // 根据报表配置删除缺考考生记录
+        // 根据报表配置删除缺考考生记录  (缺卷同缺处理)
         if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
             LOG.info("删除项目 {} 缺考考生...", projectId);
             removeAbsentStudents(projectId, subjects);
             LOG.info("项目 {} 缺考考生删除完毕。", projectId);
+
+            LOG.info("删除项目{}缺卷学生...", projectId);
+            removeLostStudents(projectId, subjects);
+            LOG.info("项目 {} 缺卷考生删除完毕。", projectId);
+
         }
 
         // 根据报表配置删除零分记录
@@ -86,6 +96,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             fillAlmostPass(projectId, subjects, almostPassOffset, passRate);
         }
     }
+
 
     private void copyToRealScore(String projectId, List<ExamSubject> subjects) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
@@ -128,6 +139,16 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         for (ExamSubject subject : subjects) {
             String sql = DEL_ABS_SCORE.replace("{{subject}}", subject.getId());
             LOG.info("删除科目 {} 缺考考生...", subject.getId());
+            projectDao.execute(sql);
+        }
+    }
+
+    //删除科目分数表中标记为缺卷的考生记录
+    private void removeLostStudents(String projectId, List<ExamSubject> subjects) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        for (ExamSubject subject : subjects) {
+            String sql = DEL_LOST_SCORE.replace("{{subject}}", subject.getId());
+            LOG.info("删除科目 {} 缺卷考生...", subject.getId());
             projectDao.execute(sql);
         }
     }
