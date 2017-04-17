@@ -76,11 +76,6 @@ public class ImportStudentHelper {
                 .find(doc())
                 .forEach((Consumer<Document>) doc -> importStudentAndClass(projectId, schools, doc));
 
-
-//        importSchools(context);
-//        importClasses(context);
-//        importStudents(context);
-
         this.studentCounter.finish();
     }
 
