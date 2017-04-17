@@ -12,6 +12,7 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
+import com.xz.scorep.executor.reportconfig.ScoreLevelsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,13 +84,12 @@ public class AllPassOrFailAggregator extends Aggregator {
 
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
         JSONObject scoreLevels = JSON.parseObject(reportConfig.getScoreLevels());
-        double passRate = scoreLevels.getDouble("Pass");
 
         // subjectId -> 及格分数(double)
         List<ExamSubject> subjects = subjectService.listSubjects(projectId);
         Map<String, Double> passScores = subjects
                 .stream().collect(Collectors.toMap(
-                        ExamSubject::getId, subject -> subject.getFullScore() * passRate));
+                        ExamSubject::getId, subject -> ScoreLevelsHelper.passScore(subject.getId(), scoreLevels, subject.getFullScore())));
 
         String sql = generateSql(subjects, passScores);
 

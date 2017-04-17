@@ -10,8 +10,10 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.ExcelCellStyles;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
+import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
+import com.xz.scorep.executor.reportconfig.ScoreLevelsHelper;
 import com.xz.scorep.executor.utils.Direction;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -250,12 +252,15 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             "@over := (select count(1) from {{table}} where score > {{averageScore}}),\n" +
             "@over /@total as over_average\n";
 
-    private static final String NOTE = "注：三率占比说明：优 {{xlnt}}，良{{good}}，及格{{pass}}";
+    private static final String NOTE = "注：三率占比说明：优 大于等于{{xlnt}}分，良 大于等于{{good}}分，及格 大于等于{{pass}}分";
     @Autowired
     private DAOFactory daoFactory;
 
     @Autowired
     private ReportConfigService reportConfigService;
+
+    @Autowired
+    private SubjectService subjectService;
 
 
     @Override
@@ -285,6 +290,9 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             Row totalRow = getSchoolSubjectTotalRow(dao, subjectId);
             sheetContext.rowAdd(totalRow);
 
+            //添加注释
+            putNoteRow(sheetContext, projectId, subjectId);
+
         } else {//全科
 
             // 学校参考人数、最高分、平均分、四率
@@ -297,11 +305,12 @@ public abstract class TotalAverageSheet extends SheetGenerator {
 
             Row total = getSchoolProjectTotalRow(projectId, dao);
             sheetContext.rowAdd(total);
+
+            //添加注释
+            putNoteRow(sheetContext, projectId, "000");
         }
 
         sheetContext.rowStyle("total", ExcelCellStyles.Green.name());
-        //添加注释
-        putNoteRow(sheetContext, projectId);
 
         sheetContext.freeze(3, 1);
         sheetContext.saveData();// 保存到 ExcelWriter
@@ -401,17 +410,19 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         return rows;
     }
 
-    private void putNoteRow(SheetContext sheetContext, String projectId) {
+    private void putNoteRow(SheetContext sheetContext, String projectId, String subjectId) {
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
         JSONObject jsonObject = JSONArray.parseObject(reportConfig.getScoreLevels());
+        double fullScore = subjectService.getsubjectScore(projectId, subjectId);
 
-        String xlnt = jsonObject.getDouble("Excellent") * 100 + "%";
-        String good = jsonObject.getDouble("Good") * 100 + "%";
-        String pass = jsonObject.getDouble("Pass") * 100 + "%";
+        double xlnt = ScoreLevelsHelper.excellentScore(subjectId, jsonObject, fullScore);
+        double good = ScoreLevelsHelper.goodScore(subjectId, jsonObject, fullScore);
+        double pass = ScoreLevelsHelper.passScore(subjectId, jsonObject, fullScore);
+
         String text = NOTE
-                .replace("{{xlnt}}", xlnt)
-                .replace("{{good}}", good)
-                .replace("{{pass}}", pass);
+                .replace("{{xlnt}}", String.valueOf(xlnt))
+                .replace("{{good}}", String.valueOf(good))
+                .replace("{{pass}}", String.valueOf(pass));
         Row noteRow = new Row();
         noteRow.put("school_id", "note");
         noteRow.put("school_name", text);

@@ -104,4 +104,15 @@ public class SubjectService {
                 daoFactory.getProjectDao(projectId).queryFirst(
                         ExamSubject.class, "select * from subject where id=?", subjectId));
     }
+
+    public double getsubjectScore(String projectId, String subjectId) {
+        if (subjectId.equals("000")) {
+            return daoFactory.getProjectDao(projectId)
+                    .queryFirst("select sum(full_score) as full_score from subject")
+                    .getDouble("full_score", 0);
+
+        } else {
+            return findSubject(projectId, subjectId).getFullScore();
+        }
+    }
 }

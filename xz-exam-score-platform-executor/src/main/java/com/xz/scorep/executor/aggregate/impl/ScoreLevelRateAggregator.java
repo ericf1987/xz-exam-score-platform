@@ -14,6 +14,7 @@ import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
+import com.xz.scorep.executor.reportconfig.ScoreLevelsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -193,11 +194,13 @@ public class ScoreLevelRateAggregator extends Aggregator {
             Target target, String targetId,
             BiConsumer<Row, Map<String, Object>> mapFixer) {
 
+        String subjectId = target.name().equals("Project") ? "000" : "001";
+
         String sql = sqlTemplate
                 .replace("{{table}}", tableName)
-                .replace("{{pass}}", String.valueOf(scoreLevels.getDouble("Pass") * fullScore))
-                .replace("{{good}}", String.valueOf(scoreLevels.getDouble("Good") * fullScore))
-                .replace("{{xlnt}}", String.valueOf(scoreLevels.getDouble("Excellent") * fullScore));
+                .replace("{{pass}}", String.valueOf(ScoreLevelsHelper.passScore(subjectId, scoreLevels, fullScore)))
+                .replace("{{good}}", String.valueOf(ScoreLevelsHelper.goodScore(subjectId, scoreLevels, fullScore)))
+                .replace("{{xlnt}}", String.valueOf(ScoreLevelsHelper.excellentScore(subjectId, scoreLevels, fullScore)));
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<Row> scoreMapRows = projectDao.query(sql);
