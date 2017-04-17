@@ -109,6 +109,12 @@ public class ImportProjectService {
             importReportConfig(context);
         }
 
+        //导入考生基础信息改为通过监控平台导入
+        MongoClient mongoClient = mongoClientFactory.getProjectMongoClient(projectId);
+        if (mongoClient == null) {
+            throw new IllegalArgumentException("项目 " + projectId + " 在网阅数据库中不存在");
+        }
+        context.put("client",mongoClient);
         if (parameters.isImportStudents()) {
             LOG.info("导入项目 {} 考生信息...", projectId);
             importStudents(context);
@@ -135,12 +141,8 @@ public class ImportProjectService {
         String projectId = context.get(PROJECT_ID_KEY);
         scoreService.clearScores(projectId);
 
-        MongoClient mongoClient = mongoClientFactory.getProjectMongoClient(projectId);
-        if (mongoClient == null) {
-            throw new IllegalArgumentException("项目 " + projectId + " 在网阅数据库中不存在");
-        }
-
         DAO projectDao = daoFactory.getProjectDao(projectId);
+        MongoClient mongoClient = context.get("client");
         ImportScoreHelper helper = new ImportScoreHelper(context, mongoClient, projectDao);
 
         //////////////////////////////////////////////////////////////////////////
