@@ -105,7 +105,7 @@ public class SubjectService {
                         ExamSubject.class, "select * from subject where id=?", subjectId));
     }
 
-    public double getsubjectScore(String projectId, String subjectId) {
+    public double getSubjectScore(String projectId, String subjectId) {
         if (subjectId.equals("000")) {
             return daoFactory.getProjectDao(projectId)
                     .queryFirst("select sum(full_score) as full_score from subject")
