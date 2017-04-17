@@ -194,7 +194,7 @@ public class ScoreLevelRateAggregator extends Aggregator {
             Target target, String targetId,
             BiConsumer<Row, Map<String, Object>> mapFixer) {
 
-        String subjectId = target.name().equals("Project") ? "000" : "001";
+        String subjectId = target.name().equals("Project") ? "000" : targetId;
 
         String sql = sqlTemplate
                 .replace("{{table}}", tableName)
