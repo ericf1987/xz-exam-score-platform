@@ -20,7 +20,7 @@ public class SchoolService {
     CacheFactory cacheFactory;
 
     public void saveSchool(String projectId, ProjectSchool school) {
-        String sql = "insert into school(id,name,area,city,province) values(?,?,?,?,?)";
+        String sql = "insert ignore into school(id,name,area,city,province) values(?,?,?,?,?)";
 
         daoFactory.getProjectDao(projectId).execute(sql,
                 school.getId(), school.getName(), school.getArea(), school.getCity(), school.getProvince());

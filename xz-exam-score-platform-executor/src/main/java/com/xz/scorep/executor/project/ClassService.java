@@ -20,12 +20,19 @@ public class ClassService {
     @Autowired
     private CacheFactory cacheFactory;
 
-    public void saveClass(String projectId, ProjectClass projectClass) {
-        daoFactory.getProjectDao(projectId).insert(projectClass, "class");
-    }
+//    public void saveClass(String projectId, ProjectClass projectClass) {
+//        daoFactory.getProjectDao(projectId).insert(projectClass, "class");
+//    }
 
     public void saveClass(String projectId, List<ProjectClass> classList) {
         daoFactory.getProjectDao(projectId).insert(classList, "class");
+    }
+
+    public void saveClass(String projectId, ProjectClass projectClass) {
+        String sql = "insert ignore into class(id,name,school_id,area,city,province) values(?,?,?,?,?,?)";
+
+        daoFactory.getProjectDao(projectId).execute(sql,
+                projectClass.getId(), projectClass.getName(), projectClass.getSchoolId(), projectClass.getArea(), projectClass.getCity(), projectClass.getProvince());
     }
 
     public void clearClasses(String projectId) {
