@@ -48,8 +48,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
                     projectId, counter.incrementAndGet(), subjectIds.size());
         });
 
-
-        removeAbsent(projectDao, subjectIds);
+//        removeAbsent(projectDao, subjectIds);
 
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
             removeZeroScores(projectId);
