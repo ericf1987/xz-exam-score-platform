@@ -118,4 +118,20 @@ public class SubjectService {
             return findSubject(projectId, subjectId).getFullScore();
         }
     }
+
+    public double getSubSubjectScore(String projectId, String subjectId, String... excludeQuestNos) {
+        return daoFactory.getProjectDao(projectId)
+                .queryFirst(createSql(subjectId, excludeQuestNos))
+                .getDouble("full_score", 0);
+    }
+
+    private String createSql(String subjectId, String[] excludeQuestNos) {
+        String sql = "select sum(full_score) as full_score from quest " +
+                "where quest_subject = '{{subjectId}}' " +
+                "and quest_no != {{exclude}} ";
+        String temp = String.join(" and quest_no != ", excludeQuestNos);
+        return sql.replace("{{subjectId}}", subjectId).replace("{{exclude}}", temp);
+
+    }
+
 }

@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ImportProjectService {
@@ -170,40 +169,73 @@ public class ImportProjectService {
         JSONArray subjects = result.get("result");
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
 
+        JSONUtils.<JSONObject>forEach(subjects, subjectDoc -> {
+            ExamSubject subject = new ExamSubject(subjectDoc);
+            subject.setVirtualSubject("false");
+            projectFullScore.add(subject.getFullScore());
+            subjectService.saveSubject(projectId, subject);
+            subjectService.createSubjectScoreTable(projectId, subject.getId());
+        });
+        projectService.updateProjectFullScore(projectId, projectFullScore.get());
+
         //是否要拆分科目
         if (Boolean.valueOf(reportConfig.getSeparateCategorySubjects())) {
-            List<ExamQuest> quests = questService.queryQuests(projectId);
-            Map<String, Double> subjectMap = quests.stream()
-                    .collect(Collectors.groupingBy(quest -> quest.getQuestSubject(),
-                            Collectors.summingDouble(quest -> quest.getFullScore())));
 
-            Map<String, ExamSubject> examSubjectMap = new HashMap<>();
-            quests.forEach(quest -> {
-                String subjectId = quest.getQuestSubject();
-                double subjectScore = subjectMap.get(subjectId);
-                String subjectName = subjectService.getSubjectName(subjectId);
-                ExamSubject subject = new ExamSubject(subjectId, subjectName, subjectScore);
+            Map<String, JSONArray> subjectMap = getSubjectsOptionalGroup(projectId);
 
-                boolean isVirtual = quest.getExamSubject().length() > 3;
-                projectFullScore.add(subjectScore);
-                subject.setVirtualSubject(String.valueOf(isVirtual));
-                examSubjectMap.put(subjectId, subject);
-            });
+            List<ExamSubject> examSubjects = subjectService.listSubjects(projectId);
+            for (ExamSubject examSubject : examSubjects) {
+                if (examSubject.getId().length() > 3) {
+                    String examSubjectId = examSubject.getId();
+                    String cardId = examSubject.getCardId();
+                    LOG.info("正在拆分项目ID{},科目{}", projectId, examSubject.getName());
 
-            examSubjectMap.forEach((subjectId, subject) -> {
-                subjectService.saveSubject(projectId, subject);
-                subjectService.createSubjectScoreTable(projectId, subjectId);
-            });
-        } else {
-            JSONUtils.<JSONObject>forEach(subjects, subjectDoc -> {
-                ExamSubject subject = new ExamSubject(subjectDoc);
-                subject.setVirtualSubject("false");
-                projectFullScore.add(subject.getFullScore());
-                subjectService.saveSubject(projectId, subject);
-                subjectService.createSubjectScoreTable(projectId, subject.getId());
-            });
+                    JSONArray jsonArray = subjectMap.get(examSubjectId);
+                    List<String> excludeQuest = new ArrayList<>();
+                    JSONUtils.<JSONObject>forEach(jsonArray, json -> {
+                        String[] questNos = json.getString("quest_nos")
+                                .replace("[", "")
+                                .replace("]", "")
+                                .replace("\"", "")
+                                .split(",");
+                        Integer chooseCount = json.getInteger("choose_count");
+                        for (int i = 0; i < questNos.length - chooseCount; i++) {
+                            excludeQuest.add(questNos[i]);
+                        }
+                    });
+
+                    int size = examSubjectId.length() / 3;
+                    for (int i = 1; i <= size; i++) {
+                        String subSubjectId = examSubjectId.substring(i * size - 3, i * size);
+                        String subjectName = subjectService.getSubjectName(subSubjectId);
+
+                        String[] exclude = new String[excludeQuest.size()];
+                        excludeQuest.toArray(exclude);
+
+                        double subSubjectScore = subjectService.
+                                getSubSubjectScore(projectId, subSubjectId, exclude);
+                        ExamSubject subject = new ExamSubject(subSubjectId, subjectName, subSubjectScore);
+                        subject.setVirtualSubject(String.valueOf(true));
+                        subject.setCardId(cardId);
+                        subjectService.saveSubject(projectId, subject);
+                    }
+                }
+            }
         }
-        projectService.updateProjectFullScore(projectId, projectFullScore.get());
+    }
+
+    private Map<String, JSONArray> getSubjectsOptionalGroup(String projectId) {
+        JSONObject optionalGroups = appAuthClient.callApi("QueryQuestionByProject",
+                new Param().setParameter(PROJECT_ID_KEY, projectId)).get("optionalGroups");
+        Map<String, JSONArray> subjectMap = new HashMap<>();
+        for (Map.Entry<String, Object> entry : optionalGroups.entrySet()) {
+            String entryKey = entry.getKey();
+            JSONArray jsonArray = JSONArray.parseArray(entry.getValue().toString());
+            if (entryKey.length() > 3 && jsonArray.size() != 0) {
+                subjectMap.put(entryKey, jsonArray);
+            }
+        }
+        return subjectMap;
     }
 
     private void importProjectInfo(Context context) {

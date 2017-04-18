@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.importproject;
 
 import com.xz.ajiaedu.common.lang.Context;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.BaseTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,11 @@ public class ImportProjectServiceTest extends BaseTest {
 
     @Test
     public void testImportStudent() throws Exception {
-
+        String examSubjectId = "007008009";
+        int size = examSubjectId.length() / 3;
+        for (int i = 1; i <= size; i++) {
+            String subSubjectId = examSubjectId.substring(i * size - 3, i * size);
+            System.out.println(subSubjectId);
+        }
     }
 }
