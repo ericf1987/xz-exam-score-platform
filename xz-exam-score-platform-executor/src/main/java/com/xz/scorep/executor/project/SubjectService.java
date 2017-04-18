@@ -41,6 +41,9 @@ public class SubjectService {
         SUBJECT_NAMES.put("019", "道德与法治");
         SUBJECT_NAMES.put("004005006", "理科综合");
         SUBJECT_NAMES.put("007008009", "文科综合");
+        SUBJECT_NAMES.put("004005", "物化综合");
+        SUBJECT_NAMES.put("007008", "政史综合");
+        SUBJECT_NAMES.put("006009", "生地综合");
     }
 
     @Autowired
@@ -105,7 +108,7 @@ public class SubjectService {
                         ExamSubject.class, "select * from subject where id=?", subjectId));
     }
 
-    public double getsubjectScore(String projectId, String subjectId) {
+    public double getSubjectScore(String projectId, String subjectId) {
         if (subjectId.equals("000")) {
             return daoFactory.getProjectDao(projectId)
                     .queryFirst("select sum(full_score) as full_score from subject")

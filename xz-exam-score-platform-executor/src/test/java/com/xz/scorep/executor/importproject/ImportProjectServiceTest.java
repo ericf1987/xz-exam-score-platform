@@ -15,9 +15,9 @@ public class ImportProjectServiceTest extends BaseTest {
 
     @Test
     public void importProject() throws Exception {
-        String projectId = "430100-172622b784994963baa740c6a3a1f532";
+        String projectId = "430300-c582131e66b64fe38da7d0510c399ec4";
         importProjectService.importProject(
-                importSelected(projectId, false, false, false, false, true, true));
+                importSelected(projectId, true, true, false, false, true, true));
     }
 
     @Test

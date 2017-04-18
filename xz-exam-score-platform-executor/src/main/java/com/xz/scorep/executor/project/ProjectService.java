@@ -62,6 +62,7 @@ public class ProjectService {
         // 考试项目总分表（科目总分表和题目得分表分别在 SubjectService 和 ScoreService）
         dao.execute("create table score_project(student_id VARCHAR(40) primary key,score decimal(5,1))");
 
+        //全科及格和全科不及格率
         dao.execute("create table all_pass_or_fail (range_type varchar(20), range_id varchar(40),all_pass_count int(11),all_pass_rate decimal(5,2),all_fail_count int(11),all_fail_rate decimal(5,2))");
         dao.execute("create index idxapfri on all_pass_or_fail(range_id)");
 
@@ -105,7 +106,7 @@ public class ProjectService {
         dao.execute("create table student(id varchar(40) primary key, name varchar(50), exam_no varchar(20), school_exam_no varchar(20), class_id varchar(40), school_id varchar(40), area varchar(6), city varchar(6), province varchar(6))");
         dao.execute("create index idxstuc on student(class_id)");
         dao.execute("create index idxstus on student(school_id)");
-        dao.execute("create table subject(id varchar(9)  primary key, name varchar(20), full_score decimal(4,1) default 0, card_id varchar(20))");
+        dao.execute("create table subject(id varchar(9)  primary key, name varchar(20), full_score decimal(4,1) default 0, card_id varchar(20), virtual_subject varchar(5))");
         dao.execute("create table absent (student_id varchar(40), subject_id varchar(9), PRIMARY KEY(student_id, subject_id))");
         dao.execute("create table cheat  (student_id varchar(40), subject_id varchar(9), PRIMARY KEY(student_id, subject_id))");
         dao.execute("create table lost   (student_id varchar(40), subject_id varchar(9), PRIMARY KEY(student_id, subject_id))");

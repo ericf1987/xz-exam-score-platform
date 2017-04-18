@@ -20,6 +20,8 @@ public class ExamSubject implements Serializable {
 
     private String cardId;
 
+    private String virtualSubject;
+
     public ExamSubject(String id, String name, double fullScore) {
         this.id = id;
         this.name = name;
@@ -66,5 +68,13 @@ public class ExamSubject implements Serializable {
 
     public void setFullScore(double fullScore) {
         this.fullScore = fullScore;
+    }
+
+    public String getVirtualSubject() {
+        return virtualSubject;
+    }
+
+    public void setVirtualSubject(String virtualSubject) {
+        this.virtualSubject = virtualSubject;
     }
 }

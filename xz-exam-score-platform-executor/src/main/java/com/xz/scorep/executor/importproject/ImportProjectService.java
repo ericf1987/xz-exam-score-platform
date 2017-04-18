@@ -25,9 +25,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ImportProjectService {
@@ -92,40 +91,47 @@ public class ImportProjectService {
             importProjectInfo(context);
         }
 
-        // 初始化数据库
-        if (parameters.isRecreateDatabase()) {
-            LOG.info("重新创建项目 {} 的数据库...", projectId);
-            projectService.initProjectDatabase(projectId);
-        }
-
-        // 导入项目数据
-        if (parameters.isImportProjectInfo()) {
-            LOG.info("导入项目 {} 科目信息...", projectId);
-            importSubjects(context);
-        }
-
+        //导入报表配置
         if (parameters.isImportReportConfig()) {
             LOG.info("导入项目 {} 报表配置...", projectId);
             importReportConfig(context);
         }
 
-        //导入考生基础信息改为通过监控平台导入
-        MongoClient mongoClient = mongoClientFactory.getProjectMongoClient(projectId);
-        if (mongoClient == null) {
-            throw new IllegalArgumentException("项目 " + projectId + " 在网阅数据库中不存在");
-        }
-        context.put("client",mongoClient);
-        if (parameters.isImportStudents()) {
-            LOG.info("导入项目 {} 考生信息...", projectId);
-            importStudents(context);
+        // 初始化项目数据库
+        if (parameters.isRecreateDatabase()) {
+            LOG.info("重新创建项目 {} 的数据库...", projectId);
+            projectService.initProjectDatabase(projectId);
         }
 
+        /**
+         * 先导入题目信息
+         * (后续根据题目信息创建 score_subject_{{subjectId}}相关表)
+         */
         if (parameters.isImportQuests()) {
             LOG.info("导入项目 {} 题目信息...", projectId);
             importQuests(context);
         } else {
             context.put("questList", questService.queryQuests(projectId));
         }
+
+        // 导入项目科目数据
+        if (parameters.isImportProjectInfo()) {
+            LOG.info("导入项目 {} 科目信息...", projectId);
+            importSubjects(context);
+        }
+
+
+        //导入考生基础信息改为通过监控平台导入
+        MongoClient mongoClient = mongoClientFactory.getProjectMongoClient(projectId);
+        if (mongoClient == null) {
+            throw new IllegalArgumentException("项目 " + projectId + " 在网阅数据库中不存在");
+        }
+        context.put("client", mongoClient);
+        if (parameters.isImportStudents()) {
+            LOG.info("导入项目 {} 考生信息...", projectId);
+            importStudents(context);
+        }
+
 
         if (parameters.isImportScore()) {
             LOG.info("导入项目 {} 阅卷分数...", projectId);
@@ -162,13 +168,41 @@ public class ImportProjectService {
                 new Param().setParameter("projectId", projectId));
 
         JSONArray subjects = result.get("result");
-        JSONUtils.<JSONObject>forEach(subjects, subjectDoc -> {
-            ExamSubject subject = new ExamSubject(subjectDoc);
-            projectFullScore.add(subject.getFullScore());
-            subjectService.saveSubject(projectId, subject);
-            subjectService.createSubjectScoreTable(projectId, subject.getId());
-        });
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
 
+        //是否要拆分科目
+        if (Boolean.valueOf(reportConfig.getSeparateCategorySubjects())) {
+            List<ExamQuest> quests = questService.queryQuests(projectId);
+            Map<String, Double> subjectMap = quests.stream()
+                    .collect(Collectors.groupingBy(quest -> quest.getQuestSubject(),
+                            Collectors.summingDouble(quest -> quest.getFullScore())));
+
+            Map<String, ExamSubject> examSubjectMap = new HashMap<>();
+            quests.forEach(quest -> {
+                String subjectId = quest.getQuestSubject();
+                double subjectScore = subjectMap.get(subjectId);
+                String subjectName = subjectService.getSubjectName(subjectId);
+                ExamSubject subject = new ExamSubject(subjectId, subjectName, subjectScore);
+
+                boolean isVirtual = quest.getExamSubject().length() > 3;
+                projectFullScore.add(subjectScore);
+                subject.setVirtualSubject(String.valueOf(isVirtual));
+                examSubjectMap.put(subjectId, subject);
+            });
+
+            examSubjectMap.forEach((subjectId, subject) -> {
+                subjectService.saveSubject(projectId, subject);
+                subjectService.createSubjectScoreTable(projectId, subjectId);
+            });
+        } else {
+            JSONUtils.<JSONObject>forEach(subjects, subjectDoc -> {
+                ExamSubject subject = new ExamSubject(subjectDoc);
+                subject.setVirtualSubject("false");
+                projectFullScore.add(subject.getFullScore());
+                subjectService.saveSubject(projectId, subject);
+                subjectService.createSubjectScoreTable(projectId, subject.getId());
+            });
+        }
         projectService.updateProjectFullScore(projectId, projectFullScore.get());
     }
 
