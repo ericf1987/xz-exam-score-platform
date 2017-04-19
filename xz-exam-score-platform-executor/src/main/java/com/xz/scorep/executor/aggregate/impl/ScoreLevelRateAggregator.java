@@ -88,6 +88,7 @@ public class ScoreLevelRateAggregator extends Aggregator {
         String projectId = aggregateParameter.getProjectId();
 
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
+        String scoreLevelConfig = reportConfig.getScoreLevelConfig();
         JSONObject scoreLevels = JSON.parseObject(reportConfig.getScoreLevels());
 
         LOG.info("开始统计四率...");
@@ -97,11 +98,11 @@ public class ScoreLevelRateAggregator extends Aggregator {
         List<ExamSubject> subjects = getExamSubjects(aggregateParameter, projectId);
 
         LOG.info("统计整体成绩四率...");
-        aggregateProjectScoreLevels(projectId, scoreLevels);
+        aggregateProjectScoreLevels(projectId, scoreLevels, scoreLevelConfig);
 
         List<String> subjectIdList = subjects.stream().map(ExamSubject::getId).collect(Collectors.toList());
         LOG.info("统计科目成绩四率...,科目列表:{}", subjectIdList);
-        aggregateSubjectScoreLevels(projectId, scoreLevels, subjects);
+        aggregateSubjectScoreLevels(projectId, scoreLevels, subjects, scoreLevelConfig);
     }
 
     private List<ExamSubject> getExamSubjects(AggregateParameter aggregateParameter, String projectId) {
@@ -135,25 +136,25 @@ public class ScoreLevelRateAggregator extends Aggregator {
         return map;
     }
 
-    private void aggregateProjectScoreLevels(String projectId, JSONObject scoreLevels) {
+    private void aggregateProjectScoreLevels(String projectId, JSONObject scoreLevels, String scoreLevelConfig) {
         ExamProject project = projectService.findProject(projectId);
         double fullScore = project.getFullScore();
 
-        aggrProjectScoreLevel(projectId, "score_project", scoreLevels, fullScore, PROVINCE_PROJECT_SCORE_LEVEL,
+        aggrProjectScoreLevel(projectId, "score_project", scoreLevels, scoreLevelConfig, fullScore, PROVINCE_PROJECT_SCORE_LEVEL,
                 Target.Project, projectId,
                 (row, map) -> {
                     map.put("range_type", Range.Province.name());
                     map.put("range_id", "430000");
                 });
 
-        aggrProjectScoreLevel(projectId, "score_project", scoreLevels, fullScore, SCHOOL_PROJECT_SCORE_LEVEL,
+        aggrProjectScoreLevel(projectId, "score_project", scoreLevels, scoreLevelConfig, fullScore, SCHOOL_PROJECT_SCORE_LEVEL,
                 Target.Project, projectId,
                 (row, map) -> {
                     map.put("range_type", Range.School.name());
                     map.put("range_id", row.getString("range_id"));
                 });
 
-        aggrProjectScoreLevel(projectId, "score_project", scoreLevels, fullScore, CLASS_PROJECT_SCORE_LEVEL,
+        aggrProjectScoreLevel(projectId, "score_project", scoreLevels, scoreLevelConfig, fullScore, CLASS_PROJECT_SCORE_LEVEL,
                 Target.Project, projectId,
                 (row, map) -> {
                     map.put("range_type", Range.Class.name());
@@ -161,26 +162,26 @@ public class ScoreLevelRateAggregator extends Aggregator {
                 });
     }
 
-    private void aggregateSubjectScoreLevels(String projectId, JSONObject scoreLevels, List<ExamSubject> examSubjects) {
+    private void aggregateSubjectScoreLevels(String projectId, JSONObject scoreLevels, List<ExamSubject> examSubjects, String scoreLevelConfig) {
         examSubjects.forEach(subject -> {
             double fullScore = subject.getFullScore();
             String tableName = "score_subject_" + subject.getId();
 
-            aggrProjectScoreLevel(projectId, tableName, scoreLevels, fullScore, PROVINCE_PROJECT_SCORE_LEVEL,
+            aggrProjectScoreLevel(projectId, tableName, scoreLevels, scoreLevelConfig, fullScore, PROVINCE_PROJECT_SCORE_LEVEL,
                     Target.Subject, subject.getId(),
                     (row, map) -> {
                         map.put("range_type", Range.Province.name());
                         map.put("range_id", "430000");
                     });
 
-            aggrProjectScoreLevel(projectId, tableName, scoreLevels, fullScore, SCHOOL_PROJECT_SCORE_LEVEL,
+            aggrProjectScoreLevel(projectId, tableName, scoreLevels, scoreLevelConfig, fullScore, SCHOOL_PROJECT_SCORE_LEVEL,
                     Target.Subject, subject.getId(),
                     (row, map) -> {
                         map.put("range_type", Range.School.name());
                         map.put("range_id", row.getString("range_id"));
                     });
 
-            aggrProjectScoreLevel(projectId, tableName, scoreLevels, fullScore, CLASS_PROJECT_SCORE_LEVEL,
+            aggrProjectScoreLevel(projectId, tableName, scoreLevels, scoreLevelConfig, fullScore, CLASS_PROJECT_SCORE_LEVEL,
                     Target.Subject, subject.getId(),
                     (row, map) -> {
                         map.put("range_type", Range.Class.name());
@@ -190,7 +191,7 @@ public class ScoreLevelRateAggregator extends Aggregator {
     }
 
     private void aggrProjectScoreLevel(
-            String projectId, String tableName, JSONObject scoreLevels, double fullScore, String sqlTemplate,
+            String projectId, String tableName, JSONObject scoreLevels, String scoreLevelConfig, double fullScore, String sqlTemplate,
             Target target, String targetId,
             BiConsumer<Row, Map<String, Object>> mapFixer) {
 
@@ -198,9 +199,9 @@ public class ScoreLevelRateAggregator extends Aggregator {
 
         String sql = sqlTemplate
                 .replace("{{table}}", tableName)
-                .replace("{{pass}}", String.valueOf(ScoreLevelsHelper.passScore(subjectId, scoreLevels, fullScore)))
-                .replace("{{good}}", String.valueOf(ScoreLevelsHelper.goodScore(subjectId, scoreLevels, fullScore)))
-                .replace("{{xlnt}}", String.valueOf(ScoreLevelsHelper.excellentScore(subjectId, scoreLevels, fullScore)));
+                .replace("{{pass}}", String.valueOf(ScoreLevelsHelper.passScore(subjectId, scoreLevels, scoreLevelConfig, fullScore)))
+                .replace("{{good}}", String.valueOf(ScoreLevelsHelper.goodScore(subjectId, scoreLevels, scoreLevelConfig, fullScore)))
+                .replace("{{xlnt}}", String.valueOf(ScoreLevelsHelper.excellentScore(subjectId, scoreLevels, scoreLevelConfig, fullScore)));
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<Row> scoreMapRows = projectDao.query(sql);

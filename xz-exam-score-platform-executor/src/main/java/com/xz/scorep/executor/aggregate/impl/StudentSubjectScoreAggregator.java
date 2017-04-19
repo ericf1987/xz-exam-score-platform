@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.aggregate.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.hyd.dao.DAO;
 import com.hyd.dao.DAOException;
 import com.xz.scorep.executor.aggregate.*;
@@ -11,6 +12,7 @@ import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
+import com.xz.scorep.executor.reportconfig.ScoreLevelsHelper;
 import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,8 +94,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         if (Boolean.valueOf(reportConfig.getFillAlmostPass())) {
             LOG.info("提升项目 {} 的接近及格分数...", projectId);
             Double almostPassOffset = reportConfig.getAlmostPassOffset();
-            Double passRate = reportConfig.scoreLevelMap().get("Pass");
-            fillAlmostPass(projectId, subjects, almostPassOffset, passRate);
+            fillAlmostPass(projectId, subjects, almostPassOffset, reportConfig);
         }
     }
 
@@ -110,12 +111,20 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         });
     }
 
-    private void fillAlmostPass(String projectId, List<ExamSubject> subjects, Double almostPassOffset, Double passRate) {
+    private void fillAlmostPass(String projectId, List<ExamSubject> subjects, Double almostPassOffset, ReportConfig reportConfig) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
+        JSONObject scoreLevels = JSONObject.parseObject(reportConfig.getScoreLevels());
+        String scoreLevelConfig = reportConfig.getScoreLevelConfig();
 
         subjects.forEach(subject -> {
-            String tableName = "score_subject_" + subject.getId();
-            double passScore = subject.getFullScore() * passRate;
+            String subjectId = subject.getId();
+            String tableName = "score_subject_" + subjectId;
+            double passScore;
+            if (scoreLevelConfig.equals("rate")) {
+                passScore = subject.getFullScore() * ScoreLevelsHelper.getScoreLevels(subjectId, scoreLevelConfig, scoreLevels).get("Pass");
+            } else {
+                passScore = ScoreLevelsHelper.getScoreLevels(subjectId, scoreLevelConfig, scoreLevels).get("Pass");
+            }
             double almostPassScore = passScore - Math.abs(almostPassOffset);   // 用 abs() 是以防万一 offset 被设置了一个负数
             projectDao.execute("update " + tableName + " set score=? where score>=? and score<?",
                     passScore, almostPassScore, passScore);

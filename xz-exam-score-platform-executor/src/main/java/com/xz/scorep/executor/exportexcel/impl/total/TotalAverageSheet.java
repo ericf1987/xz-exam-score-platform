@@ -412,12 +412,13 @@ public abstract class TotalAverageSheet extends SheetGenerator {
 
     private void putNoteRow(SheetContext sheetContext, String projectId, String subjectId) {
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
+        String scoreLevelConfig = reportConfig.getScoreLevelConfig();
         JSONObject jsonObject = JSONArray.parseObject(reportConfig.getScoreLevels());
         double fullScore = subjectService.getSubjectScore(projectId, subjectId);
 
-        double xlnt = ScoreLevelsHelper.excellentScore(subjectId, jsonObject, fullScore);
-        double good = ScoreLevelsHelper.goodScore(subjectId, jsonObject, fullScore);
-        double pass = ScoreLevelsHelper.passScore(subjectId, jsonObject, fullScore);
+        double xlnt = ScoreLevelsHelper.excellentScore(subjectId, jsonObject, scoreLevelConfig, fullScore);
+        double good = ScoreLevelsHelper.goodScore(subjectId, jsonObject, scoreLevelConfig, fullScore);
+        double pass = ScoreLevelsHelper.passScore(subjectId, jsonObject, scoreLevelConfig, fullScore);
 
         String text = NOTE
                 .replace("{{xlnt}}", String.valueOf(xlnt))

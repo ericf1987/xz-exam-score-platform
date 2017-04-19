@@ -126,12 +126,18 @@ public class SubjectService {
     }
 
     private String createSql(String subjectId, String[] excludeQuestNos) {
+
+        if (excludeQuestNos == null || excludeQuestNos.length == 0) {
+            String sql = "select sum(full_score) as full_score from quest " +
+                    "where quest_subject = '{{subjectId}}' ";
+            return sql.replace("{{subjectId}}", subjectId);
+        }
+
         String sql = "select sum(full_score) as full_score from quest " +
                 "where quest_subject = '{{subjectId}}' " +
-                "and quest_no != {{exclude}} ";
+                "and quest_no !=  {{exclude}} ";
         String temp = String.join(" and quest_no != ", excludeQuestNos);
         return sql.replace("{{subjectId}}", subjectId).replace("{{exclude}}", temp);
-
     }
 
 }

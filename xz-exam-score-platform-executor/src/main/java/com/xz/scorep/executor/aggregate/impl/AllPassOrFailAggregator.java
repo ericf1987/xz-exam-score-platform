@@ -83,13 +83,14 @@ public class AllPassOrFailAggregator extends Aggregator {
         //////////////////////////////////////////////////////////////
 
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
+        String scoreLevelConfig = reportConfig.getScoreLevelConfig();
         JSONObject scoreLevels = JSON.parseObject(reportConfig.getScoreLevels());
 
         // subjectId -> 及格分数(double)
         List<ExamSubject> subjects = subjectService.listSubjects(projectId);
         Map<String, Double> passScores = subjects
                 .stream().collect(Collectors.toMap(
-                        ExamSubject::getId, subject -> ScoreLevelsHelper.passScore(subject.getId(), scoreLevels, subject.getFullScore())));
+                        ExamSubject::getId, subject -> ScoreLevelsHelper.passScore(subject.getId(), scoreLevels, scoreLevelConfig, subject.getFullScore())));
 
         String sql = generateSql(subjects, passScores);
 

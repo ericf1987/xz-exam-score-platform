@@ -181,7 +181,7 @@ public class ImportProjectService {
         //是否要拆分科目
         if (Boolean.valueOf(reportConfig.getSeparateCategorySubjects())) {
 
-            Map<String, JSONArray> subjectMap = getSubjectsOptionalGroup(projectId);
+            Map<String, JSONArray> subjectOptionalGroups = getSubjectsOptionalGroup(projectId);
 
             List<ExamSubject> examSubjects = subjectService.listSubjects(projectId);
             for (ExamSubject examSubject : examSubjects) {
@@ -190,44 +190,63 @@ public class ImportProjectService {
                     String cardId = examSubject.getCardId();
                     LOG.info("正在拆分项目ID{},科目{}", projectId, examSubject.getName());
 
-                    JSONArray jsonArray = subjectMap.get(examSubjectId);
-                    List<String> excludeQuest = new ArrayList<>();
-                    JSONUtils.<JSONObject>forEach(jsonArray, json -> {
-                        String[] questNos = json.getString("quest_nos")
-                                .replace("[", "")
-                                .replace("]", "")
-                                .replace("\"", "")
-                                .split(",");
-                        Integer chooseCount = json.getInteger("choose_count");
-                        for (int i = 0; i < questNos.length - chooseCount; i++) {
-                            excludeQuest.add(questNos[i]);
-                        }
-                    });
+                    JSONArray jsonArray = subjectOptionalGroups.get(examSubjectId);
+                    String[] exclude = getExcludeQuestNos(jsonArray);
 
                     int size = examSubjectId.length() / 3;
                     for (int i = 1; i <= size; i++) {
                         String subSubjectId = examSubjectId.substring(i * size - 3, i * size);
                         String subjectName = subjectService.getSubjectName(subSubjectId);
 
-                        String[] exclude = new String[excludeQuest.size()];
-                        excludeQuest.toArray(exclude);
-
-                        double subSubjectScore = subjectService.
-                                getSubSubjectScore(projectId, subSubjectId, exclude);
+                        double subSubjectScore = subjectService.getSubSubjectScore(projectId, subSubjectId, exclude);
                         ExamSubject subject = new ExamSubject(subSubjectId, subjectName, subSubjectScore);
                         subject.setVirtualSubject(String.valueOf(true));
                         subject.setCardId(cardId);
+
                         subjectService.saveSubject(projectId, subject);
+                        subjectService.createSubjectScoreTable(projectId, subject.getId());
                     }
                 }
             }
         }
     }
 
+    /**
+     * 获取该综合科目下所有的选做题
+     *
+     * @param jsonArray 选做题组
+     * @return 要排除的选做题列表
+     */
+    private String[] getExcludeQuestNos(JSONArray jsonArray) {
+        List<String> excludeQuest = new ArrayList<>();
+
+        JSONUtils.<JSONObject>forEach(jsonArray, json -> {
+            String[] questNos = json.getString("quest_nos")
+                    .replace("[", "")
+                    .replace("]", "")
+                    .replace("\"", "")
+                    .split(",");
+            Integer chooseCount = json.getInteger("choose_count");
+            for (int i = 0; i < questNos.length - chooseCount; i++) {
+                excludeQuest.add(questNos[i]);
+            }
+        });
+
+        String[] exclude = new String[excludeQuest.size()];
+        return excludeQuest.toArray(exclude);
+    }
+
+    /**
+     * 获取所有含有选做题的综合科目
+     * @param projectId 项目ID
+     * @return
+     */
     private Map<String, JSONArray> getSubjectsOptionalGroup(String projectId) {
+        Map<String, JSONArray> subjectMap = new HashMap<>();
+
         JSONObject optionalGroups = appAuthClient.callApi("QueryQuestionByProject",
                 new Param().setParameter(PROJECT_ID_KEY, projectId)).get("optionalGroups");
-        Map<String, JSONArray> subjectMap = new HashMap<>();
+
         for (Map.Entry<String, Object> entry : optionalGroups.entrySet()) {
             String entryKey = entry.getKey();
             JSONArray jsonArray = JSONArray.parseArray(entry.getValue().toString());
