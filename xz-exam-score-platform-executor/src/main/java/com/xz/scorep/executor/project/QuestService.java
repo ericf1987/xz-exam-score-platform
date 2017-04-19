@@ -48,7 +48,7 @@ public class QuestService {
 
     public List<ExamQuest> queryQuests(String projectId, String subjectId) {
         return queryQuests(projectId).stream()
-                .filter(q -> q.getExamSubject().equals(subjectId))
+                .filter(q -> q.getExamSubject().equals(subjectId) || q.getQuestSubject().equals(subjectId))
                 .collect(Collectors.toList());
     }
 

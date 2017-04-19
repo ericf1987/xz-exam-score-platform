@@ -166,22 +166,17 @@ public class ImportScoreHelper {
         }
 
         // 同一学生不可能同时有存在两种及以上的状态
-        //作弊纳入统计处理
-        if (!Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
-            if (cheat) {
-                importStudentSubjectiveScore(subjectId, studentScoreDoc, true, false);
-                importStudentObjectiveScore(subjectId, studentScoreDoc, true, false);
-                return;
-            }
+        //缺考、作弊、缺卷先处理为0分
+        if (cheat) {
+            importStudentSubjectiveScore(subjectId, studentScoreDoc, true, false);
+            importStudentObjectiveScore(subjectId, studentScoreDoc, true, false);
+            return;
         }
 
-        //缺考缺卷纳入统计处理
-        if (!Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
-            if (absent || lost) {
-                importStudentSubjectiveScore(subjectId, studentScoreDoc, false, true);
-                importStudentObjectiveScore(subjectId, studentScoreDoc, false, true);
-                return;
-            }
+        if (absent || lost) {
+            importStudentSubjectiveScore(subjectId, studentScoreDoc, false, true);
+            importStudentObjectiveScore(subjectId, studentScoreDoc, false, true);
+            return;
         }
 
         //无缺考、缺卷、作弊学生

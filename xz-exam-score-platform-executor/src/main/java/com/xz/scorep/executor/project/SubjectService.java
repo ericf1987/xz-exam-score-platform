@@ -87,12 +87,10 @@ public class SubjectService {
                 "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)");
     }
 
+    //在科目拆分的情况,使用缓存可能导致查出的科目信息与预期的不相符
     public List<ExamSubject> listSubjects(String projectId) {
-        SimpleCache cache = cacheFactory.getProjectCache(projectId);
-        String cacheKey = "subjects:";
-        return cache.get(cacheKey, () ->
-                new ArrayList<>(daoFactory.getProjectDao(projectId)
-                        .query(ExamSubject.class, "select * from subject")));
+        return new ArrayList<>(daoFactory.getProjectDao(projectId)
+                .query(ExamSubject.class, "select * from subject"));
     }
 
     public static String getSubjectName(String subjectId) {

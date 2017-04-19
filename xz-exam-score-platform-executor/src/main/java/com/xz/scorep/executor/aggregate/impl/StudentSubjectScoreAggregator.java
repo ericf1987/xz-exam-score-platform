@@ -35,12 +35,17 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
     private static final String DEL_ABS_SCORE = "delete from score_subject_{{subject}} " +
             "where student_id in (\n" +
-            "  select a.student_id from absent a where a.subject_id='{{subject}}'  \n" +
+            "  select a.student_id from absent a where a.subject_id like \"%{{subject}}%\"  \n" +
             ")";
 
     private static final String DEL_LOST_SCORE = "delete from score_subject_{{subject}} " +
             "where student_id in (\n" +
-            "  select a.student_id from lost a where a.subject_id='{{subject}}'  \n" +
+            "  select a.student_id from lost a where a.subject_id like \"%{{subject}}%\"  \n" +
+            ")";
+
+    private static final String DEL_CHEAT_SCORE = "delete from score_subject_{{subject}} " +
+            "where student_id in (\n" +
+            "  select a.student_id from cheat a where a.subject_id like \"%{{subject}}%\"  \n" +
             ")";
 
     @Autowired
@@ -66,8 +71,16 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         List<ExamSubject> subjects = getSubjects(aggregateParameter);
 
+        LOG.info("subjectsSize ...{}",subjects.size());
         ThreadPools.createAndRunThreadPool(aggregateConfig.getSubjectPoolSize(), 1,
                 pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
+
+        // 根据报表配置删除作弊学生
+        if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())){
+            LOG.info("删除项目 {} 作弊考生...", projectId);
+            removeCheatStudent(projectId,subjects);
+            LOG.info("项目 {} 作弊考生删除完毕...", projectId);
+        }
 
         // 根据报表配置删除缺考考生记录  (缺卷同缺处理)
         if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
@@ -97,6 +110,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             fillAlmostPass(projectId, subjects, almostPassOffset, reportConfig);
         }
     }
+
 
 
     private void copyToRealScore(String projectId, List<ExamSubject> subjects) {
@@ -152,6 +166,16 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         }
     }
 
+    //删除科目分数表中作弊的考生记录
+    private void removeCheatStudent(String projectId, List<ExamSubject> subjects) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        for (ExamSubject subject : subjects) {
+            String sql = DEL_CHEAT_SCORE.replace("{{subject}}", subject.getId());
+            LOG.info("删除科目 {} 作弊考生...", subject.getId());
+            projectDao.execute(sql);
+        }
+    }
+
     //删除科目分数表中标记为缺卷的考生记录
     private void removeLostStudents(String projectId, List<ExamSubject> subjects) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
@@ -192,6 +216,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         subjects.forEach(subject -> {
             String subjectId = subject.getId();
+            LOG.info("subjectId{}........",subjectId);
             String tableName = "score_subject_" + subjectId;
 
             // 初始化
@@ -206,6 +231,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
     private void accumulateQuestScores(String projectId, DAO projectDao, ThreadPoolExecutor executor, String subjectId, String tableName) {
         List<ExamQuest> examQuests = questService.queryQuests(projectId, subjectId);
+        LOG.info("questSize ...{}",examQuests.size());
         final AtomicInteger counter = new AtomicInteger(0);
 
         Runnable accumulateTip = () -> LOG.info(
@@ -219,6 +245,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
     private void accumulateQuestScores0(DAO projectDao, String tableName, ExamQuest examQuest, Runnable tip) {
         try {
             String questId = examQuest.getId();
+            LOG.info("累计分数{}",examQuest.getQuestSubject());
 
             String combineSql = "update " + tableName + " p \n" +
                     "  inner join `score_" + questId + "` q using(student_id)\n" +

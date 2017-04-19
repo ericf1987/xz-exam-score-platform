@@ -51,6 +51,7 @@ public class ScoreLevelsHelper {
                 if (entry.getKey().equals(subjectId)) {
                     JSONObject value = (JSONObject) entry.getValue();
                     value.forEach((key, val) -> result.put(key, Double.parseDouble(val.toString())));
+                    return result;
                 }
             }
         }else {
