@@ -138,4 +138,8 @@ public class SubjectService {
         return sql.replace("{{subjectId}}", subjectId).replace("{{exclude}}", temp);
     }
 
+    public void deleteSubject(String projectId, String subjectId) {
+        daoFactory.getProjectDao(projectId).execute("delete from subject where id = ?", subjectId);
+    }
+
 }

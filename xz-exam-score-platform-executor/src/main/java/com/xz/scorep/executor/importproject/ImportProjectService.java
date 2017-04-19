@@ -113,7 +113,7 @@ public class ImportProjectService {
             context.put("questList", questService.queryQuests(projectId));
         }
 
-        // 导入项目科目数据
+        // 导入项目科目数据(并根据配置是否拆分综合科目)
         if (parameters.isImportProjectInfo()) {
             LOG.info("导入项目 {} 科目信息...", projectId);
             importSubjects(context);
@@ -188,7 +188,7 @@ public class ImportProjectService {
                 if (examSubject.getId().length() > 3) {
                     String examSubjectId = examSubject.getId();
                     String cardId = examSubject.getCardId();
-                    LOG.info("正在拆分项目ID{},科目{}", projectId, examSubject.getName());
+                    LOG.info("正在拆分项目ID{},科目ID{}，科目{}", projectId, examSubjectId, examSubject.getName());
 
                     JSONArray jsonArray = subjectOptionalGroups.get(examSubjectId);
                     String[] exclude = getExcludeQuestNos(jsonArray);
@@ -206,9 +206,21 @@ public class ImportProjectService {
                         subjectService.saveSubject(projectId, subject);
                         subjectService.createSubjectScoreTable(projectId, subject.getId());
                     }
+                    //拆分之后删除综合科目的相关表和记录
+                    deleteTables(projectId, examSubjectId);
                 }
             }
         }
+    }
+
+    private void deleteTables(String projectId, String examSubjectId) {
+        subjectService.deleteSubject(projectId, examSubjectId);
+        daoFactory.getProjectDao(projectId).execute("drop table `score_subject_{{id}}`"
+                .replace("{{id}}",examSubjectId));
+        daoFactory.getProjectDao(projectId).execute("drop table `score_subjective_{{id}}`"
+                .replace("{{id}}",examSubjectId));
+        daoFactory.getProjectDao(projectId).execute("drop table `score_objective_{{id}}`"
+                .replace("{{id}}",examSubjectId));
     }
 
     /**
@@ -238,6 +250,7 @@ public class ImportProjectService {
 
     /**
      * 获取所有含有选做题的综合科目
+     *
      * @param projectId 项目ID
      * @return
      */
