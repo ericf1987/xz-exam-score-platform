@@ -60,7 +60,14 @@ public class QuestService {
 
     public List<ExamQuest> queryQuests(String projectId, String subjectId, boolean objective) {
         return queryQuests(projectId).stream()
-                .filter(q -> q.getExamSubject().equals(subjectId) && q.isObjective() == objective)
+                .filter(q -> {
+                    if (subjectId.length() > 3) {
+                        return q.getExamSubject().equals(subjectId);
+                    } else {
+                        return q.getQuestSubject().equals(subjectId);
+                    }
+                })
+                .filter(q -> q.isObjective() == objective)
                 .collect(Collectors.toList());
     }
 
