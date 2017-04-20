@@ -1,7 +1,6 @@
 package com.xz.scorep.executor.reportconfig;
 
 import com.alibaba.fastjson.JSONObject;
-import com.hyd.dao.util.StringUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +32,7 @@ public class ScoreLevelsHelper {
 
     public static double score(JSONObject jsonObject, String type, String subjectId, double fullScore, String scoreLevelConfig) {
 
-        if (scoreLevelConfig.equals("rate")) {
+        if (scoreLevelConfig.equals("rate") || "".equals(scoreLevelConfig)) {
             return fullScore * jsonObject.getDouble(type);
         }
 
@@ -46,7 +45,7 @@ public class ScoreLevelsHelper {
 
     public static Map<String, Double> getScoreLevels(String subjectId, String scoreLevelConfig, JSONObject scoreLevels) {
         Map<String, Double> result = new HashMap<>();
-        if (scoreLevelConfig.equals("score")){
+        if (scoreLevelConfig.equals("score")) {
             for (Map.Entry<String, Object> entry : scoreLevels.entrySet()) {
                 if (entry.getKey().equals(subjectId)) {
                     JSONObject value = (JSONObject) entry.getValue();
@@ -54,7 +53,7 @@ public class ScoreLevelsHelper {
                     return result;
                 }
             }
-        }else {
+        } else {
             result.put("Excellent", scoreLevels.getDouble("Excellent"));
             result.put("Good", scoreLevels.getDouble("Good"));
             result.put("Pass", scoreLevels.getDouble("Pass"));

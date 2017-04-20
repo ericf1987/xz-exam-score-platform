@@ -118,7 +118,7 @@ public class ProjectService {
                 "  question_type_name varchar(10), " +
                 "  objective varchar(5), " +
                 "  give_full_score varchar(5), " +
-                "  quest_no varchar(10), " +
+                "  quest_no varchar(20), " +
                 "  full_score decimal(4,1), " +
                 "  answer text, " +
                 "  score_rule varchar(100), " +

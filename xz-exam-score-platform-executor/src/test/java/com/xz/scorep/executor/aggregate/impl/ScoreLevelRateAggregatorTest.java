@@ -19,7 +19,7 @@ public class ScoreLevelRateAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        scoreLevelRateAggregator.aggregate(new AggregateParameter(PROJECT_ID, AggregateType.Quick));
+        scoreLevelRateAggregator.aggregate(new AggregateParameter("430300-2ded1a538def48c08d1d82014acf55ba", AggregateType.Quick));
     }
 
 }
