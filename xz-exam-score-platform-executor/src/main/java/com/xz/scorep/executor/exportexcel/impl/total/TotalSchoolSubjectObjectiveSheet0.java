@@ -13,6 +13,8 @@ import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetTask;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.QuestService;
+import com.xz.scorep.executor.reportconfig.ReportConfig;
+import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.Direction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +34,7 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
             " from objective_option_rate a, quest " +
             " where " +
             "   a.quest_id=quest.id and " +
-            "   quest.exam_subject=? and " +
+            "   {{sub}} " +
             "   a.range_type='province' and a.option is not null";
 
     private static final String QUERY_TEMPLATE_SCHOOL = "select" +
@@ -41,7 +43,7 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
             " from objective_option_rate a, quest " +
             " where " +
             "   a.quest_id=quest.id and " +
-            "   quest.exam_subject=? and " +
+            "   {{sub}} " +
             "   a.range_type='school' and" +
             "   a.range_id=? and a.option is not null";
 
@@ -51,7 +53,7 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
             " from objective_option_rate a, quest " +
             " where " +
             "   a.quest_id=quest.id and " +
-            "   quest.exam_subject=? and " +
+            "   {{sub}} " +
             "   a.option is not null and" +
             "   a.range_type='class' and" +
             "   a.range_id in (select id from class where school_id=?)";
@@ -66,6 +68,9 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
 
     @Autowired
     private DAOFactory daoFactory;
+
+    @Autowired
+    private ReportConfigService reportConfigService;
 
     @Override
     protected void generateSheet(SheetContext sheetContext) throws Exception {
@@ -137,18 +142,25 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        String s = QUERY_TEMPLATE.replace("{{rateAlias}}", "province_rate");
-        System.out.println(s);
-        List<Row> provinceOptionRates = fixKey(projectDao.query(
-                s, subjectId));
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
+        Boolean separate = Boolean.valueOf(reportConfig.getSeparateCategorySubjects());
+
+        String sub = separate ? "quest.quest_subject= '" + subjectId + "' and"
+                : "quest.exam_subject='" + subjectId + "' and";
+
+        String provinceSql = QUERY_TEMPLATE.replace("{{rateAlias}}", "province_rate")
+                .replace("{{sub}}", sub);
+        List<Row> provinceOptionRates = fixKey(projectDao.query(provinceSql));
         sheetContext.rowAdd(provinceOptionRates);
 
-        List<Row> schoolOptionRates = fixKey(projectDao.query(
-                QUERY_TEMPLATE_SCHOOL.replace("{{rateAlias}}", "school_rate"), subjectId, schoolId));
+        String schoolSql = QUERY_TEMPLATE_SCHOOL.replace("{{rateAlias}}", "school_rate")
+                .replace("{{sub}}", sub);
+        List<Row> schoolOptionRates = fixKey(projectDao.query(schoolSql, schoolId));
         sheetContext.rowAdd(schoolOptionRates);
 
-        List<Row> classOptionRates = fixKey(projectDao.query(
-                QUERY_TEMPLATE_CLASS.replace("{{rateAlias}}", "class_rate"), subjectId, schoolId));
+        String classSql = QUERY_TEMPLATE_CLASS.replace("{{rateAlias}}", "class_rate")
+                .replace("{{sub}}", sub);
+        List<Row> classOptionRates = fixKey(projectDao.query(classSql, schoolId));
         sheetContext.rowAdd(fixClassRows(classOptionRates));
 
         sheetContext.fillEmptyCells(column -> column.contains("_rate"), "0%");

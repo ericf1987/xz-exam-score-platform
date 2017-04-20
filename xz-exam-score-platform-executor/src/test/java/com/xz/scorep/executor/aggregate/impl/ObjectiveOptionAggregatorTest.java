@@ -28,7 +28,7 @@ public class ObjectiveOptionAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        aggregator.aggregate(new AggregateParameter("430100-354dce3ac8ef4800a1b57f81a10b8baa"));
+        aggregator.aggregate(new AggregateParameter("430300-c582131e66b64fe38da7d0510c399ec4"));
     }
 
     @Test

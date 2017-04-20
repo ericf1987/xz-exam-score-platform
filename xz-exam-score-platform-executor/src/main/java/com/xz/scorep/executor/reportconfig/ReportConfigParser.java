@@ -41,7 +41,7 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
         if (scoreLevels != null) {
             Map<String, Object> newMap = new HashMap<>();
 
-            if (scoreLevelConfig == null || scoreLevelConfig.equals("rate")) {
+            if ("".equals(scoreLevelConfig) || scoreLevelConfig.equals("rate")) {
                 scoreLevels.forEach((key, value) -> newMap.put(StringUtil.capitalize(key), value)); // key 改为首字母大写
             } else {
                 for (Map.Entry<String, Object> entry : scoreLevels.entrySet()) {

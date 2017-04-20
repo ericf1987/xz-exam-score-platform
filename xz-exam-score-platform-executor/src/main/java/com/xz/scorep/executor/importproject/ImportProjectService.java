@@ -127,8 +127,18 @@ public class ImportProjectService {
         }
         context.put("client", mongoClient);
         if (parameters.isImportStudents()) {
-            LOG.info("导入项目 {} 考生信息...", projectId);
-            importStudents(context);
+            ImportStudentHelper helper = new ImportStudentHelper(
+                    appAuthClient, schoolService, classService, studentService);
+            try {
+                LOG.info("通过监控平台导入项目 {} 考生信息...", projectId);
+                helper.importStudentListFromMonitor(context);
+            } catch (Exception e) {
+                LOG.info("通过监控平台导入项目 {} 考生信息失败...", projectId);
+
+                LOG.info("通过CMS接口导入项目 {} 考生信息...", projectId);
+                helper.importStudentListFromCMS(context);
+                LOG.info("通过CMS接口导入项目 {} 考生信息成功...", projectId);
+            }
         }
 
 
@@ -140,6 +150,7 @@ public class ImportProjectService {
         LOG.info("导入项目 {} 完成。", projectId);
         projectService.updateProjectStatus(projectId, ProjectStatus.Ready);
     }
+
 
     private void importScore(Context context) {
 
@@ -216,11 +227,11 @@ public class ImportProjectService {
     private void deleteTables(String projectId, String examSubjectId) {
         subjectService.deleteSubject(projectId, examSubjectId);
         daoFactory.getProjectDao(projectId).execute("drop table `score_subject_{{id}}`"
-                .replace("{{id}}",examSubjectId));
+                .replace("{{id}}", examSubjectId));
         daoFactory.getProjectDao(projectId).execute("drop table `score_subjective_{{id}}`"
-                .replace("{{id}}",examSubjectId));
+                .replace("{{id}}", examSubjectId));
         daoFactory.getProjectDao(projectId).execute("drop table `score_objective_{{id}}`"
-                .replace("{{id}}",examSubjectId));
+                .replace("{{id}}", examSubjectId));
     }
 
     /**
@@ -291,14 +302,6 @@ public class ImportProjectService {
         if (reportConfig != null) {
             reportConfigService.saveReportConfig(reportConfig);
         }
-    }
-
-    private void importStudents(Context context) {
-
-        ImportStudentHelper helper = new ImportStudentHelper(
-                appAuthClient, schoolService, classService, studentService);
-
-        helper.importStudentList(context);
     }
 
     private void importQuests(Context context) {

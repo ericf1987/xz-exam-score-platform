@@ -20,11 +20,11 @@ public class TotalSchoolSubjectObjectiveReportTest extends BaseTest {
     @Test
     public void generateReport() throws Exception {
 
-        Range range = Range.school("d988de7f-8a44-487c-9442-449c90dfd861", "111");
-        Target target = Target.subject("004", "物理");
+        Range range = Range.school("002e02d6-c036-4780-85d4-e54e3f1fbf9f", "111");
+        Target target = Target.subject("008", "物11理");
         String savePath = "./target/主客观题分析（" + target.getName() + "）.xlsx";
 
-        report.generate("430100-354dce3ac8ef4800a1b57f81a10b8baa", range, target, savePath);
+        report.generate("430300-c582131e66b64fe38da7d0510c399ec4", range, target, savePath);
     }
 
 }

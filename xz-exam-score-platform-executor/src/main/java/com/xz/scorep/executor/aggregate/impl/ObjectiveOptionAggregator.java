@@ -14,6 +14,8 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.db.MultipleBatchExecutor;
 import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.project.*;
+import com.xz.scorep.executor.reportconfig.ReportConfig;
+import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +59,9 @@ public class ObjectiveOptionAggregator extends Aggregator {
 
     @Autowired
     private SubjectService subjectService;
+
+    @Autowired
+    private ReportConfigService reportConfigService;
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
@@ -112,9 +117,12 @@ public class ObjectiveOptionAggregator extends Aggregator {
 
         List<ExamQuest> quests = questService.queryQuests(projectId, true);
         SimpleCache reportCache = cacheFactory.getReportCache(projectId);
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
+        Boolean separate = Boolean.valueOf(reportConfig.getSeparateCategorySubjects());
+
 
         quests.forEach(quest -> {
-            String subjectId = quest.getExamSubject();
+            String subjectId = separate ? quest.getQuestSubject() : quest.getExamSubject();
             String questId = quest.getId();
             String cacheKey = "quest_" + questId;
             List<Row> scoreList = reportCache.get(cacheKey);
