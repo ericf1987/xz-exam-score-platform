@@ -75,6 +75,11 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         ThreadPools.createAndRunThreadPool(aggregateConfig.getSubjectPoolSize(), 1,
                 pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
 
+        //同云报表平台处理
+        LOG.info("删除项目{}缺卷学生...", projectId);
+        removeLostStudents(projectId, subjects);
+        LOG.info("项目 {} 缺卷考生删除完毕。", projectId);
+
         // 根据报表配置删除作弊学生
         if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())){
             LOG.info("删除项目 {} 作弊考生...", projectId);
@@ -82,16 +87,11 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             LOG.info("项目 {} 作弊考生删除完毕...", projectId);
         }
 
-        // 根据报表配置删除缺考考生记录  (缺卷同缺处理)
+        // 根据报表配置删除缺考考生记录
         if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
             LOG.info("删除项目 {} 缺考考生...", projectId);
             removeAbsentStudents(projectId, subjects);
             LOG.info("项目 {} 缺考考生删除完毕。", projectId);
-
-            LOG.info("删除项目{}缺卷学生...", projectId);
-            removeLostStudents(projectId, subjects);
-            LOG.info("项目 {} 缺卷考生删除完毕。", projectId);
-
         }
 
         // 根据报表配置删除零分记录
@@ -149,7 +149,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         subjects.forEach(subject -> {
             String sql = DEL_ZERO_SCORE.replace("{{subject}}", subject.getId());
-            LOG.info("删除科目 {} 零分记录...", subject.getId());
             projectDao.execute(sql);
         });
         LOG.info("项目 {} 的科目零分记录删除完毕。", projectId);
@@ -161,7 +160,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         for (ExamSubject subject : subjects) {
             String sql = DEL_ABS_SCORE.replace("{{subject}}", subject.getId());
-            LOG.info("删除科目 {} 缺考考生...", subject.getId());
             projectDao.execute(sql);
         }
     }
@@ -171,7 +169,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         for (ExamSubject subject : subjects) {
             String sql = DEL_CHEAT_SCORE.replace("{{subject}}", subject.getId());
-            LOG.info("删除科目 {} 作弊考生...", subject.getId());
             projectDao.execute(sql);
         }
     }
@@ -181,7 +178,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         for (ExamSubject subject : subjects) {
             String sql = DEL_LOST_SCORE.replace("{{subject}}", subject.getId());
-            LOG.info("删除科目 {} 缺卷考生...", subject.getId());
             projectDao.execute(sql);
         }
     }
