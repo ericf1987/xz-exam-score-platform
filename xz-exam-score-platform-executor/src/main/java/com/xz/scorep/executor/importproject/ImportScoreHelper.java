@@ -246,13 +246,12 @@ public class ImportScoreHelper {
                 saveScore(studentId, quest, new ScoreValue(0, false), true);
                 continue;
             } else {
+                boolean giveFullScore = quest.isGiveFullScore();
                 // 客观题必须要有作答，如未作答也应该是 “*”
-                if (StringUtil.isBlank(studentAnswer)) {
+                if (!giveFullScore && StringUtil.isBlank(studentAnswer)) {
                     saveScore(studentId, quest, new ScoreValue(0, false), true);
                     continue;
                 } else {
-                    boolean giveFullScore = quest.isGiveFullScore();
-
                     ScoreValue scoreValue = calculateObjScore(quest, studentAnswer, giveFullScore);
                     saveScore(studentId, quest, scoreValue, false);
                 }
