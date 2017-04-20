@@ -166,21 +166,20 @@ public class ImportScoreHelper {
         }
 
         // 同一学生不可能同时有存在两种及以上的状态
-        //作弊,缺考,缺卷 先设置0分,后面统计时再根据配置是否移除0分.....
+        //缺考、作弊、缺卷先处理为0分
         if (cheat) {
             importStudentSubjectiveScore(subjectId, studentScoreDoc, true, false);
             importStudentObjectiveScore(subjectId, studentScoreDoc, true, false);
             return;
         }
 
-        //作弊,缺考,缺卷 先设置0分,后面统计时再根据配置是否移除0分.....
         if (absent || lost) {
             importStudentSubjectiveScore(subjectId, studentScoreDoc, false, true);
             importStudentObjectiveScore(subjectId, studentScoreDoc, false, true);
             return;
         }
 
-        //无缺考、缺卷、作弊的考生
+        //无缺考、缺卷、作弊学生
         importStudentSubjectiveScore(subjectId, studentScoreDoc, false, false);
         importStudentObjectiveScore(subjectId, studentScoreDoc, false, false);
 
@@ -247,13 +246,12 @@ public class ImportScoreHelper {
                 saveScore(studentId, quest, new ScoreValue(0, false), true);
                 continue;
             } else {
+                boolean giveFullScore = quest.isGiveFullScore();
                 // 客观题必须要有作答，如未作答也应该是 “*”
-                if (StringUtil.isBlank(studentAnswer)) {
+                if (!giveFullScore && StringUtil.isBlank(studentAnswer)) {
                     saveScore(studentId, quest, new ScoreValue(0, false), true);
                     continue;
                 } else {
-                    boolean giveFullScore = quest.isGiveFullScore();
-
                     ScoreValue scoreValue = calculateObjScore(quest, studentAnswer, giveFullScore);
                     saveScore(studentId, quest, scoreValue, false);
                 }

@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.importproject;
 
 import com.xz.ajiaedu.common.lang.Context;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.BaseTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ public class ImportProjectServiceTest extends BaseTest {
     public void importProject() throws Exception {
         String projectId = "430100-354dce3ac8ef4800a1b57f81a10b8baa";
         importProjectService.importProject(
-                importSelected(projectId, false, false, false, false, true, true));
+                importSelected(projectId, true, true, true, true, true, true));
     }
 
     @Test
@@ -29,6 +30,11 @@ public class ImportProjectServiceTest extends BaseTest {
 
     @Test
     public void testImportStudent() throws Exception {
-
+        String examSubjectId = "007008009";
+        int size = examSubjectId.length() / 3;
+        for (int i = 1; i <= size; i++) {
+            String subSubjectId = examSubjectId.substring(i * size - 3, i * size);
+            System.out.println(subSubjectId);
+        }
     }
 }

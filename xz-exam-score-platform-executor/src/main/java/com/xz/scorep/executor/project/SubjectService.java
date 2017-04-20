@@ -41,6 +41,9 @@ public class SubjectService {
         SUBJECT_NAMES.put("019", "道德与法治");
         SUBJECT_NAMES.put("004005006", "理科综合");
         SUBJECT_NAMES.put("007008009", "文科综合");
+        SUBJECT_NAMES.put("004005", "物化综合");
+        SUBJECT_NAMES.put("007008", "政史综合");
+        SUBJECT_NAMES.put("006009", "生地综合");
     }
 
     @Autowired
@@ -84,12 +87,10 @@ public class SubjectService {
                 "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)");
     }
 
+    //在科目拆分的情况,使用缓存可能导致查出的科目信息与预期的不相符
     public List<ExamSubject> listSubjects(String projectId) {
-        SimpleCache cache = cacheFactory.getProjectCache(projectId);
-        String cacheKey = "subjects:";
-        return cache.get(cacheKey, () ->
-                new ArrayList<>(daoFactory.getProjectDao(projectId)
-                        .query(ExamSubject.class, "select * from subject")));
+        return new ArrayList<>(daoFactory.getProjectDao(projectId)
+                .query(ExamSubject.class, "select * from subject"));
     }
 
     public static String getSubjectName(String subjectId) {
@@ -115,4 +116,30 @@ public class SubjectService {
             return findSubject(projectId, subjectId).getFullScore();
         }
     }
+
+    public double getSubSubjectScore(String projectId, String subjectId, String... excludeQuestNos) {
+        return daoFactory.getProjectDao(projectId)
+                .queryFirst(createSql(subjectId, excludeQuestNos))
+                .getDouble("full_score", 0);
+    }
+
+    private String createSql(String subjectId, String[] excludeQuestNos) {
+
+        if (excludeQuestNos == null || excludeQuestNos.length == 0) {
+            String sql = "select sum(full_score) as full_score from quest " +
+                    "where quest_subject = '{{subjectId}}' ";
+            return sql.replace("{{subjectId}}", subjectId);
+        }
+
+        String sql = "select sum(full_score) as full_score from quest " +
+                "where quest_subject = '{{subjectId}}' " +
+                "and quest_no !=  {{exclude}} ";
+        String temp = String.join(" and quest_no != ", excludeQuestNos);
+        return sql.replace("{{subjectId}}", subjectId).replace("{{exclude}}", temp);
+    }
+
+    public void deleteSubject(String projectId, String subjectId) {
+        daoFactory.getProjectDao(projectId).execute("delete from subject where id = ?", subjectId);
+    }
+
 }

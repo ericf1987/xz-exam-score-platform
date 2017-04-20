@@ -25,9 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class ImportProjectService {
@@ -92,40 +90,47 @@ public class ImportProjectService {
             importProjectInfo(context);
         }
 
-        // 初始化数据库
-        if (parameters.isRecreateDatabase()) {
-            LOG.info("重新创建项目 {} 的数据库...", projectId);
-            projectService.initProjectDatabase(projectId);
-        }
-
-        // 导入项目数据
-        if (parameters.isImportProjectInfo()) {
-            LOG.info("导入项目 {} 科目信息...", projectId);
-            importSubjects(context);
-        }
-
+        //导入报表配置
         if (parameters.isImportReportConfig()) {
             LOG.info("导入项目 {} 报表配置...", projectId);
             importReportConfig(context);
         }
 
-        //导入考生基础信息改为通过监控平台导入
-        MongoClient mongoClient = mongoClientFactory.getProjectMongoClient(projectId);
-        if (mongoClient == null) {
-            throw new IllegalArgumentException("项目 " + projectId + " 在网阅数据库中不存在");
-        }
-        context.put("client",mongoClient);
-        if (parameters.isImportStudents()) {
-            LOG.info("导入项目 {} 考生信息...", projectId);
-            importStudents(context);
+        // 初始化项目数据库
+        if (parameters.isRecreateDatabase()) {
+            LOG.info("重新创建项目 {} 的数据库...", projectId);
+            projectService.initProjectDatabase(projectId);
         }
 
+        /**
+         * 先导入题目信息
+         * (后续根据题目信息创建 score_subject_{{subjectId}}相关表)
+         */
         if (parameters.isImportQuests()) {
             LOG.info("导入项目 {} 题目信息...", projectId);
             importQuests(context);
         } else {
             context.put("questList", questService.queryQuests(projectId));
         }
+
+        // 导入项目科目数据(并根据配置是否拆分综合科目)
+        if (parameters.isImportProjectInfo()) {
+            LOG.info("导入项目 {} 科目信息...", projectId);
+            importSubjects(context);
+        }
+
+
+        //导入考生基础信息改为通过监控平台导入
+        MongoClient mongoClient = mongoClientFactory.getProjectMongoClient(projectId);
+        if (mongoClient == null) {
+            throw new IllegalArgumentException("项目 " + projectId + " 在网阅数据库中不存在");
+        }
+        context.put("client", mongoClient);
+        if (parameters.isImportStudents()) {
+            LOG.info("导入项目 {} 考生信息...", projectId);
+            importStudents(context);
+        }
+
 
         if (parameters.isImportScore()) {
             LOG.info("导入项目 {} 阅卷分数...", projectId);
@@ -162,14 +167,107 @@ public class ImportProjectService {
                 new Param().setParameter("projectId", projectId));
 
         JSONArray subjects = result.get("result");
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
+
         JSONUtils.<JSONObject>forEach(subjects, subjectDoc -> {
             ExamSubject subject = new ExamSubject(subjectDoc);
+            subject.setVirtualSubject("false");
             projectFullScore.add(subject.getFullScore());
             subjectService.saveSubject(projectId, subject);
             subjectService.createSubjectScoreTable(projectId, subject.getId());
         });
-
         projectService.updateProjectFullScore(projectId, projectFullScore.get());
+
+        //是否要拆分科目
+        if (Boolean.valueOf(reportConfig.getSeparateCategorySubjects())) {
+
+            Map<String, JSONArray> subjectOptionalGroups = getSubjectsOptionalGroup(projectId);
+
+            List<ExamSubject> examSubjects = subjectService.listSubjects(projectId);
+            for (ExamSubject examSubject : examSubjects) {
+                if (examSubject.getId().length() > 3) {
+                    String examSubjectId = examSubject.getId();
+                    String cardId = examSubject.getCardId();
+                    LOG.info("正在拆分项目ID{},科目ID{}，科目{}", projectId, examSubjectId, examSubject.getName());
+
+                    JSONArray jsonArray = subjectOptionalGroups.get(examSubjectId);
+                    String[] exclude = getExcludeQuestNos(jsonArray);
+
+                    int size = examSubjectId.length() / 3;
+                    for (int i = 1; i <= size; i++) {
+                        String subSubjectId = examSubjectId.substring(i * size - 3, i * size);
+                        String subjectName = subjectService.getSubjectName(subSubjectId);
+
+                        double subSubjectScore = subjectService.getSubSubjectScore(projectId, subSubjectId, exclude);
+                        ExamSubject subject = new ExamSubject(subSubjectId, subjectName, subSubjectScore);
+                        subject.setVirtualSubject(String.valueOf(true));
+                        subject.setCardId(cardId);
+
+                        subjectService.saveSubject(projectId, subject);
+                        subjectService.createSubjectScoreTable(projectId, subject.getId());
+                    }
+                    //拆分之后删除综合科目的相关表和记录
+                    deleteTables(projectId, examSubjectId);
+                }
+            }
+        }
+    }
+
+    private void deleteTables(String projectId, String examSubjectId) {
+        subjectService.deleteSubject(projectId, examSubjectId);
+        daoFactory.getProjectDao(projectId).execute("drop table `score_subject_{{id}}`"
+                .replace("{{id}}",examSubjectId));
+        daoFactory.getProjectDao(projectId).execute("drop table `score_subjective_{{id}}`"
+                .replace("{{id}}",examSubjectId));
+        daoFactory.getProjectDao(projectId).execute("drop table `score_objective_{{id}}`"
+                .replace("{{id}}",examSubjectId));
+    }
+
+    /**
+     * 获取该综合科目下所有的选做题
+     *
+     * @param jsonArray 选做题组
+     * @return 要排除的选做题列表
+     */
+    private String[] getExcludeQuestNos(JSONArray jsonArray) {
+        List<String> excludeQuest = new ArrayList<>();
+
+        JSONUtils.<JSONObject>forEach(jsonArray, json -> {
+            String[] questNos = json.getString("quest_nos")
+                    .replace("[", "")
+                    .replace("]", "")
+                    .replace("\"", "")
+                    .split(",");
+            Integer chooseCount = json.getInteger("choose_count");
+            for (int i = 0; i < questNos.length - chooseCount; i++) {
+                excludeQuest.add(questNos[i]);
+            }
+        });
+
+        String[] exclude = new String[excludeQuest.size()];
+        return excludeQuest.toArray(exclude);
+    }
+
+    /**
+     * 获取所有含有选做题的综合科目
+     *
+     * @param projectId 项目ID
+     * @return
+     */
+    private Map<String, JSONArray> getSubjectsOptionalGroup(String projectId) {
+        Map<String, JSONArray> subjectMap = new HashMap<>();
+
+        JSONObject optionalGroups = appAuthClient.callApi("QueryQuestionByProject",
+                new Param().setParameter(PROJECT_ID_KEY, projectId)).get("optionalGroups");
+
+        for (Map.Entry<String, Object> entry : optionalGroups.entrySet()) {
+            String entryKey = entry.getKey();
+            JSONArray jsonArray = JSONArray.parseArray(entry.getValue().toString());
+            if (entryKey.length() > 3 && jsonArray.size() != 0) {
+                subjectMap.put(entryKey, jsonArray);
+            }
+        }
+        return subjectMap;
     }
 
     private void importProjectInfo(Context context) {

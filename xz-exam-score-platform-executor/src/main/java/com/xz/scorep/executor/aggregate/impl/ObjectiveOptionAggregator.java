@@ -130,7 +130,7 @@ public class ObjectiveOptionAggregator extends Aggregator {
 
                 // 如果考生在该科目没有分数记录（因缺考或得零分而被排除），则忽略
                 Set<String> ignoreStudents = ignoreSubjectStudentMap.get(subjectId);
-                if (ignoreStudents.contains(studentId)) {
+                if (ignoreStudents != null && ignoreStudents.contains(studentId)) {
                     return;
                 }
 

@@ -12,6 +12,8 @@ import com.xz.scorep.executor.exportexcel.SheetTask;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.utils.Direction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -45,6 +47,8 @@ public class TotalSchoolSubjectObjectiveSheet1 extends SheetGenerator {
             "group by student.class_id  ";
 
     public static final String TABLE_KEY = "quest_no";
+
+    private static final Logger LOG = LoggerFactory.getLogger(TotalSchoolSubjectObjectiveSheet1.class);
 
     @Autowired
     private ClassService classService;

@@ -9,6 +9,8 @@ import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
+import com.xz.scorep.executor.reportconfig.ReportConfig;
+import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.AsyncCounter;
 import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
@@ -41,6 +43,9 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
     @Autowired
     private AggregateConfig aggregateConfig;
 
+    @Autowired
+    private ReportConfigService reportConfigService;
+
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
         String projectId = aggregateParameter.getProjectId();
@@ -67,11 +72,13 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
         List<ExamQuest> examQuests = questService.queryQuests(projectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
         AsyncCounter counter = new AsyncCounter("统计科目主客观题得分", examQuests.size());
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
+        Boolean separate = Boolean.valueOf(reportConfig.getSeparateCategorySubjects());
 
         examQuests.forEach(examQuest -> {
             boolean objective = examQuest.isObjective();
             String questId = examQuest.getId();
-            String subjectId = examQuest.getExamSubject();
+            String subjectId = separate ? examQuest.getQuestSubject() : examQuest.getExamSubject();
 
             String accumulateTableName = "score_" + (objective ? "objective" : "subjective") + "_" + subjectId;
             String questScoreTableName = "score_" + questId;

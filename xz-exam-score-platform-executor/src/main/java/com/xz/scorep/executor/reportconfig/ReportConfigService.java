@@ -73,6 +73,9 @@ public class ReportConfigService {
         if (projectReportConfig.getRankSegmentCount() == 0) {
             projectReportConfig.setRankSegmentCount(defaultReportConfig.getRankSegmentCount());
         }
+        if (projectReportConfig.getScoreLevelConfig() == null) {
+            projectReportConfig.setScoreLevelConfig(defaultReportConfig.getScoreLevelConfig());
+        }
         if (projectReportConfig.getScoreLevels() == null) {
             projectReportConfig.setScoreLevels(defaultReportConfig.getScoreLevels());
         }

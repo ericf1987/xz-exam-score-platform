@@ -18,7 +18,8 @@ public class StudentObjectiveScoreAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        studentObjectiveScoreAggregator.aggregate(new AggregateParameter(PROJECT_ID));
+        studentObjectiveScoreAggregator.aggregate(new AggregateParameter
+                ("430100-354dce3ac8ef4800a1b57f81a10b8baa"));
     }
 
 }

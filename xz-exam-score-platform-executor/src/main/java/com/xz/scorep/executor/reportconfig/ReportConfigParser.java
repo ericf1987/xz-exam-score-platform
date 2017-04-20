@@ -32,12 +32,29 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
         String projectId = context.getString(PROJECT_ID_KEY);
         reportConfig.setProjectId(projectId);
 
+        String scoreLevelConfig = result.getString("scoreLevelConfig");
+        if (scoreLevelConfig != null) {
+            reportConfig.setScoreLevelConfig(scoreLevelConfig);
+        }
+
         JSONObject scoreLevels = result.get("scoreLevels");
         if (scoreLevels != null) {
             Map<String, Object> newMap = new HashMap<>();
-            scoreLevels.forEach((key, value) -> newMap.put(StringUtil.capitalize(key), value)); // key 改为首字母大写
+
+            if (scoreLevelConfig == null || scoreLevelConfig.equals("rate")) {
+                scoreLevels.forEach((key, value) -> newMap.put(StringUtil.capitalize(key), value)); // key 改为首字母大写
+            } else {
+                for (Map.Entry<String, Object> entry : scoreLevels.entrySet()) {
+                    Map<String, Object> map = new HashMap<>();
+                    String entryKey = entry.getKey();
+                    JSONObject entryValue = (JSONObject) entry.getValue();
+                    entryValue.forEach((key, value) -> map.put(StringUtil.capitalize(key), value));
+                    newMap.put(entryKey, map);
+                }
+            }
             reportConfig.setScoreLevels(JSON.toJSONString(newMap));
         }
+
 
         String splitUnionSubject = result.getString("splitUnionSubject");
         if (splitUnionSubject != null) {

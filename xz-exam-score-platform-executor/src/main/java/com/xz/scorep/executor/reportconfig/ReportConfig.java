@@ -51,6 +51,11 @@ public class ReportConfig {
     private String rankLevelCombines;
 
     /**
+     * 四率优/良/及格/不及格）配置方式
+     */
+    private String scoreLevelConfig;
+
+    /**
      * 四率（优/良/及格/不及格）的得分率标准
      */
     private String scoreLevels;
@@ -185,6 +190,14 @@ public class ReportConfig {
 
     public void setCollegeEntryLevelEnabled(String collegeEntryLevelEnabled) {
         this.collegeEntryLevelEnabled = collegeEntryLevelEnabled;
+    }
+
+    public String getScoreLevelConfig() {
+        return scoreLevelConfig;
+    }
+
+    public void setScoreLevelConfig(String scoreLevelConfig) {
+        this.scoreLevelConfig = scoreLevelConfig;
     }
 
     public String getRankLevels() {
