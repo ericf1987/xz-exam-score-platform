@@ -78,11 +78,4 @@ public class ExamSubject implements Serializable {
         this.fullScore = fullScore;
     }
 
-    public String getVirtualSubject() {
-        return virtualSubject;
-    }
-
-    public void setVirtualSubject(String virtualSubject) {
-        this.virtualSubject = virtualSubject;
-    }
 }

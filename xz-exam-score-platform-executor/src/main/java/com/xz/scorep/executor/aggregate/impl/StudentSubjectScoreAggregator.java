@@ -216,7 +216,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         subjects.forEach(subject -> {
             String subjectId = subject.getId();
-            LOG.info("subjectId{}........",subjectId);
             String tableName = "score_subject_" + subjectId;
 
             // 初始化
@@ -231,7 +230,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
     private void accumulateQuestScores(String projectId, DAO projectDao, ThreadPoolExecutor executor, String subjectId, String tableName) {
         List<ExamQuest> examQuests = questService.queryQuests(projectId, subjectId);
-        LOG.info("questSize ...{}",examQuests.size());
         final AtomicInteger counter = new AtomicInteger(0);
 
         Runnable accumulateTip = () -> LOG.info(
@@ -245,7 +243,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
     private void accumulateQuestScores0(DAO projectDao, String tableName, ExamQuest examQuest, Runnable tip) {
         try {
             String questId = examQuest.getId();
-            LOG.info("累计分数{}",examQuest.getQuestSubject());
 
             String combineSql = "update " + tableName + " p \n" +
                     "  inner join `score_" + questId + "` q using(student_id)\n" +
