@@ -53,8 +53,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
                             projectId, counter.incrementAndGet(), subjects.size());
                 });
 
-        //每一个科目移除缺考,总分不可能含有缺考
-        //removeAbsent(projectDao, subjectIds);
+        removeAbsent(projectDao, subjects);
 
         //移除总分为0
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
@@ -69,9 +68,9 @@ public class StudentProjectScoreAggregator extends Aggregator {
         LOG.info("项目 {} 的总分零分记录删除完毕。", projectId);
     }
 
-    private void removeAbsent(DAO projectDao, List<String> subjectIds) {
-        String where = String.join(" and ", subjectIds.stream().map(
-                subjectId -> "student_id not in (select student_id from score_subject_" + subjectId + ")")
+    private void removeAbsent(DAO projectDao, List<ExamSubject> subjects) {
+        String where = String.join(" and ", subjects.stream().map(
+                subject -> "student_id not in (select student_id from score_subject_" + subject.getId() + ")")
                 .collect(Collectors.toList()));
 
         String sql = "delete from score_project where " + where;
