@@ -14,7 +14,6 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.db.MultipleBatchExecutor;
 import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.project.*;
-import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,90 +114,92 @@ public class ObjectiveOptionAggregator extends Aggregator {
 
         //////////////////////////////////////////////////////////////
 
-        List<ExamQuest> quests = questService.queryQuests(projectId, true);
-        SimpleCache reportCache = cacheFactory.getReportCache(projectId);
-        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
-        Boolean separate = Boolean.valueOf(reportConfig.getSeparateCategorySubjects());
-
-
-        quests.forEach(quest -> {
-            String subjectId = separate ? quest.getQuestSubject() : quest.getExamSubject();
-            String questId = quest.getId();
-            String cacheKey = "quest_" + questId;
-            List<Row> scoreList = reportCache.get(cacheKey);
-
-            scoreList.forEach(score -> {
-                String studentId = score.getString("student_id");
-                Row student = studentService.findStudent(projectId, studentId);
-
-                //该学生在基础表有无数据,但在分数表有(建项目只有该学生被删除)
-                if (student == null) {
-                    return;
-                }
-
-                // 如果考生在该科目没有分数记录（因缺考或得零分而被排除），则忽略
-                Set<String> ignoreStudents = ignoreSubjectStudentMap.get(subjectId);
-                if (ignoreStudents != null && ignoreStudents.contains(studentId)) {
-                    return;
-                }
-
-                // 提取考生答题选项
-                List<String> options = new ArrayList<>();
-
-                // 如果考生答题内容非法(或"*") 则为不选率
-                String stuAnswer = score.getString("objective_answer");
-                if (StringUtil.isBlank(stuAnswer) || stuAnswer.trim().equals("*")) {
-                    options.add("*");
-                } else {
-                    char[] chars = stuAnswer.toCharArray();
-                    for (char c : chars) {
-                        options.add(Character.toString(c));
-                    }
-                }
-
-                // 添加到计数器
-                String classId = student.getString("class_id");
-                String schoolId = student.getString("school_id");
-                String provinceId = student.getString("province");
-
-                studentCounterMap.incre(Arrays.asList(questId, Range.CLASS, classId));
-                studentCounterMap.incre(Arrays.asList(questId, Range.SCHOOL, schoolId));
-                studentCounterMap.incre(Arrays.asList(questId, Range.PROVINCE, provinceId));
-
-                options.forEach(option -> {
-                    objectiveCounterMap.incre(Arrays.asList(questId, option, Range.CLASS, classId));
-                    objectiveCounterMap.incre(Arrays.asList(questId, option, Range.SCHOOL, schoolId));
-                    objectiveCounterMap.incre(Arrays.asList(questId, option, Range.PROVINCE, provinceId));
-                });
-            });
-        });
-
-        //////////////////////////////////////////////////////////////
-
         projectDao.execute("truncate table objective_option_rate");  // 清空数据
 
         //////////////////////////////////////////////////////////////
 
-        MultipleBatchExecutor insertExecutor = new MultipleBatchExecutor(projectDao, 2000);
+        SimpleCache reportCache = cacheFactory.getReportCache(projectId);
+        subjects.forEach(subject -> {
+            String subjectId = subject.getId();
+            LOG.info("正在统计科目{}客观题选率.....", subjectId);
+            List<ExamQuest> quests = questService.queryQuests(projectId, subjectId, true);
 
-        objectiveCounterMap.forEach((key, count) -> {
-            int studentCount = studentCounterMap.getCount(Arrays.asList(key.get(0), key.get(2), key.get(3)));
-            int optionCount = objectiveCounterMap.getCount(key);
-            double optionRate = (double) optionCount / studentCount;
+            quests.forEach(quest -> {
+                String questId = quest.getId();
+                String cacheKey = "quest_" + questId;
+                List<Row> scoreList = reportCache.get(cacheKey);
 
-            Map<String, Object> row = new HashMap<>();
-            row.put("quest_id", key.get(0));
-            row.put("option", key.get(1));
-            row.put("range_type", key.get(2));
-            row.put("range_id", key.get(3));
-            row.put("option_count", optionCount);
-            row.put("option_rate", optionRate);
+                scoreList.forEach(score -> {
+                    String studentId = score.getString("student_id");
+                    Row student = studentService.findStudent(projectId, studentId);
 
-            insertExecutor.push("objective_option_rate", row);
+                    //该学生在基础表有无数据,但在分数表有(建项目只有该学生被删除)
+                    if (student == null) {
+                        return;
+                    }
+
+                    // 如果考生在该科目没有分数记录（因缺考或得零分而被排除），则忽略
+                    Set<String> ignoreStudents = ignoreSubjectStudentMap.get(subjectId);
+                    if (ignoreStudents != null && ignoreStudents.contains(studentId)) {
+                        return;
+                    }
+
+                    // 提取考生答题选项
+                    List<String> options = new ArrayList<>();
+
+                    // 如果考生答题内容非法(或"*") 则为不选率
+                    String stuAnswer = score.getString("objective_answer");
+                    if (StringUtil.isBlank(stuAnswer) || stuAnswer.trim().equals("*")) {
+                        options.add("*");
+                    } else {
+                        char[] chars = stuAnswer.toCharArray();
+                        for (char c : chars) {
+                            options.add(Character.toString(c));
+                        }
+                    }
+
+                    // 添加到计数器
+                    String classId = student.getString("class_id");
+                    String schoolId = student.getString("school_id");
+                    String provinceId = student.getString("province");
+
+                    studentCounterMap.incre(Arrays.asList(questId, Range.CLASS, classId));
+                    studentCounterMap.incre(Arrays.asList(questId, Range.SCHOOL, schoolId));
+                    studentCounterMap.incre(Arrays.asList(questId, Range.PROVINCE, provinceId));
+
+                    options.forEach(option -> {
+                        objectiveCounterMap.incre(Arrays.asList(questId, option, Range.CLASS, classId));
+                        objectiveCounterMap.incre(Arrays.asList(questId, option, Range.SCHOOL, schoolId));
+                        objectiveCounterMap.incre(Arrays.asList(questId, option, Range.PROVINCE, provinceId));
+                    });
+                });
+            });
+
+            //////////////////////////////////////////////////////////////////////////
+            MultipleBatchExecutor insertExecutor = new MultipleBatchExecutor(projectDao, 2000);
+
+            objectiveCounterMap.forEach((key, count) -> {
+                int studentCount = studentCounterMap.getCount(Arrays.asList(key.get(0), key.get(2), key.get(3)));
+                int optionCount = objectiveCounterMap.getCount(key);
+                double optionRate = (double) optionCount / studentCount;
+
+                Map<String, Object> row = new HashMap<>();
+                row.put("quest_id", key.get(0));
+                row.put("option", key.get(1));
+                row.put("range_type", key.get(2));
+                row.put("range_id", key.get(3));
+                row.put("option_count", optionCount);
+                row.put("option_rate", optionRate);
+
+                insertExecutor.push("objective_option_rate", row);
+            });
+
+            insertExecutor.finish();
+
         });
 
-        insertExecutor.finish();
         LOG.info("客观题选项选率统计完成.....");
+
     }
 
 }

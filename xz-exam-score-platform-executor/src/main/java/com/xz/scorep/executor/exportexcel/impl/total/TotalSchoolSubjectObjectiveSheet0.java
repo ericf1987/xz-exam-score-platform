@@ -13,7 +13,7 @@ import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetTask;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.QuestService;
-import com.xz.scorep.executor.reportconfig.ReportConfig;
+import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.Direction;
 import org.slf4j.Logger;
@@ -68,6 +68,9 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
 
     @Autowired
     private DAOFactory daoFactory;
+
+    @Autowired
+    private SubjectService subjectService;
 
     @Autowired
     private ReportConfigService reportConfigService;
@@ -141,11 +144,9 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
         ////////////////////////////////////////////////////////////// 填充选择率
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
+        boolean virtualSubject = subjectService.isVirtualSubject(projectId, subjectId);
 
-        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
-        Boolean separate = Boolean.valueOf(reportConfig.getSeparateCategorySubjects());
-
-        String sub = separate ? "quest.quest_subject= '" + subjectId + "' and"
+        String sub = virtualSubject ? "quest.quest_subject= '" + subjectId + "' and"
                 : "quest.exam_subject='" + subjectId + "' and";
 
         String provinceSql = QUERY_TEMPLATE.replace("{{rateAlias}}", "province_rate")

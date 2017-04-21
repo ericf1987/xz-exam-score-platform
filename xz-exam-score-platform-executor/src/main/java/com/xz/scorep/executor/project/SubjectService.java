@@ -144,4 +144,10 @@ public class SubjectService {
         daoFactory.getProjectDao(projectId).execute("delete from subject where id = ?", subjectId);
     }
 
+    public boolean isVirtualSubject(String projectId, String subjectId) {
+        ExamSubject subject = daoFactory.getProjectDao(projectId).queryFirst(
+                ExamSubject.class, "select * from subject where id=?", subjectId);
+        return Boolean.valueOf(subject.getVirtualSubject());
+    }
+
 }
