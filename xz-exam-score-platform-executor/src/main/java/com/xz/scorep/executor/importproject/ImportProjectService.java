@@ -218,7 +218,7 @@ public class ImportProjectService {
                         subjectService.createSubjectScoreTable(projectId, subject.getId());
                     }
                     //拆分之后删除综合科目的相关表和记录
-                    deleteTables(projectId, examSubjectId);
+                    //deleteTables(projectId, examSubjectId);
                 }
             }
         }

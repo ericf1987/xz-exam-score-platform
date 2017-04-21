@@ -60,25 +60,34 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
             projectDao.execute("truncate table " + subjectiveTableName);
             projectDao.execute("insert into " + objectiveTableName + "(student_id,score) select id, 0 from student");
             projectDao.execute("insert into " + subjectiveTableName + "(student_id,score) select id, 0 from student");
+
+            LOG.info("科目{}主客观题成绩表已清空。", subject.getId());
+            //执行单科的主客观题统计
+            try {
+                ThreadPools.createAndRunThreadPool(
+                        aggregateConfig.getObjectivePoolSize(), 1, (pool) -> startObjectiveScoreAggregation(projectId, subject, pool));
+            } catch (InterruptedException e) {
+                LOG.error("统计主客观题失败", e);
+            }
+
         });
 
-        LOG.info("主客观题成绩表已清空。");
 
-        ThreadPools.createAndRunThreadPool(
-                aggregateConfig.getObjectivePoolSize(), 1, (pool) -> startAggregation(projectId, pool));
+//        ThreadPools.createAndRunThreadPool(
+//                aggregateConfig.getObjectivePoolSize(), 1, (pool) -> startAggregation(projectId, pool));
     }
 
-    private void startAggregation(String projectId, ThreadPoolExecutor pool) {
-        List<ExamQuest> examQuests = questService.queryQuests(projectId);
+    private void startObjectiveScoreAggregation(String projectId, ExamSubject subject, ThreadPoolExecutor pool) {
+        String subjectId = subject.getId();
+        LOG.info("正在统计科目{} , 主客观题得分",subjectId);
+        List<ExamQuest> examQuests = questService.queryQuests(projectId, subjectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
         AsyncCounter counter = new AsyncCounter("统计科目主客观题得分", examQuests.size());
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
-        Boolean separate = Boolean.valueOf(reportConfig.getSeparateCategorySubjects());
 
         examQuests.forEach(examQuest -> {
             boolean objective = examQuest.isObjective();
             String questId = examQuest.getId();
-            String subjectId = separate ? examQuest.getQuestSubject() : examQuest.getExamSubject();
 
             String accumulateTableName = "score_" + (objective ? "objective" : "subjective") + "_" + subjectId;
             String questScoreTableName = "score_" + questId;
@@ -96,5 +105,37 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
                 }
             });
         });
+        LOG.info("统计科目  {}  ,主客观题得分完成",subjectId);
+
     }
+
+//    private void startAggregation(String projectId, ThreadPoolExecutor pool) {
+//        List<ExamQuest> examQuests = questService.queryQuests(projectId);
+//        DAO projectDao = daoFactory.getProjectDao(projectId);
+//        AsyncCounter counter = new AsyncCounter("统计科目主客观题得分", examQuests.size());
+//        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
+//        Boolean separate = Boolean.valueOf(reportConfig.getSeparateCategorySubjects());
+//
+//        examQuests.forEach(examQuest -> {
+//            boolean objective = examQuest.isObjective();
+//            String questId = examQuest.getId();
+//            String subjectId = separate ? examQuest.getQuestSubject() : examQuest.getExamSubject();
+//
+//            String accumulateTableName = "score_" + (objective ? "objective" : "subjective") + "_" + subjectId;
+//            String questScoreTableName = "score_" + questId;
+//
+//            String combineSql = "update " + accumulateTableName + " p \n" +
+//                    "  inner join `" + questScoreTableName + "` q using(student_id)\n" +
+//                    "  set p.score=p.score+ifnull(q.score,0)";
+//
+//            pool.submit(() -> {
+//                try {
+//                    projectDao.execute(combineSql);
+//                    counter.count();
+//                } catch (DAOException e) {
+//                    LOG.error("统计主客观题失败", e);
+//                }
+//            });
+//        });
+//    }
 }
