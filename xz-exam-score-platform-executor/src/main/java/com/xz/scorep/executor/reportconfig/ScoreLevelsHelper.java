@@ -32,15 +32,12 @@ public class ScoreLevelsHelper {
 
     public static double score(JSONObject jsonObject, String type, String subjectId, double fullScore, String scoreLevelConfig) {
 
-        if (scoreLevelConfig.equals("rate") || "".equals(scoreLevelConfig)) {
-            return fullScore * jsonObject.getDouble(type);
-        }
-
         if (scoreLevelConfig.equals("score")) {
             JSONObject subjectJson = jsonObject.getJSONObject(subjectId);
             return subjectJson.getDouble(type);
+        } else {
+            return fullScore * jsonObject.getDouble(type);
         }
-        return 0;
     }
 
     public static Map<String, Double> getScoreLevels(String subjectId, String scoreLevelConfig, JSONObject scoreLevels) {
