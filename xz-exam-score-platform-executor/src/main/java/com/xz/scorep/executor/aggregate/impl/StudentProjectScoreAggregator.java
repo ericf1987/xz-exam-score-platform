@@ -40,16 +40,23 @@ public class StudentProjectScoreAggregator extends Aggregator {
 
         AtomicInteger counter = new AtomicInteger(0);
 
-        List<String> subjectIds = getSubjectsId(aggregateParameter);
 
-        subjectIds.forEach(subjectId -> {
-            accumulateScore(projectDao, subjectId);
-            LOG.info("项目 {} 的学生总分统计已完成 {}/{} 个科目",
-                    projectId, counter.incrementAndGet(), subjectIds.size());
-        });
+        List<ExamSubject> subjects = AggregatorHelper.getSubjects(aggregateParameter, subjectService);
 
-//        removeAbsent(projectDao, subjectIds);
 
+        subjects.stream()
+                .filter(subject -> subject.getVirtualSubject().equals("true"))
+                .forEach(subject -> {
+                    String subjectId = subject.getId();
+                    accumulateScore(projectDao, subjectId);
+                    LOG.info("项目 {} 的学生总分统计已完成 {}/{} 个科目",
+                            projectId, counter.incrementAndGet(), subjects.size());
+                });
+
+        //每一个科目移除缺考,总分不可能含有缺考
+        //removeAbsent(projectDao, subjectIds);
+
+        //移除总分为0
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
             removeZeroScores(projectId);
         }
@@ -70,22 +77,6 @@ public class StudentProjectScoreAggregator extends Aggregator {
         String sql = "delete from score_project where " + where;
         LOG.info("删除全科缺考的考生: " + sql);
         projectDao.execute(sql);
-    }
-
-
-    private List<String> getSubjectsId(AggregateParameter aggregateParameter) {
-        String projectId = aggregateParameter.getProjectId();
-        List<String> subjectId;
-
-        if (aggregateParameter.getSubjects().isEmpty()) {
-            subjectId = subjectService.listSubjects(projectId)
-                    .stream().map(ExamSubject::getId)
-                    .collect(Collectors.toList());
-
-        } else {
-            subjectId = aggregateParameter.getSubjects();
-        }
-        return subjectId;
     }
 
 

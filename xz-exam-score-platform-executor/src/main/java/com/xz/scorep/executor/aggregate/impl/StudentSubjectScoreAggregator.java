@@ -19,11 +19,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Component
 @AggragateOrder(0)
@@ -70,7 +68,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        List<ExamSubject> subjects = getSubjects(aggregateParameter);
+        List<ExamSubject> subjects = AggregatorHelper.getSubjects(aggregateParameter, subjectService);
 
         LOG.info("subjectsSize ...{}", subjects.size());
         ThreadPools.createAndRunThreadPool(aggregateConfig.getSubjectPoolSize(), 1,
@@ -197,34 +195,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         }
     }
 
-    private List<ExamSubject> getSubjects(AggregateParameter aggregateParameter) {
-        String projectId = aggregateParameter.getProjectId();
-        List<ExamSubject> subjects;
-
-        List<String> paramSubjects = aggregateParameter.getSubjects();
-        LOG.info("传入的科目参数：" + paramSubjects);
-
-        if (paramSubjects.isEmpty()) {
-            subjects = subjectService.listSubjects(projectId);
-
-        } else {
-            subjects = paramSubjects
-                    .stream()
-                    .map(subjectId -> {
-                        ExamSubject subject = subjectService.findSubject(projectId, subjectId);
-
-                        if (subject == null) {
-                            throw new IllegalStateException("科目 " + subjectId + " 没找到");
-                        }
-
-                        return subject;
-                    })
-                    .sorted()
-                    .sorted(Comparator.comparingInt(a -> a.getId().length()))
-                    .collect(Collectors.toList());
-        }
-        return subjects;
-    }
 
     private void accumulateSubjectScores(String projectId, DAO projectDao, ThreadPoolExecutor executor, List<ExamSubject> subjects) {
 

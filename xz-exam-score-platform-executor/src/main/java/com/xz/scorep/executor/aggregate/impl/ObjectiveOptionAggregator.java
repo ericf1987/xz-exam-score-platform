@@ -59,8 +59,6 @@ public class ObjectiveOptionAggregator extends Aggregator {
     @Autowired
     private SubjectService subjectService;
 
-    @Autowired
-    private ReportConfigService reportConfigService;
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {

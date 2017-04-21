@@ -95,7 +95,7 @@ public class ScoreLevelRateAggregator extends Aggregator {
         daoFactory.getProjectDao(projectId).execute("truncate table scorelevelmap");
         LOG.info("scorelevelmap 内容已清除");
 
-        List<ExamSubject> subjects = getExamSubjects(aggregateParameter, projectId);
+        List<ExamSubject> subjects = AggregatorHelper.getSubjects(aggregateParameter, subjectService);
 
         LOG.info("统计整体成绩四率...");
         aggregateProjectScoreLevels(projectId, scoreLevels, scoreLevelConfig);
