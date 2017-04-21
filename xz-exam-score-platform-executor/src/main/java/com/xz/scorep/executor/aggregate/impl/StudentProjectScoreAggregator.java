@@ -45,7 +45,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
 
 
         subjects.stream()
-                .filter(subject -> subject.getVirtualSubject().equals("true"))
+                .filter(subject -> subject.getVirtualSubject().equals("false"))
                 .forEach(subject -> {
                     String subjectId = subject.getId();
                     accumulateScore(projectDao, subjectId);
