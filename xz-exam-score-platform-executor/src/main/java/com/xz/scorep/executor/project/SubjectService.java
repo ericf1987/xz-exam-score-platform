@@ -92,7 +92,7 @@ public class SubjectService {
     //在科目拆分的情况,使用缓存可能导致查出的科目信息与预期的不相符
     public List<ExamSubject> listSubjects(String projectId) {
         return new ArrayList<>(daoFactory.getProjectDao(projectId)
-                .query(ExamSubject.class, "select * from subject"));
+                .query(ExamSubject.class, "select * from subject ORDER BY LENGTH(id)"));
     }
 
     public static String getSubjectName(String subjectId) {
@@ -148,6 +148,13 @@ public class SubjectService {
         ExamSubject subject = daoFactory.getProjectDao(projectId).queryFirst(
                 ExamSubject.class, "select * from subject where id=?", subjectId);
         return Boolean.valueOf(subject.getVirtualSubject());
+    }
+
+    public ExamSubject findComplexSubject(String projectId, String subjectId) {
+        String sql = "select * from subject where id like \"%{{subject}}%\" ";
+        List<ExamSubject> query = daoFactory.getProjectDao(projectId).query(
+                ExamSubject.class, sql.replace("{{subject}}", subjectId));
+        return query.stream().filter(subject -> subject.getId().length() > 3).findFirst().get();
     }
 
 }

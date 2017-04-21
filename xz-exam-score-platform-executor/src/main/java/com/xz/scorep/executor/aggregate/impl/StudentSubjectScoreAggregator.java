@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -71,7 +72,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         List<ExamSubject> subjects = getSubjects(aggregateParameter);
 
-        LOG.info("subjectsSize ...{}",subjects.size());
+        LOG.info("subjectsSize ...{}", subjects.size());
         ThreadPools.createAndRunThreadPool(aggregateConfig.getSubjectPoolSize(), 1,
                 pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
 
@@ -81,9 +82,9 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         LOG.info("项目 {} 缺卷考生删除完毕。", projectId);
 
         // 根据报表配置删除作弊学生
-        if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())){
+        if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
             LOG.info("删除项目 {} 作弊考生...", projectId);
-            removeCheatStudent(projectId,subjects);
+            removeCheatStudent(projectId, subjects);
             LOG.info("项目 {} 作弊考生删除完毕...", projectId);
         }
 
@@ -96,7 +97,9 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         // 根据报表配置删除零分记录
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
+            LOG.info("删除项目 {} 的科目零分记录。", projectId);
             removeZeroScores(projectId, subjects);
+            LOG.info("项目 {} 的科目零分记录删除完毕。", projectId);
         }
 
         // 将 score 拷贝到 real_score
@@ -110,7 +113,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             fillAlmostPass(projectId, subjects, almostPassOffset, reportConfig);
         }
     }
-
 
 
     private void copyToRealScore(String projectId, List<ExamSubject> subjects) {
@@ -147,11 +149,24 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
     private void removeZeroScores(String projectId, List<ExamSubject> subjects) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
-        subjects.forEach(subject -> {
-            String sql = DEL_ZERO_SCORE.replace("{{subject}}", subject.getId());
-            projectDao.execute(sql);
-        });
-        LOG.info("项目 {} 的科目零分记录删除完毕。", projectId);
+
+        for (ExamSubject subject : subjects) {
+            String subjectId = subject.getId();
+            if (Boolean.valueOf(subject.getVirtualSubject())) {
+                ExamSubject complexSubject = subjectService.findComplexSubject(projectId, subjectId);
+                String complexSubjectId = complexSubject.getId();
+                //删除 综合科目为0分的 拆分科目的学生记录
+                String sql = "delete from `score_subject_{{subjectId}}` " +
+                        "where student_id in (select a.student_id from `score_subject_{{complexSubjectId}}` a " +
+                        "where a.score =0) and score=0";
+                String replace = sql.replace("{{subjectId}}", subjectId)
+                        .replace("{{complexSubjectId}}", complexSubjectId);
+                projectDao.execute(replace);
+            } else {
+                String sql = DEL_ZERO_SCORE.replace("{{subject}}", subjectId);
+                projectDao.execute(sql);
+            }
+        }
     }
 
     // 删除科目分数表中被标记为缺考的考生记录
@@ -194,7 +209,8 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         } else {
             subjects = paramSubjects
-                    .stream().map(subjectId -> {
+                    .stream()
+                    .map(subjectId -> {
                         ExamSubject subject = subjectService.findSubject(projectId, subjectId);
 
                         if (subject == null) {
@@ -203,6 +219,8 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
                         return subject;
                     })
+                    .sorted()
+                    .sorted(Comparator.comparingInt(a -> a.getId().length()))
                     .collect(Collectors.toList());
         }
         return subjects;
