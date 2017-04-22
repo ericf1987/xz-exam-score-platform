@@ -193,6 +193,10 @@ public class ImportScoreHelper {
         String studentId = studentScoreDoc.getString("studentId");
         List<Document> subjectiveList = (List<Document>) studentScoreDoc.get("subjectiveList");
 
+        if (subjectiveList == null) {
+            return;
+        }
+
         for (Document scoreDoc : subjectiveList) {
             String questNo = scoreDoc.getString("questionNo");
             boolean effective = scoreDoc.getBoolean("isEffective", true);
@@ -235,6 +239,10 @@ public class ImportScoreHelper {
 
         String studentId = studentScoreDoc.getString("studentId");
         List<Document> objectiveList = (List<Document>) studentScoreDoc.get("objectiveList");
+
+        if (objectiveList == null) {
+            return;
+        }
 
         for (Document scoreDoc : objectiveList) {
             String questNo = scoreDoc.getString("questionNo");
