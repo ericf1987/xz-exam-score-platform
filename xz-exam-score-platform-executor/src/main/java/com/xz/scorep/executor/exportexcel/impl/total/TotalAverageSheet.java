@@ -54,7 +54,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             " school. NAME AS school_name,\n" +
             " COUNT(student.id) student_count,\n" +
             " MAX({{table}}.score) AS max_score,\n" +
-            " FORMAT(AVG({{table}}.score),2) AS average_score\n" +
+            " convert(FORMAT(AVG({{table}}.score),2),decimal(10,2)) AS average_score\n" +
             " FROM\n" +
             " school,\n" +
             " student,\n" +
@@ -134,7 +134,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             "select\n" +
             "'total' as school_id,'总体'as school_name, \n" +
             "COUNT(student.id) as student_count,max(score_project.score) as max_score,\n" +
-            "format(AVG(score_project.score),2) as average_score,\n" +
+            "convert(format(AVG(score_project.score),2),decimal(10,2)) as average_score,\n" +
             "'--' as average_range\n" +
             "from student,score_project\n" +
             "where  student.id = score_project.student_id\n" +
@@ -188,7 +188,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             "select \n" +
             "'total' as school_id, '总体' as school_name,COUNT(student.id) as student_count,\n" +
             "max(score_subject_{{subjectId}}.score) as max_score,\n" +
-            "FORMAT(avg(score_subject_{{subjectId}}.score),2) as average_score,'--' as average_range\n" +
+            "convert(FORMAT(avg(score_subject_{{subjectId}}.score),2),decimal(10,2)) as average_score,'--' as average_range\n" +
             "from student,score_subject_{{subjectId}}\n" +
             "WHERE\n" +
             "student.id = score_subject_{{subjectId}}.student_id\n" +
@@ -235,7 +235,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             " LEFT JOIN (SELECT\n" +
             " school.id  as school_id,\n" +
             " COUNT(student.id) as count,\n" +
-            " FORMAT(AVG({{table}}.score),2) AS average_score\n" +
+            " convert(FORMAT(AVG({{table}}.score),2),decimal(10,2)) AS average_score\n" +
             " FROM\n" +
             " school,\n" +
             " student,\n" +

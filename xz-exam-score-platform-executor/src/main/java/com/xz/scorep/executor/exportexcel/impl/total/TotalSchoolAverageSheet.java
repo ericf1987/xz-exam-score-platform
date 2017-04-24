@@ -50,7 +50,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             "school.name as school_name,\n" +
             "class.name as class_name,\n" +
             "COUNT(student.id) as count,\n" +
-            "FORMAT(AVG(score_project.score),2) as average_score,\n" +
+            "convert(FORMAT(AVG(score_project.score),2),decimal(10,2)) as average_score,\n" +
             "MAX(score_project.score) as max_score\n" +
             "from school,class,\n" +
             "student,score_project\n" +
@@ -141,7 +141,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             "'总分' as subject, '{{fullScore}}' as full_score,\n" +
             "'total' as class_id,school.name as school_name,\n" +
             "'全体' as class_name,COUNT(student.id) as count,\n" +
-            "FORMAT(AVG(score_project.score),2) as average_score,\n" +
+            "convert(FORMAT(AVG(score_project.score),2),decimal(10,2)) as average_score,\n" +
             "MAX(score_project.score) as max_score\n" +
             "from school,student,score_project\n" +
             "where \n" +
@@ -221,9 +221,6 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
 
     @Autowired
     DAOFactory daoFactory;
-
-    @Autowired
-    ReportConfigService reportConfigService;
 
     @Autowired
     ProjectService projectService;
