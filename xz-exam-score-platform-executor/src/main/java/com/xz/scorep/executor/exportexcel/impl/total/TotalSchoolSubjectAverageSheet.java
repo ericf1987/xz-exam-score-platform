@@ -58,9 +58,9 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
             "class.id as class_id,\n" +
             "class.name as class_name,\n" +
             "COUNT(student.id) as count,\n" +
-            "convert(format(avg(score_subject_{{subjectId}}.score),2),signed) as average_score,\n" +
-            "convert(format(AVG(score_subjective_{{subjectId}}.score),2),signed) as subjective_avg_score,\n" +
-            "convert(format(AVG(score_objective_{{subjectId}}.score),2),signed) as objective_avg_score,\n" +
+            "format(avg(score_subject_{{subjectId}}.score),2) as average_score,\n" +
+            "format(AVG(score_subjective_{{subjectId}}.score),2) as subjective_avg_score,\n" +
+            "format(AVG(score_objective_{{subjectId}}.score),2) as objective_avg_score,\n" +
             "max(score_subject_{{subjectId}}.score) as max_score\n" +
             "from school,score_subject_{{subjectId}},class,student,\n" +
             "score_subjective_{{subjectId}},score_objective_{{subjectId}}\n" +
@@ -156,9 +156,9 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
             "'total' as class_id,\n" +
             "'全体' as class_name,\n" +
             "COUNT(student.id) as count,\n" +
-            "convert(format(avg(score_subject_{{subjectId}}.score),2),signed) as average_score,\n" +
-            "convert(format(AVG(score_subjective_{{subjectId}}.score),2),signed) as subjective_avg_score,\n" +
-            "convert(format(AVG(score_objective_{{subjectId}}.score),2),signed) as objective_avg_score,\n" +
+            "format(avg(score_subject_{{subjectId}}.score),2) as average_score,\n" +
+            "format(AVG(score_subjective_{{subjectId}}.score),2) as subjective_avg_score,\n" +
+            "format(AVG(score_objective_{{subjectId}}.score),2) as objective_avg_score,\n" +
             "max(score_subject_{{subjectId}}.score) as max_score\n" +
             "from school,score_subject_{{subjectId}},student,\n" +
             "score_subjective_{{subjectId}},score_objective_{{subjectId}}\n" +
