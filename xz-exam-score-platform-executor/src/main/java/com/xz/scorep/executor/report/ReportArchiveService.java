@@ -95,8 +95,8 @@ public class ReportArchiveService {
                 runBasicAggregate(projectId);
             }
 
-            //上次生成Excel之后无统计记录直接跳过
-            if (hasAggrAfterGenerate(projectId)) {
+            //上次basic统计之后是否有过生成Excel记录
+            if (hasGenerateAfterBasicAggr(projectId)) {
                 LOG.info("...上次统计之后并无生成记录............");
                 excelReportManager.generateReports(projectId, false, true);
             }
@@ -149,7 +149,7 @@ public class ReportArchiveService {
      * @param projectId 项目ID
      * @return 上次统计之后是否生成过Excel报表  (生成压缩报表)
      */
-    private boolean hasAggrAfterGenerate(String projectId) {
+    private boolean hasGenerateAfterBasicAggr(String projectId) {
 
         Row aggrRow = daoFactory.getManagerDao().queryFirst(AGGR_SQL, projectId);
 
@@ -231,7 +231,7 @@ public class ReportArchiveService {
             }
 
             //上次生成Excel之后无统计记录直接跳过
-            if (hasAggrAfterGenerate(projectId)) {
+            if (hasGenerateAfterBasicAggr(projectId)) {
                 excelReportManager.generateReports(projectId, false, true);
             }
 
