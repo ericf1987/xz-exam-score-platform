@@ -101,7 +101,7 @@ public class ReportCacheInitializer {
                 .filter(row -> student.contains(row.getString("student_id")))
                 .map(row -> {
                     String key = "province_rank_" + subjectId;
-                    row.put(key, row.getString("rank"));
+                    row.put(key, row.getInteger("rank", 0));
                     return row;
                 })
                 .collect(Collectors.toList());
@@ -114,7 +114,7 @@ public class ReportCacheInitializer {
                 .filter(row -> student.contains(row.getString("student_id")))
                 .map(row -> {
                     String key = "school_rank_" + subjectId;
-                    row.put(key, row.getString("rank"));
+                    row.put(key, row.getInteger("rank", 0));
                     return row;
                 })
                 .collect(Collectors.toList());
@@ -127,7 +127,7 @@ public class ReportCacheInitializer {
                 .filter(row -> student.contains(row.getString("student_id")))
                 .map(row -> {
                     String key = "class_rank_" + subjectId;
-                    row.put(key, row.getString("rank"));
+                    row.put(key, row.getInteger("rank", 0));
                     return row;
                 })
                 .collect(Collectors.toList());
