@@ -319,7 +319,7 @@ public class ImportProjectService {
 
             if (examQuest.isObjective()) {
                 String answer = examQuest.getAnswer();
-                //如果客观题没有答案,则跳过,保证单科成绩可以正常统计.
+                //如果客观题没有答案,则跳过.避免单科统计时因为暂未开考的科目没答案而不能统计
                 if (answer == null) {
                     return;
                 }
