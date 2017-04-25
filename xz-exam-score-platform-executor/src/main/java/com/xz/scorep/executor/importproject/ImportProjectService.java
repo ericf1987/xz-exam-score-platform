@@ -318,7 +318,13 @@ public class ImportProjectService {
             ExamQuest examQuest = new ExamQuest(quest);
 
             if (examQuest.isObjective()) {
-                examQuest.setAnswer(examQuest.getAnswer().toUpperCase());
+                String answer = examQuest.getAnswer();
+                //如果客观题没有答案,则跳过.
+                if (answer == null) {
+                    LOG.info("该客观题属于科目{}", examQuest.getExamSubject());
+                    return;
+                }
+                examQuest.setAnswer(answer.toUpperCase());
                 examQuest.setScoreRule(examQuest.getScoreRule().toUpperCase());
                 examQuest.setOptions(examQuest.getOptions().toUpperCase());
             }
