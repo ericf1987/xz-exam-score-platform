@@ -248,6 +248,10 @@ public class ImportScoreHelper {
             String questNo = scoreDoc.getString("questionNo");
             ExamQuest quest = getQuest(subjectId, questNo);
 
+            //该科目没有客观题答案,在导入题目信息时被过滤掉,所以quest可能为NuLl
+            if (quest == null) {
+                return;
+            }
             String studentAnswer = readStudentAnswer(quest, scoreDoc);
 
             if (cheat || absent) {//作弊强、缺考、缺卷强行置为0分

@@ -319,9 +319,8 @@ public class ImportProjectService {
 
             if (examQuest.isObjective()) {
                 String answer = examQuest.getAnswer();
-                //如果客观题没有答案,则跳过.
+                //如果客观题没有答案,则跳过,保证单科成绩可以正常统计.
                 if (answer == null) {
-                    LOG.info("该客观题属于科目{}", examQuest.getExamSubject());
                     return;
                 }
                 examQuest.setAnswer(answer.toUpperCase());
