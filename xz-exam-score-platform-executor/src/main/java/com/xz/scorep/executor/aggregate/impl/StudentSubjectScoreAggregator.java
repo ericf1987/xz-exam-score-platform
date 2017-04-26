@@ -134,7 +134,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             String subjectId = subject.getId();
             String tableName = "score_subject_" + subjectId;
             double passScore;
-            if (scoreLevelConfig.equals("rate")) {
+            if ("".equals(scoreLevelConfig) || scoreLevelConfig.equals("rate")) {
                 passScore = subject.getFullScore() * ScoreLevelsHelper.getScoreLevels(subjectId, scoreLevelConfig, scoreLevels).get("Pass");
             } else {
                 passScore = ScoreLevelsHelper.getScoreLevels(subjectId, scoreLevelConfig, scoreLevels).get("Pass");
