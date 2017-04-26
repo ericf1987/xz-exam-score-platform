@@ -42,17 +42,25 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
             Map<String, Object> newMap = new HashMap<>();
 
             if ("".equals(scoreLevelConfig) || scoreLevelConfig.equals("rate")) {
-                scoreLevels.forEach((key, value) -> newMap.put(StringUtil.capitalize(key), value)); // key 改为首字母大写
+                scoreLevels.forEach((key, value) -> {
+                    if (!StringUtil.isEmpty(value)) {
+                        newMap.put(StringUtil.capitalize(key), value);//处理空串情况 key 改为首字母大写
+                    }
+                });
+                //补充缺失的配置
+                fillAbsentScoreLevels(newMap);
             } else {
                 for (Map.Entry<String, Object> entry : scoreLevels.entrySet()) {
                     Map<String, Object> map = new HashMap<>();
                     String entryKey = entry.getKey();
                     JSONObject entryValue = (JSONObject) entry.getValue();
-                    entryValue.forEach((key, value) -> map.put(StringUtil.capitalize(key), value));
+                    entryValue.forEach((key, value) -> newMap.put(StringUtil.capitalize(key), value));// key 改为首字母大写
                     newMap.put(entryKey, map);
                 }
             }
-            reportConfig.setScoreLevels(JSON.toJSONString(newMap));
+            if (newMap.size() != 0) {
+                reportConfig.setScoreLevels(JSON.toJSONString(newMap));
+            }
         }
 
 
@@ -130,6 +138,24 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
         }
 
         return reportConfig;
+    }
+
+    private void fillAbsentScoreLevels(Map<String, Object> newMap) {
+        if (newMap.get("Excellent") == null) {
+            newMap.put("Excellent", "0.9");
+        }
+
+        if (newMap.get("Good") == null) {
+            newMap.put("Good", "0.8");
+        }
+
+        if (newMap.get("Pass") == null) {
+            newMap.put("Pass", "0.6");
+        }
+
+        if (newMap.get("Fail") == null) {
+            newMap.put("Fail", "0.0");
+        }
     }
 
     /* 输入参数格式：{ "A":"40","B":"25","C":"23","D":"7","E":"4","F":"1" } */
