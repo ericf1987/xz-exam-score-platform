@@ -33,7 +33,7 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
         reportConfig.setProjectId(projectId);
 
         String scoreLevelConfig = result.getString("scoreLevelConfig");
-        if (scoreLevelConfig != null) {
+        if (!StringUtil.isEmpty(scoreLevelConfig)) {
             reportConfig.setScoreLevelConfig(scoreLevelConfig);
         }
 
