@@ -102,10 +102,7 @@ public class ImportProjectService {
             projectService.initProjectDatabase(projectId);
         }
 
-        /**
-         * 先导入题目信息
-         * (后续根据题目信息创建 score_subject_{{subjectId}}相关表)
-         */
+        //先导入题目信息(根据题目分数创建虚拟机科目)
         if (parameters.isImportQuests()) {
             LOG.info("导入项目 {} 题目信息...", projectId);
             importQuests(context);
@@ -119,29 +116,19 @@ public class ImportProjectService {
             importSubjects(context);
         }
 
-
-        //导入考生基础信息改为通过监控平台导入
+        //获取mongo连接
         MongoClient mongoClient = mongoClientFactory.getProjectMongoClient(projectId);
         if (mongoClient == null) {
             throw new IllegalArgumentException("项目 " + projectId + " 在网阅数据库中不存在");
         }
         context.put("client", mongoClient);
-        if (parameters.isImportStudents()) {
-            ImportStudentHelper helper = new ImportStudentHelper(
-                    appAuthClient, schoolService, classService, studentService);
-            try {
-                LOG.info("通过监控平台导入项目 {} 考生信息...", projectId);
-                helper.importStudentListFromMonitor(context);
-            } catch (Exception e) {
-                LOG.info("通过监控平台导入项目 {} 考生信息失败...", projectId);
 
-                LOG.info("通过CMS接口导入项目 {} 考生信息...", projectId);
-                helper.importStudentListFromCMS(context);
-                LOG.info("通过CMS接口导入项目 {} 考生信息成功...", projectId);
-            }
+        //导入考生基础信息,通过监控平台导入,出现问题时表明项目为之前项目,再通过CMS导入
+        if (parameters.isImportStudents()) {
+            importStudent(context);
         }
 
-
+        //导入项目阅卷分数
         if (parameters.isImportScore()) {
             LOG.info("导入项目 {} 阅卷分数...", projectId);
             importScore(context);
@@ -149,6 +136,22 @@ public class ImportProjectService {
 
         LOG.info("导入项目 {} 完成。", projectId);
         projectService.updateProjectStatus(projectId, ProjectStatus.Ready);
+    }
+
+    private void importStudent(Context context) {
+        String projectId = context.get(PROJECT_ID_KEY);
+        ImportStudentHelper helper = new ImportStudentHelper(
+                appAuthClient, schoolService, classService, studentService);
+        try {
+            LOG.info("通过监控平台导入项目 {} 考生信息...", projectId);
+            helper.importStudentListFromMonitor(context);
+        } catch (Exception e) {
+            LOG.info("通过监控平台导入项目 {} 考生信息失败...", projectId);
+
+            LOG.info("通过CMS接口导入项目 {} 考生信息...", projectId);
+            helper.importStudentListFromCMS(context);
+            LOG.info("通过CMS接口导入项目 {} 考生信息成功...", projectId);
+        }
     }
 
 
@@ -201,38 +204,40 @@ public class ImportProjectService {
                     String cardId = examSubject.getCardId();
                     LOG.info("正在拆分项目ID{},科目ID{}，科目{}", projectId, examSubjectId, examSubject.getName());
 
+                    //////////////////////////////////////////////////////////////////////////
                     JSONArray jsonArray = subjectOptionalGroups.get(examSubjectId);
                     String[] exclude = getExcludeQuestNos(jsonArray);
+                    createVirtualSubject(projectId, examSubjectId, cardId, exclude);
 
-                    int size = examSubjectId.length() / 3;
-                    for (int i = 1; i <= size; i++) {
-                        String subSubjectId = examSubjectId.substring(i * size - 3, i * size);
-                        String subjectName = subjectService.getSubjectName(subSubjectId);
-
-                        double subSubjectScore = subjectService.getSubSubjectScore(projectId, subSubjectId, exclude);
-                        ExamSubject subject = new ExamSubject(subSubjectId, subjectName, subSubjectScore);
-                        subject.setVirtualSubject(String.valueOf(true));
-                        subject.setCardId(cardId);
-
-                        subjectService.saveSubject(projectId, subject);
-                        subjectService.createSubjectScoreTable(projectId, subject.getId());
-                    }
-                    //拆分之后删除综合科目的相关表和记录
-                    //deleteTables(projectId, examSubjectId);
                 }
             }
         }
     }
 
-    private void deleteTables(String projectId, String examSubjectId) {
-        subjectService.deleteSubject(projectId, examSubjectId);
-        daoFactory.getProjectDao(projectId).execute("drop table `score_subject_{{id}}`"
-                .replace("{{id}}", examSubjectId));
-        daoFactory.getProjectDao(projectId).execute("drop table `score_subjective_{{id}}`"
-                .replace("{{id}}", examSubjectId));
-        daoFactory.getProjectDao(projectId).execute("drop table `score_objective_{{id}}`"
-                .replace("{{id}}", examSubjectId));
+    /**
+     * 根据综合科目创建综合科目下的子科目
+     *
+     * @param projectId     项目id
+     * @param examSubjectId 参加考试的科目(综合科目)
+     * @param cardId        cardId
+     * @param exclude       综合科目下所有的选做题
+     */
+    private void createVirtualSubject(String projectId, String examSubjectId, String cardId, String[] exclude) {
+        int size = examSubjectId.length() / 3;
+        for (int i = 1; i <= size; i++) {
+            String subSubjectId = examSubjectId.substring(i * size - 3, i * size);
+            String subjectName = subjectService.getSubjectName(subSubjectId);
+
+            double subSubjectScore = subjectService.getSubSubjectScore(projectId, subSubjectId, exclude);
+            ExamSubject subject = new ExamSubject(subSubjectId, subjectName, subSubjectScore);
+            subject.setVirtualSubject(String.valueOf(true));
+            subject.setCardId(cardId);
+
+            subjectService.saveSubject(projectId, subject);
+            subjectService.createSubjectScoreTable(projectId, subject.getId());
+        }
     }
+
 
     /**
      * 获取该综合科目下所有的选做题
