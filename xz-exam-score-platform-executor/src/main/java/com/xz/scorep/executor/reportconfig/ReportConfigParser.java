@@ -113,7 +113,7 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
         }
 
         String removeZeroScores = result.getString("removeZeroScores");
-        if (!StringUtil.isEmpty(rankLevelSettings)) {
+        if (!StringUtil.isEmpty(removeZeroScores)) {
             reportConfig.setRemoveZeroScores(removeZeroScores);
         }
 
