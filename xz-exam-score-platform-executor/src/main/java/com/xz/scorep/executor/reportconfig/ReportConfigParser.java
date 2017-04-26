@@ -62,7 +62,7 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
         }
 
         String topStudentRatio = result.getString("topStudentRatio");
-        if (topStudentRatio != null) {
+        if (!StringUtil.isEmpty(topStudentRatio)) {
             reportConfig.setTopStudentRate(Double.parseDouble(topStudentRatio));
         }
 
@@ -95,17 +95,17 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
         }
 
         String removeAbsentStudent = result.getString("removeAbsentStudent");
-        if (removeAbsentStudent != null) {
+        if (!StringUtil.isEmpty(removeAbsentStudent)) {
             reportConfig.setRemoveAbsentStudent(removeAbsentStudent);
         }
 
         String removeCheatStudent = result.getString("removeCheatStudent");
-        if (removeCheatStudent != null) {
+        if (!StringUtil.isEmpty(removeCheatStudent)) {
             reportConfig.setRemoveCheatStudent(removeCheatStudent);
         }
 
         String removeZeroScores = result.getString("removeZeroScores");
-        if (rankLevelSettings != null) {
+        if (!StringUtil.isEmpty(rankLevelSettings)) {
             reportConfig.setRemoveZeroScores(removeZeroScores);
         }
 
@@ -120,12 +120,12 @@ public class ReportConfigParser implements ImportProjectService.ResultParser<Rep
         }
 
         String fillAlmostPass = result.getString("fillAlmostPass");
-        if (fillAlmostPass != null) {
+        if (!StringUtil.isEmpty(fillAlmostPass)) {
             reportConfig.setFillAlmostPass(fillAlmostPass);
         }
 
         String highScoreRatio = result.getString("highScoreRatio");
-        if (highScoreRatio != null) {
+        if (!StringUtil.isEmpty(highScoreRatio)) {
             reportConfig.setHighScoreRate(Double.parseDouble(highScoreRatio));
         }
 
