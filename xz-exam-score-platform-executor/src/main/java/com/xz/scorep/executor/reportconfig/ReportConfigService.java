@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.reportconfig;
 
 import com.hyd.dao.DAO;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -94,16 +95,16 @@ public class ReportConfigService {
         if (projectReportConfig.getSubjectSegment() == 0) {
             projectReportConfig.setSubjectSegment(defaultReportConfig.getSubjectSegment());
         }
-        if (projectReportConfig.getRemoveZeroScores() == null) {
+        if (StringUtil.isEmpty(projectReportConfig.getRemoveZeroScores())) {
             projectReportConfig.setRemoveZeroScores(defaultReportConfig.getRemoveZeroScores());
         }
-        if (projectReportConfig.getRemoveAbsentStudent() == null) {
+        if (StringUtil.isEmpty(projectReportConfig.getRemoveAbsentStudent())) {
             projectReportConfig.setRemoveAbsentStudent(defaultReportConfig.getRemoveAbsentStudent());
         }
-        if (projectReportConfig.getRemoveCheatStudent() == null) {
+        if (StringUtil.isEmpty(projectReportConfig.getRemoveCheatStudent())) {
             projectReportConfig.setRemoveCheatStudent(defaultReportConfig.getRemoveCheatStudent());
         }
-        if (projectReportConfig.getFillAlmostPass() == null) {
+        if (StringUtil.isEmpty(projectReportConfig.getFillAlmostPass())) {
             projectReportConfig.setFillAlmostPass(defaultReportConfig.getFillAlmostPass());
         }
         if (projectReportConfig.getAlmostPassOffset() == 0) {
