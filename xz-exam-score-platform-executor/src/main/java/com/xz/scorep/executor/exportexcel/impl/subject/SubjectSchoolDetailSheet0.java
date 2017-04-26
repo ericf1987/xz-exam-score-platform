@@ -135,7 +135,8 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
                 String answer = row.getString("objective_answer");
                 answer = answer == null ? "*" : answer;//避免学生题目表中答案为null
                 String score = StringUtil.removeEnd(row.getString(scoreColName), ".0");
-                row.put(scoreColName, score + "[" + answer + "]");
+                String value = score + "[" + answer + "]";
+                row.put(scoreColName, value);
             });
         }
 
