@@ -31,6 +31,20 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentObjectiveScoreAggregator.class);
 
+    private static final String UPDATE_OBJECTIVE_SCORE_INFO = "" +
+            "update `{{tableName}}` set paper_score_type = \n" +
+            "case\n" +
+            "when student_id in (select student_id from absent WHERE subject_id like \"{{subjectId}}\") then \"absent\"\n" +
+            "when student_id in (select student_id from cheat where subject_id like \"{{subjectId}}\") then \"cheat\"\n" +
+            "else\"paper\" end";
+
+    private static final String DEL_ZERO_SCORE = "delete from `{{tableName}}` where score=0 and paper_score_type = \"paper\"";
+
+    private static final String DEL_ABS_SCORE = "delete from `{{tableName}}` where paper_score_type = \"absent\"";
+
+    private static final String DEL_CHEAT_SCORE = "delete from `{{tableName}}` where paper_score_type = \"cheat\"";
+
+
     @Autowired
     private DAOFactory daoFactory;
 
@@ -53,15 +67,16 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
         subjects.forEach(subject -> {
-            String objectiveTableName = "score_objective_" + subject.getId();
-            String subjectiveTableName = "score_subjective_" + subject.getId();
+            String subjectId = subject.getId();
+            String objectiveTableName = "score_objective_" + subjectId;
+            String subjectiveTableName = "score_subjective_" + subjectId;
 
             projectDao.execute("truncate table " + objectiveTableName);
             projectDao.execute("truncate table " + subjectiveTableName);
             projectDao.execute("insert into " + objectiveTableName + "(student_id,score) select id, 0 from student");
             projectDao.execute("insert into " + subjectiveTableName + "(student_id,score) select id, 0 from student");
 
-            LOG.info("科目{}主客观题成绩表已清空。", subject.getId());
+            LOG.info("科目{}主客观题成绩表已清空。", subjectId);
             //执行单科的主客观题统计
             try {
                 ThreadPools.createAndRunThreadPool(
@@ -70,20 +85,61 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
                 LOG.error("统计主客观题失败", e);
             }
 
+            updateObjectiveScore(projectId, projectDao, subjectId, objectiveTableName, subjectiveTableName);
         });
 
 
-//        ThreadPools.createAndRunThreadPool(
-//                aggregateConfig.getObjectivePoolSize(), 1, (pool) -> startAggregation(projectId, pool));
+    }
+
+    private void updateObjectiveScore(String projectId, DAO projectDao, String subjectId, String objectiveTableName, String subjectiveTableName) {
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
+
+        //先更新主客观题得分表的得分来源
+        projectDao.execute(UPDATE_OBJECTIVE_SCORE_INFO
+                .replace("{{tableName}}", objectiveTableName)
+                .replace("{{subjectId}}", subjectId));
+
+        projectDao.execute(UPDATE_OBJECTIVE_SCORE_INFO
+                .replace("{{tableName}}", subjectiveTableName)
+                .replace("{{subjectId}}", subjectId));
+
+        // 根据报表配置删除零分记录(该0分为卷面0分)
+        if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
+            projectDao.execute(DEL_ZERO_SCORE
+                    .replace("{{tableName}}", objectiveTableName)
+                    .replace("{{subject}}", subjectId));
+            projectDao.execute(DEL_ZERO_SCORE
+                    .replace("{{tableName}}", subjectiveTableName)
+                    .replace("{{subject}}", subjectId));
+        }
+
+        // 根据报表配置删除作弊学生
+        if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
+            projectDao.execute(DEL_CHEAT_SCORE
+                    .replace("{{tableName}}", objectiveTableName)
+                    .replace("{{subject}}", subjectId));
+            projectDao.execute(DEL_CHEAT_SCORE
+                    .replace("{{tableName}}", subjectiveTableName)
+                    .replace("{{subject}}", subjectId));
+        }
+
+        // 根据报表配置删除缺考考生记录
+        if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
+            projectDao.execute(DEL_ABS_SCORE
+                    .replace("{{tableName}}", objectiveTableName)
+                    .replace("{{subject}}", subjectId));
+            projectDao.execute(DEL_ABS_SCORE
+                    .replace("{{tableName}}", subjectiveTableName)
+                    .replace("{{subject}}", subjectId));
+        }
     }
 
     private void startObjectiveScoreAggregation(String projectId, ExamSubject subject, ThreadPoolExecutor pool) {
         String subjectId = subject.getId();
-        LOG.info("正在统计科目{} , 主客观题得分",subjectId);
+        LOG.info("正在统计科目{} , 主客观题得分", subjectId);
         List<ExamQuest> examQuests = questService.queryQuests(projectId, subjectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
         AsyncCounter counter = new AsyncCounter("统计科目主客观题得分", examQuests.size());
-        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
 
         examQuests.forEach(examQuest -> {
             boolean objective = examQuest.isObjective();
@@ -105,37 +161,9 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
                 }
             });
         });
-        LOG.info("统计科目  {}  ,主客观题得分完成",subjectId);
+        LOG.info("统计科目  {}  ,主客观题得分完成", subjectId);
 
     }
 
-//    private void startAggregation(String projectId, ThreadPoolExecutor pool) {
-//        List<ExamQuest> examQuests = questService.queryQuests(projectId);
-//        DAO projectDao = daoFactory.getProjectDao(projectId);
-//        AsyncCounter counter = new AsyncCounter("统计科目主客观题得分", examQuests.size());
-//        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
-//        Boolean separate = Boolean.valueOf(reportConfig.getSeparateCategorySubjects());
-//
-//        examQuests.forEach(examQuest -> {
-//            boolean objective = examQuest.isObjective();
-//            String questId = examQuest.getId();
-//            String subjectId = separate ? examQuest.getQuestSubject() : examQuest.getExamSubject();
-//
-//            String accumulateTableName = "score_" + (objective ? "objective" : "subjective") + "_" + subjectId;
-//            String questScoreTableName = "score_" + questId;
-//
-//            String combineSql = "update " + accumulateTableName + " p \n" +
-//                    "  inner join `" + questScoreTableName + "` q using(student_id)\n" +
-//                    "  set p.score=p.score+ifnull(q.score,0)";
-//
-//            pool.submit(() -> {
-//                try {
-//                    projectDao.execute(combineSql);
-//                    counter.count();
-//                } catch (DAOException e) {
-//                    LOG.error("统计主客观题失败", e);
-//                }
-//            });
-//        });
-//    }
+
 }

@@ -53,29 +53,66 @@ public class StudentProjectScoreAggregator extends Aggregator {
                             projectId, counter.incrementAndGet(), subjects.size());
                 });
 
-        removeAbsent(projectDao, subjects);
-
         //移除总分为0
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
             removeZeroScores(projectId);
         }
+
+        //根据报表配置删除全科缺考考生记录
+        if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
+            removeAbsentStudent(projectDao, subjects);
+        }
+
+        //根据报表配置删除全科作弊考生记录
+        if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
+            removeCheatStudent(projectDao, subjects);
+        }
+
+
+    }
+
+    private void removeCheatStudent(DAO projectDao, List<ExamSubject> subjects) {
+        String query = "select student_id,COUNT(*) counts from cheat  GROUP BY student_id ";
+        int examSubjects = (int) subjects.stream()
+                .filter(subject -> subject.getVirtualSubject().equals("false"))
+                .count();
+
+        List<String> studentList = projectDao.query(query).stream()
+                .filter(row -> row.getInteger("counts", 0) < examSubjects)
+                .map(row -> row.getString("student_id"))
+                .collect(Collectors.toList());
+
+        String students = String.join(",", studentList);
+
+        LOG.info("删除全科作弊的考生: ");
+        projectDao.execute("delete from score_project where student_id in (?)", students);
     }
 
     private void removeZeroScores(String projectId) {
-        String sql = "delete from score_project where score=0";
-        LOG.info("删除项目零分记录...");
+        String sql = "delete from score_project where score=0 and student_id not in(" +
+                "select student_id from absent \n" +
+                "UNION \n" +
+                "select student_id from cheat ) ";
+        LOG.info("删除项目缺考、作弊外的零分记录...");
         daoFactory.getProjectDao(projectId).execute(sql);
-        LOG.info("项目 {} 的总分零分记录删除完毕。", projectId);
+        LOG.info("项目 {} 的缺考、作弊外的零分记录删除完毕。", projectId);
     }
 
-    private void removeAbsent(DAO projectDao, List<ExamSubject> subjects) {
-        String where = String.join(" and ", subjects.stream().map(
-                subject -> "student_id not in (select student_id from score_subject_" + subject.getId() + ")")
-                .collect(Collectors.toList()));
+    private void removeAbsentStudent(DAO projectDao, List<ExamSubject> subjects) {
+        String query = "select student_id,COUNT(*) counts from absent  GROUP BY student_id ";
+        int examSubjects = (int) subjects.stream()
+                .filter(subject -> subject.getVirtualSubject().equals("false"))
+                .count();
 
-        String sql = "delete from score_project where " + where;
-        LOG.info("删除全科缺考的考生: " + sql);
-        projectDao.execute(sql);
+        List<String> studentList = projectDao.query(query).stream()
+                .filter(row -> row.getInteger("counts", 0) < examSubjects)
+                .map(row -> row.getString("student_id"))
+                .collect(Collectors.toList());
+
+        String students = String.join(",", studentList);
+
+        LOG.info("删除全科缺考的考生: ");
+        projectDao.execute("delete from score_project where student_id in (?)", students);
     }
 
 

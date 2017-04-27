@@ -79,15 +79,15 @@ public class SubjectService {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         projectDao.execute("create table if not exists " +
                 "score_subject_" + subjectId +
-                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0,real_score decimal(4,1) not null default 0)");
+                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0,real_score decimal(4,1) not null default 0,paper_score_type VARCHAR(6))");
 
         projectDao.execute("create table if not exists " +
                 "score_objective_" + subjectId +
-                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)");
+                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0,paper_score_type VARCHAR(6))");
 
         projectDao.execute("create table if not exists " +
                 "score_subjective_" + subjectId +
-                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0)");
+                "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0,paper_score_type VARCHAR(6))");
     }
 
     //在科目拆分的情况,使用缓存可能导致查出的科目信息与预期的不相符

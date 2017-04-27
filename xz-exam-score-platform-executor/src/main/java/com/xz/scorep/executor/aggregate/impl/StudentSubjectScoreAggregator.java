@@ -30,22 +30,24 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentSubjectScoreAggregator.class);
 
-    private static final String DEL_ZERO_SCORE = "delete from score_subject_{{subject}} where score=0";
+    private static final String UPDATE_SUBJECT_SCORE_INFO = "" +
+            "update `score_objective_{{subjectId}}` set paper_score_type = \n" +
+            "case\n" +
+            "when student_id in (select student_id from absent WHERE subject_id like \"{{subjectId}}\") then \"absent\"\n" +
+            "when student_id in (select student_id from cheat where subject_id like \"{{subjectId}}\") then \"cheat\"\n" +
+            "else\"paper\" end";
 
-    private static final String DEL_ABS_SCORE = "delete from score_subject_{{subject}} " +
-            "where student_id in (\n" +
-            "  select a.student_id from absent a where a.subject_id like \"%{{subject}}%\"  \n" +
-            ")";
+    //只删除卷面0分
+    private static final String DEL_ZERO_SCORE = "delete from score_subject_{{subject}} where score=0 and paper_score_type = \"paper\"";
+
+    private static final String DEL_ABS_SCORE = "delete from score_subject_{{subject}} where paper_score_type = \"absent\"";
 
     private static final String DEL_LOST_SCORE = "delete from score_subject_{{subject}} " +
             "where student_id in (\n" +
             "  select a.student_id from lost a where a.subject_id like \"%{{subject}}%\"  \n" +
             ")";
 
-    private static final String DEL_CHEAT_SCORE = "delete from score_subject_{{subject}} " +
-            "where student_id in (\n" +
-            "  select a.student_id from cheat a where a.subject_id like \"%{{subject}}%\"  \n" +
-            ")";
+    private static final String DEL_CHEAT_SCORE = "delete from score_subject_{{subject}} where paper_score_type = \"cheat\"";
 
     @Autowired
     private QuestService questService;
@@ -74,10 +76,19 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         ThreadPools.createAndRunThreadPool(aggregateConfig.getSubjectPoolSize(), 1,
                 pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
 
+        updateSubjectScore(projectId, subjects);
+
         //同云报表平台处理
         LOG.info("删除项目{}缺卷学生...", projectId);
         removeLostStudents(projectId, subjects);
         LOG.info("项目 {} 缺卷考生删除完毕。", projectId);
+
+        // 根据报表配置删除零分记录(该0分为卷面0分)
+        if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
+            LOG.info("删除项目 {} 的科目零分记录。", projectId);
+            removeZeroScores(projectId, subjects);
+            LOG.info("项目 {} 的科目零分记录删除完毕。", projectId);
+        }
 
         // 根据报表配置删除作弊学生
         if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
@@ -93,13 +104,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             LOG.info("项目 {} 缺考考生删除完毕。", projectId);
         }
 
-        // 根据报表配置删除零分记录
-        if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
-            LOG.info("删除项目 {} 的科目零分记录。", projectId);
-            removeZeroScores(projectId, subjects);
-            LOG.info("项目 {} 的科目零分记录删除完毕。", projectId);
-        }
-
         // 将 score 拷贝到 real_score
         LOG.info("拷贝项目 {} 的科目分数 score 到 real_score...", projectId);
         copyToRealScore(projectId, subjects);
@@ -109,6 +113,16 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             LOG.info("提升项目 {} 的接近及格分数...", projectId);
             Double almostPassOffset = reportConfig.getAlmostPassOffset();
             fillAlmostPass(projectId, subjects, almostPassOffset, reportConfig);
+        }
+    }
+
+    private void updateSubjectScore(String projectId, List<ExamSubject> subjects) {
+
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        for (ExamSubject subject : subjects) {
+            String subjectId = subject.getId();
+            //更新科目成绩来源类型(缺考分,作弊分,卷面分),缺考,作弊为0
+            projectDao.execute(UPDATE_SUBJECT_SCORE_INFO.replace("{{subjectId}}", subjectId));
         }
     }
 
@@ -145,18 +159,20 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         });
     }
 
+    //只删除卷面为0分的记录
     private void removeZeroScores(String projectId, List<ExamSubject> subjects) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
         for (ExamSubject subject : subjects) {
             String subjectId = subject.getId();
+
             if (Boolean.valueOf(subject.getVirtualSubject())) {
                 ExamSubject complexSubject = subjectService.findComplexSubject(projectId, subjectId);
                 String complexSubjectId = complexSubject.getId();
                 //删除 综合科目为0分的 拆分科目的学生记录
                 String sql = "delete from `score_subject_{{subjectId}}` " +
                         "where student_id in (select a.student_id from `score_subject_{{complexSubjectId}}` a " +
-                        "where a.score =0) and score=0";
+                        "where a.score =0) and score=0 and paper_score_type = \"paper\" ";
                 String replace = sql.replace("{{subjectId}}", subjectId)
                         .replace("{{complexSubjectId}}", complexSubjectId);
                 projectDao.execute(replace);
