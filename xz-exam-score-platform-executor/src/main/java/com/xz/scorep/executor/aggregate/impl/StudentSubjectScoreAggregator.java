@@ -33,6 +33,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
     private static final String UPDATE_SUBJECT_SCORE_INFO = "" +
             "update `score_objective_{{subjectId}}` set paper_score_type = \n" +
             "case\n" +
+            "when student_id in (select student_id from lost WHERE subject_id like \"{{subjectId}}\") then \"lost\"\n" +
             "when student_id in (select student_id from absent WHERE subject_id like \"{{subjectId}}\") then \"absent\"\n" +
             "when student_id in (select student_id from cheat where subject_id like \"{{subjectId}}\") then \"cheat\"\n" +
             "else\"paper\" end";
@@ -42,10 +43,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
     private static final String DEL_ABS_SCORE = "delete from score_subject_{{subject}} where paper_score_type = \"absent\"";
 
-    private static final String DEL_LOST_SCORE = "delete from score_subject_{{subject}} " +
-            "where student_id in (\n" +
-            "  select a.student_id from lost a where a.subject_id like \"%{{subject}}%\"  \n" +
-            ")";
+    private static final String DEL_LOST_SCORE = "delete from score_subject_{{subject}} where paper_score_type = \"lost\"";
 
     private static final String DEL_CHEAT_SCORE = "delete from score_subject_{{subject}} where paper_score_type = \"cheat\"";
 

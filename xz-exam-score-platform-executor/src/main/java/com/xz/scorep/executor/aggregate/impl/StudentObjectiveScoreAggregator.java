@@ -34,6 +34,7 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
     private static final String UPDATE_OBJECTIVE_SCORE_INFO = "" +
             "update `{{tableName}}` set paper_score_type = \n" +
             "case\n" +
+            "when student_id in (select student_id from lost WHERE subject_id like \"{{subjectId}}\") then \"lost\"\n" +
             "when student_id in (select student_id from absent WHERE subject_id like \"{{subjectId}}\") then \"absent\"\n" +
             "when student_id in (select student_id from cheat where subject_id like \"{{subjectId}}\") then \"cheat\"\n" +
             "else\"paper\" end";
@@ -43,6 +44,8 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
     private static final String DEL_ABS_SCORE = "delete from `{{tableName}}` where paper_score_type = \"absent\"";
 
     private static final String DEL_CHEAT_SCORE = "delete from `{{tableName}}` where paper_score_type = \"cheat\"";
+
+    private static final String DEL_LOST_SCORE = "delete from `{{tableName}}` where paper_score_type = \"lost\"";
 
 
     @Autowired
@@ -102,6 +105,15 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
         projectDao.execute(UPDATE_OBJECTIVE_SCORE_INFO
                 .replace("{{tableName}}", subjectiveTableName)
                 .replace("{{subjectId}}", subjectId));
+
+        //默认删除丢卷学生
+        projectDao.execute(DEL_LOST_SCORE
+                .replace("{{tableName}}", objectiveTableName)
+                .replace("{{subject}}", subjectId));
+        projectDao.execute(DEL_LOST_SCORE
+                .replace("{{tableName}}", subjectiveTableName)
+                .replace("{{subject}}", subjectId));
+
 
         // 根据报表配置删除零分记录(该0分为卷面0分)
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {

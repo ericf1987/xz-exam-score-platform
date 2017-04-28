@@ -53,7 +53,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
                             projectId, counter.incrementAndGet(), subjects.size());
                 });
 
-        //移除总分为0
+        //删除项目总分为0分,且没有缺考没有作弊记录的学生成绩
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
             removeZeroScores(projectId);
         }
@@ -72,23 +72,26 @@ public class StudentProjectScoreAggregator extends Aggregator {
     }
 
     private void removeCheatStudent(DAO projectDao, List<ExamSubject> subjects) {
+        //学生作弊的科目数,  当学生作弊的科目数等于参考科目数,该学生为全科作弊
         String query = "select student_id,COUNT(*) counts from cheat  GROUP BY student_id ";
-        int examSubjects = (int) subjects.stream()
+        int subjectCount = (int) subjects.stream()
                 .filter(subject -> subject.getVirtualSubject().equals("false"))
                 .count();
 
         List<String> studentList = projectDao.query(query).stream()
-                .filter(row -> row.getInteger("counts", 0) < examSubjects)
+                .filter(row -> row.getInteger("counts", 0) == subjectCount)
                 .map(row -> row.getString("student_id"))
                 .collect(Collectors.toList());
 
         String students = String.join(",", studentList);
 
-        LOG.info("删除全科作弊的考生: ");
+        LOG.info("删除全科作弊的考生.... ");
         projectDao.execute("delete from score_project where student_id in (?)", students);
+        LOG.info("项目的全科作弊学生删除完毕.....");
     }
 
     private void removeZeroScores(String projectId) {
+        //删除项目总分为0分,且没有缺考没有作弊记录的学生成绩
         String sql = "delete from score_project where score=0 and student_id not in(" +
                 "select student_id from absent \n" +
                 "UNION \n" +
@@ -99,20 +102,22 @@ public class StudentProjectScoreAggregator extends Aggregator {
     }
 
     private void removeAbsentStudent(DAO projectDao, List<ExamSubject> subjects) {
+        //学生缺考的科目数,  当学生缺考的科目数等于参考科目数,该学生为全科缺考
         String query = "select student_id,COUNT(*) counts from absent  GROUP BY student_id ";
-        int examSubjects = (int) subjects.stream()
+        int subjectCount = (int) subjects.stream()
                 .filter(subject -> subject.getVirtualSubject().equals("false"))
                 .count();
 
         List<String> studentList = projectDao.query(query).stream()
-                .filter(row -> row.getInteger("counts", 0) < examSubjects)
+                .filter(row -> row.getInteger("counts", 0) == subjectCount)
                 .map(row -> row.getString("student_id"))
                 .collect(Collectors.toList());
 
         String students = String.join(",", studentList);
 
-        LOG.info("删除全科缺考的考生: ");
+        LOG.info("删除全科缺考的考生记录....");
         projectDao.execute("delete from score_project where student_id in (?)", students);
+        LOG.info("项目的全科缺考学生删除完毕.....");
     }
 
 
