@@ -2,16 +2,19 @@ package com.xz.scorep.executor.importproject;
 
 import com.hyd.dao.DAO;
 import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.Counter;
 import com.xz.ajiaedu.common.lang.StringUtil;
+import com.xz.ajiaedu.common.mongo.MongoUtils;
 import com.xz.ajiaedu.common.score.ScorePattern;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.db.MultipleBatchExecutor;
 import com.xz.scorep.executor.project.AbsentService;
 import com.xz.scorep.executor.project.CheatService;
 import com.xz.scorep.executor.project.LostService;
+import com.xz.scorep.executor.project.StudentService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -53,6 +56,8 @@ public class ImportScoreHelper {
 
     private LostService lostService;
 
+    private StudentService studentService;
+
     private ReportConfig reportConfig;
 
     private Counter counter = new Counter(5000,
@@ -64,6 +69,10 @@ public class ImportScoreHelper {
         this.scoreBatchExecutor = new MultipleBatchExecutor(projectDao, 100);
 
         prepare();
+    }
+
+    public void setStudentService(StudentService studentService) {
+        this.studentService = studentService;
     }
 
     public void setAbsentService(AbsentService absentService) {
@@ -136,7 +145,25 @@ public class ImportScoreHelper {
         String subjectDbName = projectId + "_" + subjectId;
         MongoDatabase subjectDb = mongoClient.getDatabase(subjectDbName);
 
-        subjectDb.getCollection("students").find(doc())
+        List<String> listStudents = studentService.listStudents(projectId);
+        MongoCollection<Document> students = subjectDb.getCollection("students");
+        importStudentScore(projectId, students, subjectId, listStudents);
+    }
+
+    // 导入单个考生的单科成绩
+    private void importStudentScore(String projectId, MongoCollection<Document> students, String subjectId, List<String> listStudents) {
+
+        for (String studentId : listStudents) {
+            Document query = MongoUtils.doc("studentId", studentId);
+            Document first = students.find(query).first();
+            //该科目下所有没有网阅记录的学生添加到缺考表中
+            if (first == null) {
+                absentService.saveAbsent(projectId, studentId, subjectId);
+            }
+            continue;
+        }
+
+        students.find(doc())
                 .forEach((Consumer<Document>) doc -> importStudentScore(projectId, doc, subjectId));
     }
 

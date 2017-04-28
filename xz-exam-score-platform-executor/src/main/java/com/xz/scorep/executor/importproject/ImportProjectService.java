@@ -169,6 +169,7 @@ public class ImportProjectService {
         helper.setAbsentService(absentService);
         helper.setCheatService(cheatService);
         helper.setLostService(lostService);
+        helper.setStudentService(studentService);
         helper.setReportConfig(reportConfig);
         helper.importScore();
     }

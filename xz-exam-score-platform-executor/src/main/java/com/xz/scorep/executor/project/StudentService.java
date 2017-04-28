@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.project;
 
+import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.hyd.simplecache.SimpleCache;
 import com.xz.scorep.executor.bean.ProjectStudent;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentService {
@@ -61,5 +63,13 @@ public class StudentService {
             String sql = "select * from student where id=?";
             return daoFactory.getProjectDao(projectId).queryFirst(sql, studentId);
         });
+    }
+
+    public List<String> listStudents(String projectId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        return projectDao.query("select * from student")
+                .stream()
+                .map(row -> row.getString("id"))
+                .collect(Collectors.toList());
     }
 }

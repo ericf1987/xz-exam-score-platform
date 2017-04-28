@@ -80,13 +80,14 @@ public class StudentProjectScoreAggregator extends Aggregator {
 
         List<String> studentList = projectDao.query(query).stream()
                 .filter(row -> row.getInteger("counts", 0) == subjectCount)
-                .map(row -> row.getString("student_id"))
+                .map(row -> "\"" + row.getString("student_id") + "\"")
                 .collect(Collectors.toList());
 
         String students = String.join(",", studentList);
 
         LOG.info("删除全科作弊的考生.... ");
-        projectDao.execute("delete from score_project where student_id in (?)", students);
+        String sql = "delete from score_project where student_id in ({{condition}})";
+        projectDao.execute(sql.replace("{{condition}}", students));
         LOG.info("项目的全科作弊学生删除完毕.....");
     }
 
@@ -110,13 +111,13 @@ public class StudentProjectScoreAggregator extends Aggregator {
 
         List<String> studentList = projectDao.query(query).stream()
                 .filter(row -> row.getInteger("counts", 0) == subjectCount)
-                .map(row -> row.getString("student_id"))
+                .map(row -> "\"" + row.getString("student_id") + "\"")
                 .collect(Collectors.toList());
 
         String students = String.join(",", studentList);
-
         LOG.info("删除全科缺考的考生记录....");
-        projectDao.execute("delete from score_project where student_id in (?)", students);
+        String sql = "delete from score_project where student_id in ({{condition}})";
+        projectDao.execute(sql.replace("{{condition}}", students));
         LOG.info("项目的全科缺考学生删除完毕.....");
     }
 
