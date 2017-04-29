@@ -55,7 +55,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
 
         //删除项目总分为0分,且没有缺考没有作弊记录的学生成绩
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
-            removeZeroScores(projectId);
+            removeZeroScores(projectId, subjects);
         }
 
         //根据报表配置删除全科缺考考生记录
@@ -95,14 +95,20 @@ public class StudentProjectScoreAggregator extends Aggregator {
         LOG.info("项目的全科作弊学生删除完毕.....");
     }
 
-    private void removeZeroScores(String projectId) {
+    private void removeZeroScores(String projectId, List<ExamSubject> subjects) {
         //删除项目总分为0分,且没有缺考没有作弊记录的学生成绩
         String sql = "delete from score_project where score=0 and student_id not in(" +
-                "select student_id from absent \n" +
-                "UNION \n" +
-                "select student_id from cheat ) ";
+                "select a.student_id from (select student_id,COUNT(*) counts from absent GROUP BY student_id) a where a.counts = {{count}}\n" +
+                "UNION\n" +
+                "select a.student_id from (select student_id,COUNT(*) counts from cheat GROUP BY student_id) a where a.counts = {{count}}" +
+                ") ";
+
+        int subjectCount = (int) subjects.stream()
+                .filter(subject -> subject.getVirtualSubject().equals("false"))
+                .count();
+
         LOG.info("删除项目缺考、作弊外的零分记录...");
-        daoFactory.getProjectDao(projectId).execute(sql);
+        daoFactory.getProjectDao(projectId).execute(sql.replace("{{count}}", String.valueOf(subjectCount)));
         LOG.info("项目 {} 的缺考、作弊外的零分记录删除完毕。", projectId);
     }
 
