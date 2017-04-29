@@ -83,6 +83,10 @@ public class StudentProjectScoreAggregator extends Aggregator {
                 .map(row -> "\"" + row.getString("student_id") + "\"")
                 .collect(Collectors.toList());
 
+        if (studentList == null) {
+            return;
+        }
+
         String students = String.join(",", studentList);
 
         LOG.info("删除全科作弊的考生.... ");
@@ -113,6 +117,10 @@ public class StudentProjectScoreAggregator extends Aggregator {
                 .filter(row -> row.getInteger("counts", 0) == subjectCount)
                 .map(row -> "\"" + row.getString("student_id") + "\"")
                 .collect(Collectors.toList());
+
+        if (studentList == null) {
+            return;
+        }
 
         String students = String.join(",", studentList);
         LOG.info("删除全科缺考的考生记录....");

@@ -33,9 +33,9 @@ public class StudentSubjectScoreAggregator extends Aggregator {
     private static final String UPDATE_SUBJECT_SCORE_INFO = "" +
             "update `score_subject_{{subjectId}}` set paper_score_type = \n" +
             "case\n" +
-            "when student_id in (select student_id from lost WHERE subject_id like \"{{subjectId}}\") then \"lost\"\n" +
-            "when student_id in (select student_id from absent WHERE subject_id like \"{{subjectId}}\") then \"absent\"\n" +
-            "when student_id in (select student_id from cheat where subject_id like \"{{subjectId}}\") then \"cheat\"\n" +
+            "when student_id in (select student_id from lost WHERE subject_id like \"%{{subjectId}}%\") then \"lost\"\n" +
+            "when student_id in (select student_id from absent WHERE subject_id like \"%{{subjectId}}%\") then \"absent\"\n" +
+            "when student_id in (select student_id from cheat where subject_id like \"%{{subjectId}}%\") then \"cheat\"\n" +
             "else\"paper\" end";
 
     //只删除卷面0分

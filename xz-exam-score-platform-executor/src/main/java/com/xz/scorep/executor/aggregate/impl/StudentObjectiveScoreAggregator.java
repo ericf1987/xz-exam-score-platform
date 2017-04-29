@@ -34,9 +34,9 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
     private static final String UPDATE_OBJECTIVE_SCORE_INFO = "" +
             "update `{{tableName}}` set paper_score_type = \n" +
             "case\n" +
-            "when student_id in (select student_id from lost WHERE subject_id like \"{{subjectId}}\") then \"lost\"\n" +
-            "when student_id in (select student_id from absent WHERE subject_id like \"{{subjectId}}\") then \"absent\"\n" +
-            "when student_id in (select student_id from cheat where subject_id like \"{{subjectId}}\") then \"cheat\"\n" +
+            "when student_id in (select student_id from lost WHERE subject_id like \"%{{subjectId}}%\") then \"lost\"\n" +
+            "when student_id in (select student_id from absent WHERE subject_id like \"%{{subjectId}}%\") then \"absent\"\n" +
+            "when student_id in (select student_id from cheat where subject_id like \"%{{subjectId}}%\") then \"cheat\"\n" +
             "else\"paper\" end";
 
     private static final String DEL_ZERO_SCORE = "delete from `{{tableName}}` where score=0 and paper_score_type = \"paper\"";
