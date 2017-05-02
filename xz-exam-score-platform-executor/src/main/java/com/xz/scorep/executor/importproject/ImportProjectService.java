@@ -224,11 +224,16 @@ public class ImportProjectService {
      * @param exclude       综合科目下所有的选做题
      */
     private void createVirtualSubject(String projectId, String examSubjectId, String cardId, String[] exclude) {
-        int size = examSubjectId.length() / 3;
-        for (int i = 1; i <= size; i++) {
-            String subSubjectId = examSubjectId.substring(i * size - 3, i * size);
-            String subjectName = subjectService.getSubjectName(subSubjectId);
 
+        while (true) {
+            if (examSubjectId.length() < 3) {
+                break;
+            }
+            String subSubjectId = examSubjectId.substring(0, 3);
+            examSubjectId = examSubjectId.substring(3, examSubjectId.length());
+            //////////////////////////////////////////////////////////////////////////
+
+            String subjectName = subjectService.getSubjectName(subSubjectId);
             double subSubjectScore = subjectService.getSubSubjectScore(projectId, subSubjectId, exclude);
             ExamSubject subject = new ExamSubject(subSubjectId, subjectName, subSubjectScore);
             subject.setVirtualSubject(String.valueOf(true));
@@ -237,6 +242,7 @@ public class ImportProjectService {
             subjectService.saveSubject(projectId, subject);
             subjectService.createSubjectScoreTable(projectId, subject.getId());
         }
+
     }
 
 

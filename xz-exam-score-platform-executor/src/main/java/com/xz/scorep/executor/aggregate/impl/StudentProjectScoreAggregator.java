@@ -97,6 +97,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
 
     private void removeZeroScores(String projectId, List<ExamSubject> subjects) {
         //删除项目总分为0分,且没有缺考没有作弊记录的学生成绩
+        //(语数外){语缺考,数缺考,外参考得0(应该排除);语数外均缺考得0分此处不应排除}
         String sql = "delete from score_project where score=0 and student_id not in(" +
                 "select a.student_id from (select student_id,COUNT(*) counts from absent GROUP BY student_id) a where a.counts = {{count}}\n" +
                 "UNION\n" +
@@ -107,9 +108,9 @@ public class StudentProjectScoreAggregator extends Aggregator {
                 .filter(subject -> subject.getVirtualSubject().equals("false"))
                 .count();
 
-        LOG.info("删除项目缺考、作弊外的零分记录...");
+        LOG.info("删除项目全科缺考、作弊外的零分记录...");
         daoFactory.getProjectDao(projectId).execute(sql.replace("{{count}}", String.valueOf(subjectCount)));
-        LOG.info("项目 {} 的缺考、作弊外的零分记录删除完毕。", projectId);
+        LOG.info("项目 {} 的全科缺考、作弊外的零分记录删除完毕。", projectId);
     }
 
     private void removeAbsentStudent(DAO projectDao, List<ExamSubject> subjects) {
