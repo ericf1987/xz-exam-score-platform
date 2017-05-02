@@ -39,7 +39,8 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
             "when student_id in (select student_id from cheat where subject_id like \"%{{subjectId}}%\") then \"cheat\"\n" +
             "else\"paper\" end";
 
-    private static final String DEL_ZERO_SCORE = "delete from `{{tableName}}` where score=0 and paper_score_type = \"paper\"";
+    private static final String DEL_ZERO_SCORE = "delete from `{{tableName}}` where student_id in (" +
+            "select student_id from `score_subject_{{subject}}` where score = 0 ) and score=0 and paper_score_type = \"paper\"";
 
     private static final String DEL_ABS_SCORE = "delete from `{{tableName}}` where paper_score_type = \"absent\"";
 
@@ -117,6 +118,7 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
 
         // 根据报表配置删除零分记录(该0分为卷面0分)
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
+            //只删除总分为0的主客观题得分为0分的记录
             projectDao.execute(DEL_ZERO_SCORE
                     .replace("{{tableName}}", objectiveTableName)
                     .replace("{{subject}}", subjectId));
