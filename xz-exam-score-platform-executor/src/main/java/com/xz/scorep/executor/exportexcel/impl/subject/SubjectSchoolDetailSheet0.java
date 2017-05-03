@@ -133,13 +133,11 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
         if (quest.isObjective()) {
             rows.forEach(row -> {
                 String answer = row.getString("objective_answer");
-                answer = answer == null ? "*" : answer;//避免学生题目表中答案为null
-                String score = StringUtil.removeEnd(row.getString(scoreColName), ".0");
-//                String value = score + "[" + answer + "]";
+                answer = StringUtil.isBlank(answer) ? "*" : answer;//避免学生题目表中答案为null
+                String score = StringUtil.removeEnd(row.getString("score"), ".0");
+                String value = score + "[" + answer + "]";
                 //待测试看看有没有之前的问题(重复答案或者缺答案)
-                StringBuffer value = new StringBuffer();
-                value.append(score).append("[").append(answer).append("]");
-                row.put(scoreColName, value.toString());
+                row.put(scoreColName, value);
             });
         }
 
