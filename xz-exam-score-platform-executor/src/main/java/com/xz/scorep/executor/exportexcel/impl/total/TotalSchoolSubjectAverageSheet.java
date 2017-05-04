@@ -9,6 +9,7 @@ import com.xz.scorep.executor.exportexcel.ExcelCellStyles;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetTask;
+import com.xz.scorep.executor.exportexcel.impl.subject.Row2MapHelper;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.Direction;
 import org.apache.commons.lang3.StringUtils;
@@ -256,10 +257,11 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
                 .replace("{{subjectId}}",subjectId)
                 .replace("{{schoolId}}",schoolId);
         List<Row> rows = dao.query(sql);
-        sheetContext.rowAdd(rows);
+        sheetContext.rowAdd(Row2MapHelper.row2Map(rows));
         sheetContext.rowSortBy("class_name");
 
-        sheetContext.rowAdd(dao.query(CLASS_MIN_SCORE.replace("{{scoreTable}}", scoreTable), schoolId));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(
+                dao.query(CLASS_MIN_SCORE.replace("{{scoreTable}}", scoreTable), schoolId)));
 
         String totalSql = QUERY_TOTAL_ROW
                 .replace("{{subjectName}}",subjectName)

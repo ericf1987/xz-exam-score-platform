@@ -1,6 +1,5 @@
 package com.xz.scorep.executor.table;
 
-import com.hyd.dao.Row;
 import com.hyd.dao.util.StringUtil;
 import com.xz.ajiaedu.common.lang.NaturalOrderComparator;
 
@@ -71,13 +70,13 @@ public class Table {
         tableRow.put(propertyName, propertyValue);
     }
 
-    public void readRow(Row row) {
+    public void readRow(Map<String, Object> row) {
 
         if (StringUtil.isEmpty(this.key)) {
             throw new IllegalStateException("没有设置 Table 的 key");
         }
 
-        String keyId = row.getString(key);
+        String keyId = (String) row.get(key);
         if (keyId == null) {
             throw new IllegalArgumentException("Row must contain key '" + key + "'");
         }
@@ -107,7 +106,7 @@ public class Table {
         });
     }
 
-    public void readRows(List<Row> rows) {
+    public void readRows(List<Map<String, Object>> rows) {
         rows.forEach(this::readRow);
     }
 

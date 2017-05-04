@@ -18,8 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -130,18 +129,26 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
     }
 
     private static void fillScore(SheetContext sheetContext, ExamQuest quest, String scoreColName, List<Row> rows) {
-        if (quest.isObjective()) {
-            rows.forEach(row -> {
-                String answer = row.getString("objective_answer");
-                answer = StringUtil.isBlank(answer) ? "*" : answer;//避免学生题目表中答案为null
-                String score = StringUtil.removeEnd(row.getString("score"), ".0");
-                String value = score + "[" + answer + "]";
-                //待测试看看有没有之前的问题(重复答案或者缺答案)
-                row.put(scoreColName, value);
-            });
-        }
 
-        sheetContext.rowAdd(rows);
+        List<Map<String, Object>> converted =
+                rows.stream().map(HashMap::new).collect(Collectors.toList());
+
+        if (quest.isObjective()) {
+            converted.forEach(map -> fixScoreRow(scoreColName, map));
+            sheetContext.rowAdd(converted);
+        } else {
+            List<Map<String, Object>> collect = Row2MapHelper.row2Map(rows);
+            sheetContext.rowAdd(collect);
+        }
+    }
+
+    private static void fixScoreRow(String scoreColName, Map<String, Object> map) {
+        String answer = (String) map.get("objective_answer");
+        answer = StringUtil.isBlank(answer) ? "*" : answer;//避免学生题目表中答案为null
+        String score = StringUtil.removeEnd(String.valueOf(map.get("score")), ".0");
+        String value = score + "[" + answer + "]";
+        //待测试看看有没有之前的问题(重复答案或者缺答案)
+        map.put(scoreColName, value);
     }
 
     private static void fillStudentSubjectInfo(SheetContext sheetContext, StudentQuery studentQuery) {

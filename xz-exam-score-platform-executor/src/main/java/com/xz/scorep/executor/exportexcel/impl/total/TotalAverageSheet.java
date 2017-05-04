@@ -10,6 +10,7 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.ExcelCellStyles;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
+import com.xz.scorep.executor.exportexcel.impl.subject.Row2MapHelper;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
@@ -284,7 +285,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             // 先按平均分排名,最后增加总计行
             accordingAverageSorting(sheetContext, rows);
 
-            sheetContext.rowAdd(querySchoolMinScore(dao, "score_subject_" + subjectId));
+            sheetContext.rowAdd(Row2MapHelper.row2Map(querySchoolMinScore(dao, "score_subject_" + subjectId)));
 
             //每一科目的总计栏
             Row totalRow = getSchoolSubjectTotalRow(dao, subjectId);
@@ -301,7 +302,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             // 先按平均分排名,最后增加总计行
             accordingAverageSorting(sheetContext, rows);
 
-            sheetContext.rowAdd(querySchoolMinScore(dao, "score_project"));
+            sheetContext.rowAdd(Row2MapHelper.row2Map(querySchoolMinScore(dao, "score_project")));
 
             Row total = getSchoolProjectTotalRow(projectId, dao);
             sheetContext.rowAdd(total);
@@ -364,14 +365,14 @@ public abstract class TotalAverageSheet extends SheetGenerator {
                 .replace("{{targetId}}", projectId);
 
         List<Row> rows = dao.query(sql);
-        sheetContext.rowAdd(rows);
+        sheetContext.rowAdd(Row2MapHelper.row2Map(rows));
 
         //超均率
         List<Row> schoolOverAverageRows = dao.query(SCHOOL_PROJECT_OVER_AVERAGE_RATE.replace("{{table}}", "score_project"));
-        sheetContext.rowAdd(schoolOverAverageRows);
+        sheetContext.rowAdd(Row2MapHelper.row2Map(schoolOverAverageRows));
 
         //全科及格率 、全科不及格率
-        sheetContext.rowAdd(dao.query(PASS_OR_FAIL));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(dao.query(PASS_OR_FAIL)));
         return rows;
     }
 
@@ -401,12 +402,12 @@ public abstract class TotalAverageSheet extends SheetGenerator {
                 .replace("{{targetType}}", getTargetType(sheetContext))
                 .replace("{{targetId}}", subjectId);
         List<Row> rows = dao.query(sql);
-        sheetContext.rowAdd(rows);
+        sheetContext.rowAdd(Row2MapHelper.row2Map(rows));
 
         //超均率
         List<Row> schoolSubjectOverAverageRows = dao.query(
                 SCHOOL_PROJECT_OVER_AVERAGE_RATE.replace("{{table}}", SUBJECT + subjectId));
-        sheetContext.rowAdd(schoolSubjectOverAverageRows);
+        sheetContext.rowAdd(Row2MapHelper.row2Map(schoolSubjectOverAverageRows));
         return rows;
     }
 

@@ -8,6 +8,7 @@ import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
+import com.xz.scorep.executor.exportexcel.impl.subject.Row2MapHelper;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.Direction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,7 +96,7 @@ public class TotalBasicDataSheets extends SheetGenerator {
         sheetContext.rowAdd(studentQuery.listStudentInfo(projectId, Range.PROVINCE_RANGE));
 
         // 全科分数和排名
-        sheetContext.rowAdd(getProjectScoreAndRank(projectId));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(getProjectScoreAndRank(projectId)));
 
         // 各科分数和排名
         subjectService.listSubjects(projectId).forEach(subject -> {
@@ -107,7 +108,7 @@ public class TotalBasicDataSheets extends SheetGenerator {
             String rankColumnName = "rank_" + subject.getId();
             writeRanks(rows, scoreColumnName, rankColumnName);
 
-            sheetContext.rowAdd(rows);
+            sheetContext.rowAdd(Row2MapHelper.row2Map(rows));
         });
     }
 

@@ -12,12 +12,14 @@ import com.xz.scorep.executor.exportexcel.ExcelCellStyles;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetTask;
+import com.xz.scorep.executor.exportexcel.impl.subject.Row2MapHelper;
 import com.xz.scorep.executor.utils.Direction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 填充各种 Range 和 Target 的分数分布表
@@ -63,7 +65,7 @@ public class TotalDistributionSheet extends SheetGenerator {
 
         // item 列表
         String tableName = range.match(Range.PROVINCE) ? "school" : "class";
-        String subjectName = target.match(Target.PROJECT)? "总分": target.getName();
+        String subjectName = target.match(Target.PROJECT) ? "总分" : target.getName();
         List<Row> itemRows = projectDao.query(SQL
                 .Select("id as item_id",
                         "name as item_name",
@@ -72,7 +74,9 @@ public class TotalDistributionSheet extends SheetGenerator {
                 .Where(range.match(Range.SCHOOL), "school_id=?", range.getId())
         );
 
-        sheetContext.rowAdd(itemRows);
+        List<Map<String, Object>> collect = Row2MapHelper.row2Map(itemRows);
+
+        sheetContext.rowAdd(collect);
         sheetContext.headerMove(Direction.DOWN);
 
         ////////////////////////////////////////////////////////////// 统计各学校的分数段人数

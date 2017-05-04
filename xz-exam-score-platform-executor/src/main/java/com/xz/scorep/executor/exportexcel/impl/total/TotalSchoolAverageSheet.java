@@ -6,6 +6,7 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.ExcelCellStyles;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
+import com.xz.scorep.executor.exportexcel.impl.subject.Row2MapHelper;
 import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.Direction;
@@ -244,10 +245,10 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
                 .replace("{{schoolId}}", schoolId);
         DAO dao = daoFactory.getProjectDao(projectId);
         List<Row> rows = dao.query(classSql);
-        sheetContext.rowAdd(rows);
+        sheetContext.rowAdd(Row2MapHelper.row2Map(rows));
 
         String classMinScoreSql = CLASS_MIN_SCORE.replace("{{scoreTable}}", "score_project");
-        sheetContext.rowAdd(dao.query(classMinScoreSql, schoolId));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(dao.query(classMinScoreSql, schoolId)));
 
         sheetContext.rowSortBy("class_name");
 

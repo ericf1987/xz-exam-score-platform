@@ -7,6 +7,7 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
+import com.xz.scorep.executor.exportexcel.impl.subject.Row2MapHelper;
 import com.xz.scorep.executor.exportexcel.impl.subject.SheetContextHelper;
 import com.xz.scorep.executor.exportexcel.impl.subject.SubjectSchoolDetailSheet0;
 import com.xz.scorep.executor.project.QuestService;
@@ -81,15 +82,15 @@ public abstract class TotalSchoolDetailSheet extends SheetGenerator {
                 .replace("{{subjectId}}", subjectId)
                 .replace("{{schoolId}}", schoolId);
         List<Row> rows = dao.query(totalSql);
-        sheetContext.rowAdd(rows);
+        sheetContext.rowAdd(Row2MapHelper.row2Map(rows));
 
         List<String> studentList = rows.stream()
                 .map(row -> row.getString("student_id"))
                 .collect(Collectors.toList());
 
-        sheetContext.rowAdd(reportCache.queryProvinceRank(projectId, studentList, subjectId));
-        sheetContext.rowAdd(reportCache.querySchoolRank(projectId, studentList, subjectId));
-        sheetContext.rowAdd(reportCache.queryClassRank(projectId, studentList, subjectId));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(reportCache.queryProvinceRank(projectId, studentList, subjectId)));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(reportCache.querySchoolRank(projectId, studentList, subjectId)));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(reportCache.queryClassRank(projectId, studentList, subjectId)));
 
         List<Row> subjects = dao.query("select id ,name ,card_id from subject ");
         for (Row row : subjects) {
@@ -103,11 +104,11 @@ public abstract class TotalSchoolDetailSheet extends SheetGenerator {
                     .replace("{{subjectId}}", rowId)
                     .replace("{{schoolId}}", schoolId);
 
-            sheetContext.rowAdd(dao.query(eachSql));
+            sheetContext.rowAdd(Row2MapHelper.row2Map(dao.query(eachSql)));
 
-            sheetContext.rowAdd(reportCache.queryProvinceRank(projectId, studentList, rowId));
-            sheetContext.rowAdd(reportCache.querySchoolRank(projectId, studentList, rowId));
-            sheetContext.rowAdd(reportCache.queryClassRank(projectId, studentList, rowId));
+            sheetContext.rowAdd(Row2MapHelper.row2Map(reportCache.queryProvinceRank(projectId, studentList, rowId)));
+            sheetContext.rowAdd(Row2MapHelper.row2Map(reportCache.querySchoolRank(projectId, studentList, rowId)));
+            sheetContext.rowAdd(Row2MapHelper.row2Map(reportCache.queryClassRank(projectId, studentList, rowId)));
         }
     }
 

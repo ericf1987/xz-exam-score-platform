@@ -4,6 +4,7 @@ import com.hyd.dao.Row;
 import com.hyd.dao.database.commandbuilder.Command;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.db.DAOFactory;
+import com.xz.scorep.executor.exportexcel.impl.subject.Row2MapHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -62,7 +63,7 @@ public class StudentQuery {
     }
 
     // 查询考生基本信息
-    public List<Row> listStudentInfo(String projectId, Range range) {
+    public List<Map<String, Object>> listStudentInfo(String projectId, Range range) {
 
         String sql = "select " +
                 "  student.id as student_id, " +
@@ -89,10 +90,11 @@ public class StudentQuery {
             params.add(range.getId());
         }
 
-        return daoFactory.getProjectDao(projectId).query(new Command(sql, params));
+        List<Row> rows = daoFactory.getProjectDao(projectId).query(new Command(sql, params));
+        return Row2MapHelper.row2Map(rows);
     }
 
-    public List<Row> listStudentSubjectInfo(String projectId, String subjectId, Range range) {
+    public List<Map<String, Object>> listStudentSubjectInfo(String projectId, String subjectId, Range range) {
 
         String rangeCondition = buildRangeCondition(range, "s.{{type}}='{{id}}' AND");
 
@@ -100,7 +102,8 @@ public class StudentQuery {
                 .replace("{{subject}}", subjectId)
                 .replace("{{range}}", rangeCondition);
 
-        return daoFactory.getProjectDao(projectId).query(query);
+        List<Row> rows = daoFactory.getProjectDao(projectId).query(query);
+        return Row2MapHelper.row2Map(rows);
     }
 
     public List<Row> listStudentQuestScore(String projectId, String questId, Range range) {

@@ -11,6 +11,7 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetTask;
+import com.xz.scorep.executor.exportexcel.impl.subject.Row2MapHelper;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
@@ -152,17 +153,17 @@ public class TotalSchoolSubjectObjectiveSheet0 extends SheetGenerator {
         String provinceSql = QUERY_TEMPLATE.replace("{{rateAlias}}", "province_rate")
                 .replace("{{sub}}", sub);
         List<Row> provinceOptionRates = fixKey(projectDao.query(provinceSql));
-        sheetContext.rowAdd(provinceOptionRates);
+        sheetContext.rowAdd(Row2MapHelper.row2Map(provinceOptionRates));
 
         String schoolSql = QUERY_TEMPLATE_SCHOOL.replace("{{rateAlias}}", "school_rate")
                 .replace("{{sub}}", sub);
         List<Row> schoolOptionRates = fixKey(projectDao.query(schoolSql, schoolId));
-        sheetContext.rowAdd(schoolOptionRates);
+        sheetContext.rowAdd(Row2MapHelper.row2Map(schoolOptionRates));
 
         String classSql = QUERY_TEMPLATE_CLASS.replace("{{rateAlias}}", "class_rate")
                 .replace("{{sub}}", sub);
         List<Row> classOptionRates = fixKey(projectDao.query(classSql, schoolId));
-        sheetContext.rowAdd(fixClassRows(classOptionRates));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(fixClassRows(classOptionRates)));
 
         sheetContext.fillEmptyCells(column -> column.contains("_rate"), "0%");
         sheetContext.rowSortBy("quest_no", "option_name");

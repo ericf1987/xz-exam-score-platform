@@ -1,6 +1,5 @@
 package com.xz.scorep.executor.exportexcel;
 
-import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.excel.ExcelWriter;
 import com.xz.ajiaedu.common.lang.CollectionUtils;
 import com.xz.ajiaedu.common.lang.Context;
@@ -108,11 +107,11 @@ public class SheetContext {
         return this.sheetHeaderBuilder.getPosition();
     }
 
-    public void rowAdd(List<Row> rows) {
+    public void rowAdd(List<Map<String, Object>> rows) {
         this.table.readRows(rows);
     }
 
-    public void rowAdd(Row row) {
+    public void rowAdd(Map<String, Object> row) {
         this.table.readRow(row);
     }
 

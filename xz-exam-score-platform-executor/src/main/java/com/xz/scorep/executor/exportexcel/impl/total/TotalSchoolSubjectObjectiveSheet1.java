@@ -9,6 +9,7 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.SheetContext;
 import com.xz.scorep.executor.exportexcel.SheetGenerator;
 import com.xz.scorep.executor.exportexcel.SheetTask;
+import com.xz.scorep.executor.exportexcel.impl.subject.Row2MapHelper;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.utils.Direction;
@@ -95,7 +96,7 @@ public class TotalSchoolSubjectObjectiveSheet1 extends SheetGenerator {
                 fixRow(examQuest, row, "province_score", "province_score", "province_rate");
                 fixRow(examQuest, row, "school_score", "school_score", "school_rate");
             });
-            sheetContext.rowAdd(rows);
+            sheetContext.rowAdd(Row2MapHelper.row2Map(rows));
 
             ////////////////////////////////////////////////////////////// 查询班级
 
