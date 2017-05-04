@@ -115,19 +115,6 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
     }
 
 
-    private static void fillStudentQuestScore(SheetContext sheetContext, AtomicInteger colIndex, ExamQuest quest, StudentQuery studentQuery) {
-        String projectId = sheetContext.getProjectId();
-        Range range = sheetContext.getSheetTask().getRange();
-        String scoreColName = "score_" + quest.getId();
-
-        sheetContext.headerPut(quest.getQuestNo());
-        sheetContext.headerMove(Direction.RIGHT);
-        sheetContext.columnSet(colIndex.incrementAndGet(), scoreColName);
-
-        List<Row> rows = studentQuery.listStudentQuestScore(projectId, quest.getId(), range);
-        fillScore(sheetContext, quest, scoreColName, rows);
-    }
-
     private static void fillScore(SheetContext sheetContext, ExamQuest quest, String scoreColName, List<Row> rows) {
 
         List<Map<String, Object>> converted =
