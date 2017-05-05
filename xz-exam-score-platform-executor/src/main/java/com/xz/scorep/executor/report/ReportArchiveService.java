@@ -96,23 +96,26 @@ public class ReportArchiveService {
             }
 
             //上次basic统计之后是否有过生成Excel记录
-            if (hasGenerateAfterBasicAggr(projectId)) {
-                LOG.info("...上次统计之后并无生成记录............");
+            boolean generate = hasGenerateAfterBasicAggr(projectId);
+            if (generate) {
+                LOG.info("项目{}上次统计之后并无生成Excel记录,并生成本次Excel报表............",projectId);
                 excelReportManager.generateReports(projectId, false, true);
             }
 
+            if (generate){
+                LOG.info("生成新的Excel报表,需要重新打包上传....");
+                LOG.info("项目 " + projectId + " 开始打包报表...");
+                String excelPath = excelConfig.getSavePath();
+                String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "全科报表");
+                ExamProject project = projectService.findProject(projectId);
+                File tempFile = createZipArchive(archiveRoot);
+                String fileName = project.getName() + "_全科.zip";
+                String uploadPath = uploadZipArchive(projectId, tempFile, fileName);
+                LOG.info("报表打包完毕，已上传到 " + uploadPath);
+                saveProjectArchiveRecord("000", projectId, uploadPath);
+            }
 
-            LOG.info("项目 " + projectId + " 开始打包报表...");
-            String excelPath = excelConfig.getSavePath();
-            String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "全科报表");
 
-            ExamProject project = projectService.findProject(projectId);
-            File tempFile = createZipArchive(archiveRoot);
-            String fileName = project.getName() + "_全科.zip";
-            String uploadPath = uploadZipArchive(projectId, tempFile, fileName);
-
-            LOG.info("报表打包完毕，已上传到 " + uploadPath);
-            saveProjectArchiveRecord("000", projectId, uploadPath);
         } catch (Exception e) {
             LOG.error("", e);
         } finally {
@@ -231,20 +234,26 @@ public class ReportArchiveService {
             }
 
             //上次生成Excel之后无统计记录直接跳过
-            if (hasGenerateAfterBasicAggr(projectId)) {
+            boolean generate = hasGenerateAfterBasicAggr(projectId);
+            if (generate) {
+                LOG.info("项目{}上次统计之后并无生成Excel记录,并生成本次Excel报表............",projectId);
                 excelReportManager.generateReports(projectId, false, true);
             }
 
-            String subjectName = SubjectService.getSubjectName(subjectId);
-            String excelPath = excelConfig.getSavePath();
-            String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "单科报表/" + subjectName);
-            Row row = daoFactory.getManagerDao().queryFirst("select * from project where id = ?", projectId);
+            if (generate) {
+                LOG.info("生成新的Excel报表,需要重新打包上传....");
+                String subjectName = SubjectService.getSubjectName(subjectId);
+                String excelPath = excelConfig.getSavePath();
+                String archiveRoot = ExcelReportManager.getSaveFilePath(projectId, excelPath, "单科报表/" + subjectName);
+                Row row = daoFactory.getManagerDao().queryFirst("select * from project where id = ?", projectId);
 
-            String fileName = row.getString("name") + "_" + subjectName + ".zip";
+                String fileName = row.getString("name") + "_" + subjectName + ".zip";
 
-            File tempFile = createZipArchive(archiveRoot);
-            String uploadPath = uploadZipArchive(projectId, tempFile, fileName);
-            saveProjectArchiveRecord(subjectId, projectId, uploadPath);
+                File tempFile = createZipArchive(archiveRoot);
+                String uploadPath = uploadZipArchive(projectId, tempFile, fileName);
+                saveProjectArchiveRecord(subjectId, projectId, uploadPath);
+            }
+
         } catch (Exception e) {
             LOG.error("", e);
         } finally {
