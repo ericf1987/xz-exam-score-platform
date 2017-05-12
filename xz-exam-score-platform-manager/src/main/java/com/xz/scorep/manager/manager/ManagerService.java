@@ -39,6 +39,10 @@ public class ManagerService {
     public synchronized void updateExecutorAgent(
             String host, int port, long dataSize, List<ProjectStatus> projects) {
 
+        if (host.contains("126")) {
+            //测试服务器则不添加到服务器里列表中
+            return;
+        }
         ExecutorAgent executorAgent = getExecutorAgent(host, port);
 
         if (executorAgent == null) {
