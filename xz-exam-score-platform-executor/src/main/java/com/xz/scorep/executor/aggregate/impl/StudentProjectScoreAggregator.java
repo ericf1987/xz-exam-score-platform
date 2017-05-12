@@ -83,16 +83,24 @@ public class StudentProjectScoreAggregator extends Aggregator {
                 .map(row -> "\"" + row.getString("student_id") + "\"")
                 .collect(Collectors.toList());
 
-        if (studentList == null) {
+        if (studentList.isEmpty()) {
             return;
         }
 
-        String students = String.join(",", studentList);
+        if (studentList.size() == 1) {
+            String studentId = studentList.get(0);
+            LOG.info("删除全科作弊的考生.... ");
+            String sql = "delete from score_project where student_id = {{studentId}}";
+            projectDao.execute(sql.replace("{{studentId}}", studentId));
+            LOG.info("项目的全科作弊学生删除完毕.....");
+        } else {
+            String students = String.join(",", studentList);
+            LOG.info("删除全科作弊的考生.... ");
+            String sql = "delete from score_project where student_id in ({{condition}})";
+            projectDao.execute(sql.replace("{{condition}}", students));
+            LOG.info("项目的全科作弊学生删除完毕.....");
+        }
 
-        LOG.info("删除全科作弊的考生.... ");
-        String sql = "delete from score_project where student_id in ({{condition}})";
-        projectDao.execute(sql.replace("{{condition}}", students));
-        LOG.info("项目的全科作弊学生删除完毕.....");
     }
 
     private void removeZeroScores(String projectId, List<ExamSubject> subjects) {
@@ -125,15 +133,24 @@ public class StudentProjectScoreAggregator extends Aggregator {
                 .map(row -> "\"" + row.getString("student_id") + "\"")
                 .collect(Collectors.toList());
 
-        if (studentList == null) {
+        if (studentList.isEmpty()) {
             return;
         }
 
-        String students = String.join(",", studentList);
-        LOG.info("删除全科缺考的考生记录....");
-        String sql = "delete from score_project where student_id in ({{condition}})";
-        projectDao.execute(sql.replace("{{condition}}", students));
-        LOG.info("项目的全科缺考学生删除完毕.....");
+        if (studentList.size() == 1) {
+            LOG.info("删除全科缺考的考生记录....");
+            String studentId = studentList.get(0);
+            String sql = "delete from score_project where student_id = {{studentId}}";
+            projectDao.execute(sql.replace("{{studentId}}", studentId));
+            LOG.info("项目的全科缺考学生删除完毕.....");
+        } else {
+            String students = String.join(",", studentList);
+            LOG.info("删除全科缺考的考生记录....");
+            String sql = "delete from score_project where student_id in ({{condition}})";
+            projectDao.execute(sql.replace("{{condition}}", students));
+            LOG.info("项目的全科缺考学生删除完毕.....");
+        }
+
     }
 
 
