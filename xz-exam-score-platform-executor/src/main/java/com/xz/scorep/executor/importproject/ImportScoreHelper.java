@@ -231,6 +231,10 @@ public class ImportScoreHelper {
             double fullScore = Double.parseDouble(scoreDoc.get("fullScore").toString());
 
             ExamQuest quest = getQuest(subjectId, questNo);
+
+            if (quest == null) {
+                return;
+            }
             score = calculateSbjScore(quest, fullScore, score, effective);
             ScoreValue scoreValue;
             if (cheat || absent) {    //作弊、缺考、缺卷强行置为0分
