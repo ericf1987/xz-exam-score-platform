@@ -42,6 +42,7 @@ public class SqlUtils {
     public static void initialTable(String subjectId, DAO projectDao, String... sql) {
         if (StringUtil.isBlank(subjectId)) {
             initialTable(projectDao, sql);
+            return;
         }
 
         for (String s : sql) {
