@@ -14,7 +14,7 @@ public class SqlUtils {
      * @param sql     SQL语句
      * @param tag     变量标记
      * @param replace 替换标记
-     * @return  返回
+     * @return 返回
      */
     public static String replaceSubjectId(String sql, String tag, String replace) {
         return sql.replace(tag, replace);
