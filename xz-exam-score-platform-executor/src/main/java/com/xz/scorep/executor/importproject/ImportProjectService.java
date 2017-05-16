@@ -199,19 +199,18 @@ public class ImportProjectService {
             Map<String, JSONArray> subjectOptionalGroups = getSubjectsOptionalGroup(projectId);
 
             List<ExamSubject> examSubjects = subjectService.listSubjects(projectId);
-            for (ExamSubject examSubject : examSubjects) {
-                if (examSubject.getId().length() > 3) {
-                    String examSubjectId = examSubject.getId();
-                    String cardId = examSubject.getCardId();
-                    LOG.info("正在拆分项目ID{},科目ID{}，科目{}", projectId, examSubjectId, examSubject.getName());
+            //////////////////////////////////////////////////////////////////////////
+            examSubjects.stream().filter(examSubject -> examSubject.getId().length() > 3).forEach(examSubject -> {
+                String examSubjectId = examSubject.getId();
+                String cardId = examSubject.getCardId();
+                LOG.info("正在拆分项目ID{},科目ID{}，科目{}", projectId, examSubjectId, examSubject.getName());
 
-                    //////////////////////////////////////////////////////////////////////////
-                    JSONArray jsonArray = subjectOptionalGroups.get(examSubjectId);
-                    String[] exclude = getExcludeQuestNos(jsonArray);
-                    createVirtualSubject(projectId, examSubjectId, cardId, exclude);
+                //////////////////////////////////////////////////////////////////////////
+                JSONArray jsonArray = subjectOptionalGroups.get(examSubjectId);
+                String[] exclude = getExcludeQuestNos(jsonArray);
+                createVirtualSubject(projectId, examSubjectId, cardId, exclude);
 
-                }
-            }
+            });
         }
     }
 
@@ -233,7 +232,7 @@ public class ImportProjectService {
             examSubjectId = examSubjectId.substring(3, examSubjectId.length());
             //////////////////////////////////////////////////////////////////////////
 
-            String subjectName = subjectService.getSubjectName(subSubjectId);
+            String subjectName = SubjectService.getSubjectName(subSubjectId);
             double subSubjectScore = subjectService.getSubSubjectScore(projectId, subSubjectId, exclude);
             ExamSubject subject = new ExamSubject(subSubjectId, subjectName, subSubjectScore);
             subject.setVirtualSubject(String.valueOf(true));
@@ -262,9 +261,7 @@ public class ImportProjectService {
                     .replace("\"", "")
                     .split(",");
             Integer chooseCount = json.getInteger("choose_count");
-            for (int i = 0; i < questNos.length - chooseCount; i++) {
-                excludeQuest.add(questNos[i]);
-            }
+            excludeQuest.addAll(Arrays.asList(questNos).subList(0, questNos.length - chooseCount));
         });
 
         String[] exclude = new String[excludeQuest.size()];
@@ -275,7 +272,7 @@ public class ImportProjectService {
      * 获取所有含有选做题的综合科目
      *
      * @param projectId 项目ID
-     * @return
+     * @return 返回
      */
     private Map<String, JSONArray> getSubjectsOptionalGroup(String projectId) {
         Map<String, JSONArray> subjectMap = new HashMap<>();
@@ -313,6 +310,7 @@ public class ImportProjectService {
 
         if (reportConfig != null) {
             reportConfigService.saveReportConfig(reportConfig);
+            context.put("reportConfig", reportConfig);
         }
     }
 

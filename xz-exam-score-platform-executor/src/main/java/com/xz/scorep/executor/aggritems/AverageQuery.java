@@ -16,6 +16,19 @@ import java.util.stream.Collectors;
 @Component
 public class AverageQuery {
 
+    //总体平均分
+    private static final String AVG_PROJECT_PROVINCE = "SELECT AVG(score) AS average FROM {{table}} score, student, class\n" +
+            "WHERE student.class_id = class.id\n" +
+            "AND class.province = ?";
+
+    //总体平均分分组
+    public static final String AVG_PROJECT_PROVINCE_GROUP = "SELECT AVG(score) AS average , school.province rangeId " +
+            "FROM {{table}} score, student, class, school\n" +
+            "WHERE student.class_id = class.id\n" +
+            "AND class.school_id = school.id\n" +
+            "GROUP BY rangeId";
+
+    //学校平均分
     private static final String AVG_PROJECT_SCHOOL = "select \n" +
             "  AVG(score) as average \n" +
             "from \n" +
@@ -25,15 +38,27 @@ public class AverageQuery {
             "  student.class_id=class.id and \n" +
             "  class.school_id=?";
 
-    private static final String AVG_PROJECT_CLASSES = "select \n" +
-            "  AVG(score) as average, class.id as class_id \n" +
-            "from \n" +
-            "  {{table}} score, student, class\n" +
-            "where\n" +
-            "  score.student_id=student.id and \n" +
-            "  student.class_id=class.id and \n" +
-            "  class.school_id=?\n" +
-            "group by class.id";
+    //学校平均分分组
+    public static final String AVG_PROJECT_SCHOOL_GROUP = "SELECT AVG(score) AS average , school.id rangeId " +
+            "FROM {{table}} score, student, class, school\n" +
+            "WHERE score.student_id = student.id\n" +
+            "AND student.class_id = class.id\n" +
+            "AND class.school_id = school.id\n" +
+            "GROUP BY rangeId;";
+
+    //班级平均分
+    private static final String AVG_PROJECT_CLASSES = "SELECT AVG(score) AS average " +
+            "FROM {{table}} score, student, class\n" +
+            "WHERE score.student_id = student.id\n" +
+            "AND student.class_id = class.id\n" +
+            "AND class.id = ?";
+
+    //班级平均分分组
+    public static final String AVG_PROJECT_CLASSES_GROUP = "SELECT AVG(score) AS average , class.id rangeId " +
+            "FROM {{table}} score, student, class\n" +
+            "WHERE score.student_id = student.id\n" +
+            "AND student.class_id = class.id\n" +
+            "GROUP BY rangeId;";
 
     private static final String AVG_SUBJECT_PROVINCE = "select " +
             "'{{subject}}' as subject, avg(score) as average from score_subject_{{subject}}";
@@ -80,7 +105,7 @@ public class AverageQuery {
             String subjectId = subject.getId();
             String subjectName = subject.getName();
             String sql = AVG_SUBJECT_SCHOOL
-                    .replace("{{subjectId}}", subjectId).replace("{{subjectName}}",subjectName);
+                    .replace("{{subjectId}}", subjectId).replace("{{subjectName}}", subjectName);
             subjectQueries.add(sql);
         });
 
@@ -102,7 +127,7 @@ public class AverageQuery {
 
     // 各班总分平均分
     public Map<String, Double> getClassProjectAverages(String projectId, String schoolId) {
-        String sql = AVG_PROJECT_CLASSES.replace("{{table}}", "score_project");
+        String sql = AVG_PROJECT_CLASSES_GROUP.replace("{{table}}", "score_project");
         List<Row> rows = daoFactory.getProjectDao(projectId).query(sql, schoolId);
         return rows.stream().collect(Collectors.toMap(
                 row -> row.getString("class_id"),
