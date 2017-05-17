@@ -10,6 +10,7 @@ import com.xz.ajiaedu.common.json.JSONUtils;
 import com.xz.ajiaedu.common.lang.Context;
 import com.xz.ajiaedu.common.lang.DoubleValue;
 import com.xz.ajiaedu.common.lang.Result;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.bean.ExamProject;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.ExamSubject;
@@ -334,7 +335,9 @@ public class ImportProjectService {
                     return;
                 }
                 examQuest.setAnswer(answer.toUpperCase());
-                examQuest.setScoreRule(examQuest.getScoreRule().toUpperCase());
+                String scoreRule = examQuest.getScoreRule();
+                scoreRule = StringUtil.isEmpty(scoreRule) ? answer.toUpperCase() : scoreRule.toUpperCase();
+                examQuest.setScoreRule(scoreRule);
                 examQuest.setOptions(examQuest.getOptions().toUpperCase());
             }
 
