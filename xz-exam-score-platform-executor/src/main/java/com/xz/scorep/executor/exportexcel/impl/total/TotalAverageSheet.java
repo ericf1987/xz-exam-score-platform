@@ -42,9 +42,9 @@ public abstract class TotalAverageSheet extends SheetGenerator {
     private static final String PROVINCE_MIN_SCORE = "select min(score) as min_score " +
             "  from {{scoreTable}} s where s.score>0";
 
-    private static final String SCHOOL_PROJECT_OR_SUBJECT_INFO = "SELECT\n" +
+    private static final String SCHOOL_PROJECT_OR_SUBJECT_INFO_INCLUDE_ZERO = "SELECT\n" +
             " a.school_id,a.school_name,a.student_count,a.max_score,\n" +
-            " a.average_score,CONCAT(IFNULL(xlnt.xlnt, '0.00'),'%') AS excellent,\n" +
+            " a.average_score_zero,CONCAT(IFNULL(xlnt.xlnt, '0.00'),'%') AS excellent,\n" +
             " CONCAT(IFNULL(good.good, '0.00'),'%') AS good,\n" +
             " CONCAT(IFNULL(pass.pass, '0.00'),'%') AS pass,\n" +
             " CONCAT(IFNULL(fail.fail, '0.00'),'%') AS fail\n" +
@@ -55,7 +55,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             " school. NAME AS school_name,\n" +
             " COUNT(student.id) student_count,\n" +
             " MAX({{table}}.score) AS max_score,\n" +
-            " convert(FORMAT(AVG({{table}}.score),2),decimal(10,2)) AS average_score\n" +
+            " convert(FORMAT(AVG({{table}}.score),2),decimal(10,2)) AS average_score_zero\n" +
             " FROM\n" +
             " school,\n" +
             " student,\n" +
@@ -124,9 +124,27 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             " ) fail ON fail.id = a.school_id";
 
 
+    private static final String SCHOOL_PROJECT_OR_SUBJECT_AVERAGE_EXCLUDE_ZERO = "" +
+            " SELECT\n" +
+            " school.id AS school_id,\n" +
+            " school. NAME AS school_name,\n" +
+            " COUNT(student.id) student_count,\n" +
+            " MAX({{table}}.score) AS max_score,\n" +
+            " convert(FORMAT(AVG({{table}}.score),2),decimal(10,2)) AS average_score\n" +
+            " FROM\n" +
+            " school,\n" +
+            " student,\n" +
+            " {{table}}\n" +
+            " WHERE\n" +
+            " school.id = student.school_id\n" +
+            " AND student.id = {{table}}.student_id\n" +
+            " AND {{table}}.score > 0" +
+            " GROUP BY\n" +
+            " school.id\n";
+
     private static final String TOTAL_SCORE_INFO = "select \n" +
             "a.school_id,a.school_name,a.student_count,\n" +
-            "a.max_score,a.average_score,\n" +
+            "a.max_score,a.average_score_zero,\n" +
             "a.average_range,\n" +
             "xlnt.excellent,good.good,pass.pass,fail.fail,\n" +
             "pass_fail.all_pass,pass_fail.all_fail\n" +
@@ -135,7 +153,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             "select\n" +
             "'total' as school_id,'总体'as school_name, \n" +
             "COUNT(student.id) as student_count,max(score_project.score) as max_score,\n" +
-            "convert(format(AVG(score_project.score),2),decimal(10,2)) as average_score,\n" +
+            "convert(format(AVG(score_project.score),2),decimal(10,2)) as average_score_zero,\n" +
             "'--' as average_range\n" +
             "from student,score_project\n" +
             "where  student.id = score_project.student_id\n" +
@@ -181,7 +199,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
 
     private static final String SUBJECT_TOTAL_ROW = "select \n" +
             "a.school_id,a.school_name,a.student_count,\n" +
-            "a.max_score,a.average_score,\n" +
+            "a.max_score,a.average_score_zero,\n" +
             "a.average_range,xlnt.excellent,good.good,\n" +
             "pass.pass,fail.fail\n" +
             "FROM\n" +
@@ -189,7 +207,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
             "select \n" +
             "'total' as school_id, '总体' as school_name,COUNT(student.id) as student_count,\n" +
             "max(score_subject_{{subjectId}}.score) as max_score,\n" +
-            "convert(FORMAT(avg(score_subject_{{subjectId}}.score),2),decimal(10,2)) as average_score,'--' as average_range\n" +
+            "convert(FORMAT(avg(score_subject_{{subjectId}}.score),2),decimal(10,2)) as average_score_zero,'--' as average_range\n" +
             "from student,score_subject_{{subjectId}}\n" +
             "WHERE\n" +
             "student.id = score_subject_{{subjectId}}.student_id\n" +
@@ -330,8 +348,16 @@ public abstract class TotalAverageSheet extends SheetGenerator {
     private Row getSchoolProjectTotalRow(String projectId, DAO dao) {
         //总计栏
         Row total = dao.queryFirst(TOTAL_SCORE_INFO.replace("{{projectId}}", projectId));
+        String excludeZero = "select\n" +
+                "'total' as school_id ," +
+                "convert(format(AVG(score_project.score),2),decimal(10,2)) as average_score\n" +
+                "from student,score_project\n" +
+                "where  student.id = score_project.student_id and score_project.score > 0\n";
 
-        double averageScore = total.getDouble("average_score", 0);
+        Row row = dao.queryFirst(excludeZero);
+        total.put("average_score", row.getDouble("average_score", 0));
+
+        double averageScore = total.getDouble("average_score_zero", 0);
         String averageRateSql = TOTAL_OVER_AVERAGE_RATE
                 .replace("{{table}}", "score_project")
                 .replace("{{averageScore}}", String.valueOf(averageScore));
@@ -359,7 +385,7 @@ public abstract class TotalAverageSheet extends SheetGenerator {
     }
 
     private List<Row> putSchoolProjectInfo(SheetContext sheetContext, String projectId, DAO dao) {
-        String sql = SCHOOL_PROJECT_OR_SUBJECT_INFO
+        String sql = SCHOOL_PROJECT_OR_SUBJECT_INFO_INCLUDE_ZERO
                 .replace("{{table}}", "score_project")
                 .replace("{{targetType}}", getTargetType(sheetContext))
                 .replace("{{targetId}}", projectId);
@@ -367,20 +393,37 @@ public abstract class TotalAverageSheet extends SheetGenerator {
         List<Row> rows = dao.query(sql);
         sheetContext.rowAdd(Row2MapHelper.row2Map(rows));
 
+        String zero = SCHOOL_PROJECT_OR_SUBJECT_AVERAGE_EXCLUDE_ZERO
+                .replace("{{table}}", "score_project")
+                .replace("{{targetType}}", getTargetType(sheetContext))
+                .replace("{{targetId}}", projectId);
+        List<Row> excludeZero = dao.query(zero);
+        sheetContext.rowAdd(Row2MapHelper.row2Map(excludeZero));
+
         //超均率
         List<Row> schoolOverAverageRows = dao.query(SCHOOL_PROJECT_OVER_AVERAGE_RATE.replace("{{table}}", "score_project"));
         sheetContext.rowAdd(Row2MapHelper.row2Map(schoolOverAverageRows));
 
         //全科及格率 、全科不及格率
         sheetContext.rowAdd(Row2MapHelper.row2Map(dao.query(PASS_OR_FAIL)));
-        return rows;
+        return excludeZero;
     }
 
     private Row getSchoolSubjectTotalRow(DAO dao, String subjectId) {
         Row totalRow = dao.queryFirst(SUBJECT_TOTAL_ROW.replace("{{subjectId}}", subjectId));
 
-        double averageScore = totalRow.getDouble("average_score", 0);
+        double averageScore = totalRow.getDouble("average_score_zero", 0);
 
+        String excludeZero = "select \n" +
+                "'total' as school_id, '总体' as school_name,COUNT(student.id) as student_count,\n" +
+                "max(score_subject_{{subjectId}}.score) as max_score,\n" +
+                "convert(FORMAT(avg(score_subject_{{subjectId}}.score),2),decimal(10,2)) as average_score,'--' as average_range\n" +
+                "from student,score_subject_{{subjectId}}\n" +
+                "WHERE\n" +
+                "student.id = score_subject_{{subjectId}}.student_id and score_subject_{{subjectId}}.score >0\n";
+
+        Row row = dao.queryFirst(excludeZero.replace("{{subjectId}}", subjectId));
+        totalRow.put("average_score", row.getDouble("average_score", 0));
         String totalOverAverageRateSql = TOTAL_OVER_AVERAGE_RATE
                 .replace("{{table}}", SUBJECT + subjectId)
                 .replace("{{averageScore}}", String.valueOf(averageScore));
@@ -397,18 +440,25 @@ public abstract class TotalAverageSheet extends SheetGenerator {
     }
 
     private List<Row> putSchoolSubjectInfo(SheetContext sheetContext, DAO dao, String subjectId) {
-        String sql = SCHOOL_PROJECT_OR_SUBJECT_INFO
+        String sql = SCHOOL_PROJECT_OR_SUBJECT_INFO_INCLUDE_ZERO
                 .replace("{{table}}", SUBJECT + subjectId)
                 .replace("{{targetType}}", getTargetType(sheetContext))
                 .replace("{{targetId}}", subjectId);
         List<Row> rows = dao.query(sql);
         sheetContext.rowAdd(Row2MapHelper.row2Map(rows));
 
+        String zero = SCHOOL_PROJECT_OR_SUBJECT_AVERAGE_EXCLUDE_ZERO
+                .replace("{{table}}", SUBJECT + subjectId)
+                .replace("{{targetType}}", getTargetType(sheetContext))
+                .replace("{{targetId}}", subjectId);
+        List<Row> excludeZero = dao.query(zero);
+        sheetContext.rowAdd(Row2MapHelper.row2Map(excludeZero));
+
         //超均率
         List<Row> schoolSubjectOverAverageRows = dao.query(
                 SCHOOL_PROJECT_OVER_AVERAGE_RATE.replace("{{table}}", SUBJECT + subjectId));
         sheetContext.rowAdd(Row2MapHelper.row2Map(schoolSubjectOverAverageRows));
-        return rows;
+        return excludeZero;
     }
 
     private void putNoteRow(SheetContext sheetContext, String projectId, String subjectId) {

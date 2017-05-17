@@ -31,7 +31,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             "a.subject,a.full_score,\n" +
             "a.class_id,a.school_name,\n" +
             "a.class_name,a.count,\n" +
-            "a.average_score,a.max_score,\n" +
+            "a.average_score_zero,a.max_score,\n" +
             "IFNULL(xlnt.xlnt_count,0) as xlnt_count,\n" +
             "concat(IFNULL(xlnt.xlnt_rate,0),'%') as xlnt_rate,\n" +
             "IFNULL(good.good_count,0) as good_count,\n" +
@@ -51,7 +51,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             "school.name as school_name,\n" +
             "class.name as class_name,\n" +
             "COUNT(student.id) as count,\n" +
-            "convert(FORMAT(AVG(score_project.score),2),decimal(10,2)) as average_score,\n" +
+            "convert(FORMAT(AVG(score_project.score),2),decimal(10,2)) as average_score_zero,\n" +
             "MAX(score_project.score) as max_score\n" +
             "from school,class,\n" +
             "student,score_project\n" +
@@ -123,7 +123,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
     public static final String QUERY_TOTAL_INFO = "select\n" +
             "a.subject,a.full_score,a.class_id,\n" +
             "a.school_name,a.class_name,a.count,\n" +
-            "a.average_score,a.max_score,\n" +
+            "a.average_score_zero,a.max_score,\n" +
             "IFNULL(xlnt.xlnt_count,0) as xlnt_count,\n" +
             "concat(IFNULL(xlnt.xlnt_rate,0),'%') as xlnt_rate,\n" +
             "IFNULL(good.good_count,0) as good_count,\n" +
@@ -142,7 +142,7 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
             "'总分' as subject, '{{fullScore}}' as full_score,\n" +
             "'total' as class_id,school.name as school_name,\n" +
             "'全体' as class_name,COUNT(student.id) as count,\n" +
-            "convert(FORMAT(AVG(score_project.score),2),decimal(10,2)) as average_score,\n" +
+            "convert(FORMAT(AVG(score_project.score),2),decimal(10,2)) as average_score_zero,\n" +
             "MAX(score_project.score) as max_score\n" +
             "from school,student,score_project\n" +
             "where \n" +
@@ -241,11 +241,28 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
 
         //平均分、最高分、最低分、优率、良率、及格率、不及格率、全科及格率、全科不及格率
         String classSql = QUERY_CLASS_BASE_INFO
-                .replace("{{fullScore}}", StringUtils.removeEnd(fullScore,".0"))
+                .replace("{{fullScore}}", StringUtils.removeEnd(fullScore, ".0"))
                 .replace("{{schoolId}}", schoolId);
         DAO dao = daoFactory.getProjectDao(projectId);
         List<Row> rows = dao.query(classSql);
         sheetContext.rowAdd(Row2MapHelper.row2Map(rows));
+
+        String classExcludeZero = "select \n" +
+                "class.id as class_id,\n" +
+                "convert(FORMAT(AVG(score_project.score),2),decimal(10,2)) as average_score \n" +
+                "from school,class,\n" +
+                "student,score_project\n" +
+                "where \n" +
+                "student.class_id = class.id\n" +
+                "and class.school_id = school.id\n" +
+                "and student.school_id = school.id\n" +
+                "and student.id = score_project.student_id\n" +
+                "and school.id = '{{schoolId}}'\n" +
+                "and score_project.score > 0 " +
+                "GROUP BY class.id\n";
+
+        List<Row> classExcludeZeroList = dao.query(classExcludeZero.replace("{{schoolId}}", schoolId));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(classExcludeZeroList));
 
         String classMinScoreSql = CLASS_MIN_SCORE.replace("{{scoreTable}}", "score_project");
         sheetContext.rowAdd(Row2MapHelper.row2Map(dao.query(classMinScoreSql, schoolId)));
@@ -255,8 +272,21 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
         //总计栏
         String totalSql = QUERY_TOTAL_INFO
                 .replace("{{schoolId}}", schoolId)
-                .replace("{{fullScore}}", StringUtils.removeEnd(fullScore,".0"));
-        sheetContext.rowAdd(dao.queryFirst(totalSql));
+                .replace("{{fullScore}}", StringUtils.removeEnd(fullScore, ".0"));
+        String totalExcludeZero = "select \n" +
+                "'total' as class_id," +
+                "convert(FORMAT(AVG(score_project.score),2),decimal(10,2)) as average_score\n" +
+                "from school,student,score_project\n" +
+                "where \n" +
+                "student.school_id = school.id\n" +
+                "and student.id = score_project.student_id\n" +
+                "and school.id = '{{schoolId}}'" +
+                "and score_project.score > 0\n";
+
+        Row totalRow = dao.queryFirst(totalSql);
+        Row row = dao.queryFirst(totalExcludeZero.replace("{{schoolId}}", schoolId));
+        totalRow.put("average_score", row.getDouble("average_score", 0));
+        sheetContext.rowAdd(totalRow);
 
         sheetContext.tablePutValue("total", "min_score",
                 dao.queryFirst(SCHOOL_MIN_SCORE.replace("{{scoreTable}}", "score_project"), schoolId)
@@ -273,69 +303,69 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
         commonTableHeader(sheetContext);
 
         sheetContext.headerPut("最高分", 2, 1);
-        sheetContext.columnSet(6, "max_score");
+        sheetContext.columnSet(7, "max_score");
         sheetContext.headerMove(Direction.RIGHT);
 
         sheetContext.headerPut("最低分", 2, 1);
-        sheetContext.columnSet(7, "min_score");
+        sheetContext.columnSet(8, "min_score");
         sheetContext.headerMove(Direction.RIGHT);
 
 
         sheetContext.headerPut("优秀", 1, 2);
         sheetContext.headerMove(Direction.DOWN);
         sheetContext.headerPut("人数", 1, 1);
-        sheetContext.columnSet(8, "xlnt_count");
+        sheetContext.columnSet(9, "xlnt_count");
         sheetContext.headerMove(Direction.RIGHT);
         sheetContext.headerPut("比率", 1, 1);
-        sheetContext.columnSet(9, "xlnt_rate");
+        sheetContext.columnSet(10, "xlnt_rate");
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
 
 
         sheetContext.headerPut("良好", 1, 2);
         sheetContext.headerMove(Direction.DOWN);
         sheetContext.headerPut("人数", 1, 1);
-        sheetContext.columnSet(10, "good_count");
+        sheetContext.columnSet(11, "good_count");
         sheetContext.headerMove(Direction.RIGHT);
         sheetContext.headerPut("比率", 1, 1);
-        sheetContext.columnSet(11, "good_rate");
+        sheetContext.columnSet(12, "good_rate");
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
 
 
         sheetContext.headerPut("及格", 1, 2);
         sheetContext.headerMove(Direction.DOWN);
         sheetContext.headerPut("人数", 1, 1);
-        sheetContext.columnSet(12, "pass_count");
+        sheetContext.columnSet(13, "pass_count");
         sheetContext.headerMove(Direction.RIGHT);
         sheetContext.headerPut("比率", 1, 1);
-        sheetContext.columnSet(13, "pass_rate");
+        sheetContext.columnSet(14, "pass_rate");
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
 
 
         sheetContext.headerPut("不及格", 1, 2);
         sheetContext.headerMove(Direction.DOWN);
         sheetContext.headerPut("人数", 1, 1);
-        sheetContext.columnSet(14, "fail_count");
+        sheetContext.columnSet(15, "fail_count");
         sheetContext.headerMove(Direction.RIGHT);
         sheetContext.headerPut("比率", 1, 1);
-        sheetContext.columnSet(15, "fail_rate");
+        sheetContext.columnSet(16, "fail_rate");
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
 
         sheetContext.headerPut("全科及格率", 1, 2);
         sheetContext.headerMove(Direction.DOWN);
         sheetContext.headerPut("人数", 1, 1);
-        sheetContext.columnSet(16, "all_pass_count");
+        sheetContext.columnSet(17, "all_pass_count");
         sheetContext.headerMove(Direction.RIGHT);
         sheetContext.headerPut("比率", 1, 1);
-        sheetContext.columnSet(17, "all_pass_rate");
+        sheetContext.columnSet(18, "all_pass_rate");
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
 
         sheetContext.headerPut("全科不及格率", 1, 2);
         sheetContext.headerMove(Direction.DOWN);
         sheetContext.headerPut("人数", 1, 1);
-        sheetContext.columnSet(18, "all_fail_count");
+        sheetContext.columnSet(19, "all_fail_count");
         sheetContext.headerMove(Direction.RIGHT);
         sheetContext.headerPut("比率", 1, 1);
-        sheetContext.columnSet(19, "all_fail_rate");
+        sheetContext.columnSet(20, "all_fail_rate");
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
     }
 
@@ -364,8 +394,13 @@ public class TotalSchoolAverageSheet extends SheetGenerator {
         sheetContext.columnSet(4, "count");
         sheetContext.headerMove(Direction.RIGHT);
 
-        sheetContext.headerPut("平均分", 2, 1);
-        sheetContext.columnSet(5, "average_score");
+        sheetContext.headerPut("平均分\r\n(含0分)", 2, 1);
+        sheetContext.columnSet(5, "average_score_zero");
+        sheetContext.headerMove(Direction.RIGHT);
+
+        sheetContext.headerPut("平均分\r\n(不含0分)", 2, 1);
+        sheetContext.columnSet(6, "average_score");
+        sheetContext.columnWidth(6,11);
         sheetContext.headerMove(Direction.RIGHT);
     }
 

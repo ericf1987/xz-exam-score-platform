@@ -17,10 +17,10 @@ public class TotalSchoolSubjectAverageReportTest extends BaseTest {
 
     @Test
     public void testReport() {
-        Range range = Range.school("04b91813-cc5e-4139-aa71-871ce82c8b41", "沅江市南嘴中学");
-        Target target = Target.subject("001", "语文");
+        Range range = Range.school("a0b6b5ac-146f-4af9-ab90-b32a28c634cb", "沅江市南嘴中学");
+        Target target = Target.subject("003", "英文");
         String savePath = "./target/_全校分数排名、得分明细表(数学).xlsx";
 
-        report.generate(PROJECT3_ID, range, target, savePath);
+        report.generate("430100-c6da4bfd10134ddb9c87c601d51eb631", range, target, savePath);
     }
 }

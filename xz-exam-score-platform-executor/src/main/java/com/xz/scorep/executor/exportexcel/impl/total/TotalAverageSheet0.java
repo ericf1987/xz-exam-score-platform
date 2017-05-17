@@ -23,7 +23,8 @@ public class TotalAverageSheet0 extends TotalAverageSheet {
         table.put("student_count","实考人数");
         table.put("max_score","最高分");
         table.put("min_score","最低分");
-        table.put("average_score","平均分");
+        table.put("average_score_zero","平均分\r\n(含0分)");
+        table.put("average_score","平均分\r\n(不含0分)");
         table.put("average_range","平均分排名");
         table.put("excellent","优率");
         table.put("good","良率");

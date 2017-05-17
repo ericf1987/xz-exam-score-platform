@@ -39,8 +39,8 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
 
     private static final String QUERY_CLASS_ROWS = "select\n" +
             "a.subject,a.full_score,a.school_name,\n" +
-            "a.class_id,a.class_name,a.count,a.average_score,\n" +
-            "a.subjective_avg_score,a.objective_avg_score,\n" +
+            "a.class_id,a.class_name,a.count,a.average_score_zero,\n" +
+            "a.subjective_avg_score_zero,a.objective_avg_score_zero,\n" +
             "a.max_score,\n" +
             "IFNULL(xlnt.xlnt_count,0) as xlnt_count,\n" +
             "concat(IFNULL(xlnt.xlnt_rate,0),'%') as xlnt_rate,\n" +
@@ -59,9 +59,9 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
             "class.id as class_id,\n" +
             "class.name as class_name,\n" +
             "COUNT(student.id) as count,\n" +
-            "convert(format(avg(score_subject_{{subjectId}}.score),2),decimal(10,2)) as average_score,\n" +
-            "convert(format(AVG(score_subjective_{{subjectId}}.score),2),decimal(10,2)) as subjective_avg_score,\n" +
-            "convert(format(AVG(score_objective_{{subjectId}}.score),2),decimal(10,2)) as objective_avg_score,\n" +
+            "convert(format(avg(score_subject_{{subjectId}}.score),2),decimal(10,2)) as average_score_zero,\n" +
+            "convert(format(AVG(score_subjective_{{subjectId}}.score),2),decimal(10,2)) as subjective_avg_score_zero,\n" +
+            "convert(format(AVG(score_objective_{{subjectId}}.score),2),decimal(10,2)) as objective_avg_score_zero,\n" +
             "max(score_subject_{{subjectId}}.score) as max_score\n" +
             "from school,score_subject_{{subjectId}},class,student,\n" +
             "score_subjective_{{subjectId}},score_objective_{{subjectId}}\n" +
@@ -137,8 +137,8 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
 
     private static final String QUERY_TOTAL_ROW = "select\n" +
             "a.subject,a.full_score,a.school_name,\n" +
-            "a.class_id,a.class_name,a.count,a.average_score,\n" +
-            "a.subjective_avg_score,a.objective_avg_score,\n" +
+            "a.class_id,a.class_name,a.count,a.average_score_zero,\n" +
+            "a.subjective_avg_score_zero,a.objective_avg_score_zero,\n" +
             "a.max_score,\n" +
             "IFNULL(xlnt.xlnt_count,0) as xlnt_count,\n" +
             "concat(IFNULL(xlnt.xlnt_rate,0),'%') as xlnt_rate,\n" +
@@ -157,9 +157,9 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
             "'total' as class_id,\n" +
             "'全体' as class_name,\n" +
             "COUNT(student.id) as count,\n" +
-            "convert(format(avg(score_subject_{{subjectId}}.score),2),decimal(10,2)) as average_score,\n" +
-            "convert(format(AVG(score_subjective_{{subjectId}}.score),2),decimal(10,2)) as subjective_avg_score,\n" +
-            "convert(format(AVG(score_objective_{{subjectId}}.score),2),decimal(10,2)) as objective_avg_score,\n" +
+            "convert(format(avg(score_subject_{{subjectId}}.score),2),decimal(10,2)) as average_score_zero,\n" +
+            "convert(format(AVG(score_subjective_{{subjectId}}.score),2),decimal(10,2)) as subjective_avg_score_zero,\n" +
+            "convert(format(AVG(score_objective_{{subjectId}}.score),2),decimal(10,2)) as objective_avg_score_zero,\n" +
             "max(score_subject_{{subjectId}}.score) as max_score\n" +
             "from school,score_subject_{{subjectId}},student,\n" +
             "score_subjective_{{subjectId}},score_objective_{{subjectId}}\n" +
@@ -226,7 +226,76 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
             "and scorelevelmap.target_id = '{{subjectId}}'\n" +
             "and school.id = '{{schoolId}}'\n" +
             ") fail on fail.class_id = a.class_id";
+    public static final String SUBJECT_EXCLUDE_ZERO_AVERAGE_SCORE = "select \n" +
+            "class.id as class_id,\n" +
+            "convert(format(avg(score_subject_{{subjectId}}.score),2),decimal(10,2)) as average_score \n" +
+            "from school,score_subject_{{subjectId}},class,student \n" +
+            "where\n" +
+            "class.school_id = school.id\n" +
+            "and student.class_id = class.id\n" +
+            "and student.id = score_subject_{{subjectId}}.student_id\n" +
+            "and school.id = '{{schoolId}}'\n" +
+            "and score_subject_{{subjectId}}.score > 0 " +
+            "GROUP BY class.id\n";
 
+
+    public static final String SUBJECTIVE_EXCLUDE_ZERO_AVERAGE_SCORE = "select \n" +
+            "class.id as class_id,\n" +
+            "convert(format(AVG(score_subjective_{{subjectId}}.score),2),decimal(10,2)) as subjective_avg_score\n" +
+            "from school,class,student,\n" +
+            "score_subjective_{{subjectId}} \n" +
+            "where\n" +
+            "class.school_id = school.id\n" +
+            "and student.class_id = class.id\n" +
+            "and student.id = score_subjective_{{subjectId}}.student_id\n" +
+            "and school.id = '{{schoolId}}'\n" +
+            "and score_subjective_{{subjectId}}.score > 0 " +
+            "GROUP BY class.id\n";
+
+    public static final String OBJECTIVE_EXCLUDE_ZERO_AVERAGE_SCORE = "select \n" +
+            "class.id as class_id,\n" +
+            "convert(format(AVG(score_objective_{{subjectId}}.score),2),decimal(10,2)) as objective_avg_score\n" +
+            "from school,class,student,\n" +
+            "score_objective_{{subjectId}}\n" +
+            "where\n" +
+            "class.school_id = school.id\n" +
+            "and student.class_id = class.id\n" +
+            "and student.id = score_objective_{{subjectId}}.student_id\n" +
+            "and school.id = '{{schoolId}}'\n" +
+            "and score_objective_{{subjectId}}.score > 0 " +
+            "GROUP BY class.id\n";
+
+    public static final String TOTAL_SUBJECT_EXCLUDE_ZERO_AVERAGE_SCORE = "select \n" +
+            "'total' as class_id,\n" +
+            "convert(format(avg(score_subject_{{subjectId}}.score),2),decimal(10,2)) as average_score\n" +
+            "from school,score_subject_{{subjectId}},student\n" +
+            "where\n" +
+            "student.school_id = school.id\n" +
+            "and student.id = score_subject_{{subjectId}}.student_id\n" +
+            "and score_subject_{{subjectId}}.score > 0 " +
+            "and school.id = '{{schoolId}}'\n";
+
+    public static final String TOTAL_SUBJECTIVE_EXCLUDE_ZERO_AVERAGE_SCORE = "select \n" +
+            "'total' as class_id,\n" +
+            "convert(format(AVG(score_subjective_{{subjectId}}.score),2),decimal(10,2)) as subjective_avg_score\n" +
+            "from school,student,\n" +
+            "score_subjective_{{subjectId}}\n" +
+            "where\n" +
+            "student.school_id = school.id\n" +
+            "and student.id = score_subjective_{{subjectId}}.student_id\n" +
+            "and school.id = '{{schoolId}}' " +
+            "and score_subjective_{{subjectId}}.score >0 \n";
+
+    public static final String TOTAL_OBJECTIVE_EXCLUDE_ZERO_AVERAGE_SCORE ="select \n" +
+            "'total' as class_id,\n" +
+            "convert(format(AVG(score_objective_{{subjectId}}.score),2),decimal(10,2)) as objective_avg_score \n" +
+            "from school,student,\n" +
+            "score_objective_{{subjectId}}\n" +
+            "where\n" +
+            "student.school_id = school.id\n" +
+            "and student.id = score_objective_{{subjectId}}.student_id\n" +
+            "and school.id = '{{schoolId}}'\n" +
+            "and score_objective_{{subjectId}}.score > 0";
     @Autowired
     private SubjectService subjectService;
 
@@ -258,6 +327,9 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
                 .replace("{{schoolId}}",schoolId);
         List<Row> rows = dao.query(sql);
         sheetContext.rowAdd(Row2MapHelper.row2Map(rows));
+
+        addClassExcludeZeroScore(sheetContext,dao,schoolId,subjectId);
+
         sheetContext.rowSortBy("class_name");
 
         sheetContext.rowAdd(Row2MapHelper.row2Map(
@@ -268,7 +340,12 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
                 .replace("{{fullScore}}",StringUtils.removeEnd(String.valueOf(fullScore),".0"))
                 .replace("{{subjectId}}",subjectId)
                 .replace("{{schoolId}}",schoolId);
+
+
+        addTotalExcludeZeroScore(sheetContext,dao,schoolId,subjectId);
+
         sheetContext.rowAdd(dao.queryFirst(totalSql));
+
 
         sheetContext.tablePutValue("total", "min_score",
                 dao.queryFirst(SCHOOL_MIN_SCORE.replace("{{scoreTable}}", scoreTable), schoolId)
@@ -277,6 +354,40 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
         sheetContext.rowStyle("total", ExcelCellStyles.Green.name());
         sheetContext.freeze(3, 3);
         sheetContext.saveData();
+    }
+
+    private void addTotalExcludeZeroScore(SheetContext sheetContext, DAO dao, String schoolId, String subjectId) {
+        Row totalSubjectExcludeZeroRow = dao.queryFirst(TOTAL_SUBJECT_EXCLUDE_ZERO_AVERAGE_SCORE
+                .replace("{{subjectId}}", subjectId)
+                .replace("{{schoolId}}", schoolId));
+        sheetContext.rowAdd(totalSubjectExcludeZeroRow);
+
+        Row totalSubjectiveExcludeZeroRow = dao.queryFirst(TOTAL_SUBJECTIVE_EXCLUDE_ZERO_AVERAGE_SCORE
+                .replace("{{subjectId}}", subjectId)
+                .replace("{{schoolId}}", schoolId));
+        sheetContext.rowAdd(totalSubjectiveExcludeZeroRow);
+
+        Row totalObjectiveExcludeZeroRow = dao.queryFirst(TOTAL_OBJECTIVE_EXCLUDE_ZERO_AVERAGE_SCORE
+                .replace("{{subjectId}}", subjectId)
+                .replace("{{schoolId}}", schoolId));
+        sheetContext.rowAdd(totalObjectiveExcludeZeroRow);
+    }
+
+    private void addClassExcludeZeroScore(SheetContext sheetContext, DAO dao, String schoolId, String subjectId) {
+        List<Row> subjectExcludeZeroRows = dao.query(SUBJECT_EXCLUDE_ZERO_AVERAGE_SCORE
+                .replace("{{subjectId}}",subjectId)
+                .replace("{{schoolId}}",schoolId));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(subjectExcludeZeroRows));
+
+        List<Row> subjectiveExcludeZeroRows = dao.query(SUBJECTIVE_EXCLUDE_ZERO_AVERAGE_SCORE
+                .replace("{{subjectId}}",subjectId)
+                .replace("{{schoolId}}",schoolId));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(subjectiveExcludeZeroRows));
+
+        List<Row> objectiveExcludeZeroRows = dao.query(OBJECTIVE_EXCLUDE_ZERO_AVERAGE_SCORE
+                .replace("{{subjectId}}",subjectId)
+                .replace("{{schoolId}}",schoolId));
+        sheetContext.rowAdd(Row2MapHelper.row2Map(objectiveExcludeZeroRows));
     }
 
     private void createTableHeader(SheetContext sheetContext) {
@@ -288,59 +399,69 @@ public class TotalSchoolSubjectAverageSheet extends SheetGenerator {
         //公共表头部分
         TotalSchoolAverageSheet.commonTableHeader(sheetContext);
 
-        sheetContext.headerPut("主观题\r\n平均分", 2, 1);
-        sheetContext.columnSet(6, "subjective_avg_score");
+        sheetContext.headerPut("主观题平均分\r\n(含0分)", 2, 1);
+        sheetContext.columnSet(7, "subjective_avg_score_zero");
         sheetContext.headerMove(Direction.RIGHT);
+        sheetContext.columnWidth(7,14);
+        sheetContext.headerPut("主观题平均分\r\n(不含0分)", 2, 1);
+        sheetContext.columnSet(8, "subjective_avg_score");
+        sheetContext.headerMove(Direction.RIGHT);
+        sheetContext.columnWidth(8,14);
 
-        sheetContext.headerPut("客观题\r\n平均分", 2, 1);
-        sheetContext.columnSet(7, "objective_avg_score");
+        sheetContext.headerPut("客观题平均分\r\n(含0分)", 2, 1);
+        sheetContext.columnSet(9, "objective_avg_score_zero");
         sheetContext.headerMove(Direction.RIGHT);
+        sheetContext.columnWidth(9,14);
+        sheetContext.headerPut("客观题平均分\r\n(不含0分)", 2, 1);
+        sheetContext.columnSet(10, "objective_avg_score");
+        sheetContext.headerMove(Direction.RIGHT);
+        sheetContext.columnWidth(10,14);
 
         sheetContext.headerPut("最高分", 2, 1);
-        sheetContext.columnSet(8, "max_score");
+        sheetContext.columnSet(11, "max_score");
         sheetContext.headerMove(Direction.RIGHT);
 
         sheetContext.headerPut("最低分", 2, 1);
-        sheetContext.columnSet(9, "min_score");
+        sheetContext.columnSet(12, "min_score");
         sheetContext.headerMove(Direction.RIGHT);
 
         sheetContext.headerPut("优秀", 1, 2);
         sheetContext.headerMove(Direction.DOWN);
         sheetContext.headerPut("人数", 1, 1);
-        sheetContext.columnSet(10, "xlnt_count");
+        sheetContext.columnSet(13, "xlnt_count");
         sheetContext.headerMove(Direction.RIGHT);
         sheetContext.headerPut("比率", 1, 1);
-        sheetContext.columnSet(11, "xlnt_rate");
+        sheetContext.columnSet(14, "xlnt_rate");
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
 
 
         sheetContext.headerPut("良好", 1, 2);
         sheetContext.headerMove(Direction.DOWN);
         sheetContext.headerPut("人数", 1, 1);
-        sheetContext.columnSet(12, "good_count");
+        sheetContext.columnSet(15, "good_count");
         sheetContext.headerMove(Direction.RIGHT);
         sheetContext.headerPut("比率", 1, 1);
-        sheetContext.columnSet(13, "good_rate");
+        sheetContext.columnSet(16, "good_rate");
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
 
 
         sheetContext.headerPut("及格", 1, 2);
         sheetContext.headerMove(Direction.DOWN);
         sheetContext.headerPut("人数", 1, 1);
-        sheetContext.columnSet(14, "pass_count");
+        sheetContext.columnSet(17, "pass_count");
         sheetContext.headerMove(Direction.RIGHT);
         sheetContext.headerPut("比率", 1, 1);
-        sheetContext.columnSet(15, "pass_rate");
+        sheetContext.columnSet(18, "pass_rate");
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
 
 
         sheetContext.headerPut("不及格", 1, 2);
         sheetContext.headerMove(Direction.DOWN);
         sheetContext.headerPut("人数", 1, 1);
-        sheetContext.columnSet(16, "fail_count");
+        sheetContext.columnSet(19, "fail_count");
         sheetContext.headerMove(Direction.RIGHT);
         sheetContext.headerPut("比率", 1, 1);
-        sheetContext.columnSet(17, "fail_rate");
+        sheetContext.columnSet(20, "fail_rate");
         sheetContext.headerMove(Direction.RIGHT, Direction.UP);
     }
 }
