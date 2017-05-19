@@ -2,7 +2,8 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
-import com.xz.ajiaedu.common.report.Keys;
+import com.xz.ajiaedu.common.report.Keys.Range;
+import com.xz.ajiaedu.common.report.Keys.Target;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.aggritems.AverageQuery;
 import com.xz.scorep.executor.bean.AverageScore;
@@ -68,9 +69,9 @@ public class AverageScoreAggregator extends Aggregator {
         List<Row> schoolRows = projectDao.query(AverageQuery.AVG_PROJECT_SCHOOL_GROUP.replace("{{table}}", "score_project"));
         List<Row> classRows = projectDao.query(AverageQuery.AVG_PROJECT_CLASSES_GROUP.replace("{{table}}", "score_project"));
 
-        convertToRows(averageScores, provinceRows, Keys.Range.Province.name(), Keys.Target.Project.name(), projectId);
-        convertToRows(averageScores, schoolRows, Keys.Range.School.name(), Keys.Target.Project.name(), projectId);
-        convertToRows(averageScores, classRows, Keys.Range.Class.name(), Keys.Target.Project.name(), projectId);
+        convertToRows(averageScores, provinceRows, Range.Province.name(), Target.Project.name(), projectId);
+        convertToRows(averageScores, schoolRows, Range.School.name(), Target.Project.name(), projectId);
+        convertToRows(averageScores, classRows, Range.Class.name(), Target.Project.name(), projectId);
 
         projectDao.insert(averageScores, "average_score");
         LOG.info("项目 ID {} 总分平均分统计完成 ....", projectId);
@@ -94,9 +95,9 @@ public class AverageScoreAggregator extends Aggregator {
             List<Row> schoolRows = projectDao.query(AverageQuery.AVG_PROJECT_SCHOOL_GROUP.replace("{{table}}", tableName));
             List<Row> classRows = projectDao.query(AverageQuery.AVG_PROJECT_CLASSES_GROUP.replace("{{table}}", tableName));
 
-            convertToRows(averageScores, provinceRows, Keys.Range.Province.name(), Keys.Target.Subject.name(), projectId);
-            convertToRows(averageScores, schoolRows, Keys.Range.School.name(), Keys.Target.Subject.name(), projectId);
-            convertToRows(averageScores, classRows, Keys.Range.Class.name(), Keys.Target.Subject.name(), projectId);
+            convertToRows(averageScores, provinceRows, Range.Province.name(), Target.Subject.name(), projectId);
+            convertToRows(averageScores, schoolRows, Range.School.name(), Target.Subject.name(), projectId);
+            convertToRows(averageScores, classRows, Range.Class.name(), Target.Subject.name(), projectId);
 
             projectDao.insert(averageScores, "average_score");
             LOG.info("项目ID {} ,科目 ID {} 平均分统计完成...", projectId, subjectId);
