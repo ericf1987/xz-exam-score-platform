@@ -74,7 +74,7 @@ public class AverageScoreAggregator extends Aggregator {
         convertToRows(averageScores, classRows, Range.Class.name(), Target.Project.name(), projectId);
 
         projectDao.insert(averageScores, "average_score");
-        LOG.info("项目 ID {} 总分平均分统计完成 ....", projectId);
+        LOG.info("项目ID {}  总分平均分统计完成...", projectId);
     }
 
     private void convertToRows(List<AverageScore> averageScores, List<Row> rows, String rangType, String targetType, String projectId) {
