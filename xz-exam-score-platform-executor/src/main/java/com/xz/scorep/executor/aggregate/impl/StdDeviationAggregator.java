@@ -2,7 +2,6 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
-import com.xz.ajiaedu.common.concurrent.Executors;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.aggritems.AverageQuery;
 import com.xz.scorep.executor.bean.ExamSubject;
@@ -21,8 +20,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import static com.xz.ajiaedu.common.report.Keys.Range;
 import static com.xz.ajiaedu.common.report.Keys.Target;
@@ -73,18 +70,13 @@ public class StdDeviationAggregator extends Aggregator {
 
         initializeTable(projectDao);
 
-        LOG.info("项目 {} 正在统计标准差...", projectId);
         processProjectData(projectId, projectDao);
 
-        ThreadPoolExecutor poolExecutor = Executors
-                .newBlockingThreadPoolExecutor(10, 10, 1);
-
-
-        processSubjectData(poolExecutor, projectId, projectDao, examSubjects);
+        processSubjectData(projectId, projectDao, examSubjects);
 
     }
 
-    private void processSubjectData(ThreadPoolExecutor poolExecutor, String projectId, DAO projectDao, List<ExamSubject> subjects) throws InterruptedException {
+    private void processSubjectData(String projectId, DAO projectDao, List<ExamSubject> subjects) throws InterruptedException {
 
         subjects.forEach(subject -> processSubjectData(projectId, projectDao, subject));
 

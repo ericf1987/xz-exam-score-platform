@@ -15,19 +15,19 @@ public class ScoreDetailService {
 
     private static String QUERY_STUDENT_PROJECT_SCORE = "select score.score,s.province rangeId\n" +
             "from {{tableName}} score\n" +
-            "LEFT JOIN student s on s.id = score.student_id";
+            "LEFT JOIN student s on s.id = score.student_id where score is not null";
 
     private static String QUERY_STUDENT_SCHOOL_SCORE = "select score.score,school.id rangeId \n" +
             "from school\n" +
             "LEFT JOIN student s on s.school_id = school.id \n" +
             "LEFT JOIN {{tableName}} score on score.student_id = s.id\n" +
-            "where school.id = \"{{schoolId}}\"";
+            "where school.id = \"{{schoolId}}\" and score is not null ";
 
     private static String QUERY_STUDENT_CLASS_SCORE = "select score.score,class.id rangeId \n" +
             "from {{tableName}} score\n" +
             "LEFT JOIN student  on student.id = score.student_id\n" +
             "LEFT JOIN class on student.class_id = class.id\n" +
-            "where class.id = \"{{classId}}\";";
+            "where class.id = \"{{classId}}\" and score is not null ";
 
     @Autowired
     private QuestService questService;
