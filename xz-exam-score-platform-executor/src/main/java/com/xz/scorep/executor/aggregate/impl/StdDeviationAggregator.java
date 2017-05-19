@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static com.xz.ajiaedu.common.report.Keys.Range;
 import static com.xz.ajiaedu.common.report.Keys.Target;
@@ -72,14 +73,21 @@ public class StdDeviationAggregator extends Aggregator {
 
         initializeTable(projectDao);
 
-        processData(projectId, projectDao, examSubjects);
+        LOG.info("项目 {} 正在统计标准差...", projectId);
+        processProjectData(projectId, projectDao);
+
+        ThreadPoolExecutor poolExecutor = Executors
+                .newBlockingThreadPoolExecutor(10, 10, 1);
+
+
+        processSubjectData(poolExecutor, projectId, projectDao, examSubjects);
 
     }
 
-    private void processData(String projectId, DAO projectDao, List<ExamSubject> subjects) {
-        ThreadPoolExecutor poolExecutor = Executors.newBlockingThreadPoolExecutor(10, 10, 1);
-        poolExecutor.submit(() -> processProjectData(projectId, projectDao));
-        subjects.forEach(subject -> poolExecutor.submit(() -> processSubjectData(projectId, projectDao, subject)));
+    private void processSubjectData(ThreadPoolExecutor poolExecutor, String projectId, DAO projectDao, List<ExamSubject> subjects) throws InterruptedException {
+
+        subjects.forEach(subject -> processSubjectData(projectId, projectDao, subject));
+
     }
 
     private void initializeTable(DAO projectDao) {
@@ -88,6 +96,7 @@ public class StdDeviationAggregator extends Aggregator {
     }
 
     private void processProjectData(String projectId, DAO projectDao) {
+
         List<StdDeviation> stdDeviations = new ArrayList<>();
 
         List<Row> provinceRows = projectDao.query(AverageQuery.AVG_PROJECT_PROVINCE_GROUP.replace("{{table}}", "score_project"));
@@ -109,7 +118,7 @@ public class StdDeviationAggregator extends Aggregator {
         addStdDeviationList(stdDeviations, classStdDeviation, Range.Class.name(), Target.Project.name(), projectId);
         projectDao.insert(stdDeviations, "std_deviation");
 
-        LOG.info("完成项目ID{}总分的标准差统计....", projectId);
+        LOG.info("完成项目ID{}总分的标准差统计....,大小 ..{}", projectId, stdDeviations.size());
 
     }
 
@@ -147,6 +156,6 @@ public class StdDeviationAggregator extends Aggregator {
         addStdDeviationList(stdDeviations, classStdDeviation, Range.Class.name(), Target.Subject.name(), subjectId);
         projectDao.insert(stdDeviations, "std_deviation");
 
-        LOG.info("完成项目{},科目{} 总分的标准差", projectId, subjectId);
+        LOG.info("完成项目{},科目{} 总分的标准差 ,大小为 ..{}", projectId, subjectId, stdDeviations.size());
     }
 }

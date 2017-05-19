@@ -22,10 +22,9 @@ public class AverageQuery {
             "AND class.province = ?";
 
     //总体平均分分组
-    public static final String AVG_PROJECT_PROVINCE_GROUP = "SELECT AVG(score) AS average , school.province rangeId " +
-            "FROM {{table}} score, student, class, school\n" +
-            "WHERE student.class_id = class.id\n" +
-            "AND class.school_id = school.id\n" +
+    public static final String AVG_PROJECT_PROVINCE_GROUP = "SELECT AVG(score) AS average , student.province rangeId " +
+            "FROM {{table}} score\n" +
+            "left join student on score.student_id = student.id\n" +
             "GROUP BY rangeId";
 
     //学校平均分
@@ -39,11 +38,10 @@ public class AverageQuery {
             "  class.school_id=?";
 
     //学校平均分分组
-    public static final String AVG_PROJECT_SCHOOL_GROUP = "SELECT AVG(score) AS average , school.id rangeId " +
-            "FROM {{table}} score, student, class, school\n" +
-            "WHERE score.student_id = student.id\n" +
-            "AND student.class_id = class.id\n" +
-            "AND class.school_id = school.id\n" +
+    public static final String AVG_PROJECT_SCHOOL_GROUP = "SELECT ifnull(AVG(score),0) AS average , school.id rangeId " +
+            "FROM school\n" +
+            "left join student on student.school_id = school.id\n" +
+            "left join {{table}} score on score.student_id = student.id\n" +
             "GROUP BY rangeId;";
 
     //班级平均分
@@ -54,10 +52,10 @@ public class AverageQuery {
             "AND class.id = ?";
 
     //班级平均分分组
-    public static final String AVG_PROJECT_CLASSES_GROUP = "SELECT AVG(score) AS average , class.id rangeId " +
-            "FROM {{table}} score, student, class\n" +
-            "WHERE score.student_id = student.id\n" +
-            "AND student.class_id = class.id\n" +
+    public static final String AVG_PROJECT_CLASSES_GROUP = "SELECT ifnull(AVG(score),0) AS average , class.id rangeId " +
+            "FROM  class\n" +
+            "left join student on student.class_id = class.id\n" +
+            "left join {{table}} score on score.student_id = student.id \n" +
             "GROUP BY rangeId;";
 
     private static final String AVG_SUBJECT_PROVINCE = "select " +

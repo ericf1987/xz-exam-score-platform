@@ -18,9 +18,9 @@ public class ScoreDetailService {
             "LEFT JOIN student s on s.id = score.student_id";
 
     private static String QUERY_STUDENT_SCHOOL_SCORE = "select score.score,school.id rangeId \n" +
-            "from {{tableName}} score\n" +
-            "LEFT JOIN student s on score.student_id = s.id\n" +
-            "LEFT JOIN school on s.school_id = school.id\n" +
+            "from school\n" +
+            "LEFT JOIN student s on s.school_id = school.id \n" +
+            "LEFT JOIN {{tableName}} score on score.student_id = s.id\n" +
             "where school.id = \"{{schoolId}}\"";
 
     private static String QUERY_STUDENT_CLASS_SCORE = "select score.score,class.id rangeId \n" +

@@ -59,6 +59,10 @@ public class AggregatorHelper {
             List<Row> rangScoreRows = studentScores.get(rangId);
 
             int studentCount = rangScoreRows.size();
+            if (studentCount == 0) {
+                LOG.info("rangId {}  对应人数为0", rangId);
+                return;
+            }
 
             double stdDeviation = calculateStdDeviation(average, studentCount, rangScoreRows);
             rangStdDeviation.put(rangId, stdDeviation);
