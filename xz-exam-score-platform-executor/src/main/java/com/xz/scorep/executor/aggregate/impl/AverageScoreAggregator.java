@@ -95,9 +95,9 @@ public class AverageScoreAggregator extends Aggregator {
             List<Row> schoolRows = projectDao.query(AverageQuery.AVG_PROJECT_SCHOOL_GROUP.replace("{{table}}", tableName));
             List<Row> classRows = projectDao.query(AverageQuery.AVG_PROJECT_CLASSES_GROUP.replace("{{table}}", tableName));
 
-            convertToRows(averageScores, provinceRows, Range.Province.name(), Target.Subject.name(), projectId);
-            convertToRows(averageScores, schoolRows, Range.School.name(), Target.Subject.name(), projectId);
-            convertToRows(averageScores, classRows, Range.Class.name(), Target.Subject.name(), projectId);
+            convertToRows(averageScores, provinceRows, Range.Province.name(), Target.Subject.name(), subjectId);
+            convertToRows(averageScores, schoolRows, Range.School.name(), Target.Subject.name(), subjectId);
+            convertToRows(averageScores, classRows, Range.Class.name(), Target.Subject.name(), subjectId);
 
             projectDao.insert(averageScores, "average_score");
             LOG.info("项目ID {} ,科目 ID {} 平均分统计完成...", projectId, subjectId);
