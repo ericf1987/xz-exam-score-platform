@@ -2,6 +2,7 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.xz.ajiaedu.common.report.Keys;
+import com.xz.ajiaedu.common.report.Keys.Target;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Range;
@@ -78,19 +79,19 @@ public class MaxMinScoreAggregator extends Aggregator {
     private void processProjectData(DAO projectDao, String projectId) {
         String province = INSERT_PROJECT_MAX_MIN_SCORE.replace("{{rangeType}}", Keys.Range.Province.name())
                 .replace("{{rangeId}}", Range.PROVINCE_RANGE.getId())
-                .replace("{{targetType}}", Keys.Target.Project.name())
+                .replace("{{targetType}}", Target.Project.name())
                 .replace("{{targetId}}", projectId)
                 .replace("{{table}}", "score_project");
         projectDao.execute(province);
 
         String school = INSERT_SCHOOL_MAX_MIN_SCORE.replace("{{rangeType}}", Keys.Range.School.name())
-                .replace("{{targetType}}", Keys.Target.Project.name())
+                .replace("{{targetType}}", Target.Project.name())
                 .replace("{{targetId}}", projectId)
                 .replace("{{table}}", "score_project");
         projectDao.execute(school);
 
         String clazz = INSERT_CLASS_MAX_MIN_SCORE.replace("{{rangeType}}", Keys.Range.Class.name())
-                .replace("{{targetType}}", Keys.Target.Project.name())
+                .replace("{{targetType}}", Target.Project.name())
                 .replace("{{targetId}}", projectId)
                 .replace("{{table}}", "score_project");
         projectDao.execute(clazz);
@@ -108,19 +109,19 @@ public class MaxMinScoreAggregator extends Aggregator {
         String tableName = "score_subject_" + subjectId;
         String province = INSERT_PROJECT_MAX_MIN_SCORE.replace("{{rangeType}}", Keys.Range.Province.name())
                 .replace("{{rangeId}}", Range.PROVINCE_RANGE.getId())
-                .replace("{{targetType}}", Keys.Target.Subject.name())
+                .replace("{{targetType}}", Target.Subject.name())
                 .replace("{{targetId}}", subjectId)
                 .replace("{{table}}", tableName);
         projectDao.execute(province);
 
         String school = INSERT_SCHOOL_MAX_MIN_SCORE.replace("{{rangeType}}", Keys.Range.School.name())
-                .replace("{{targetType}}", Keys.Target.Subject.name())
+                .replace("{{targetType}}", Target.Subject.name())
                 .replace("{{targetId}}", subjectId)
                 .replace("{{table}}", tableName);
         projectDao.execute(school);
 
         String clazz = INSERT_CLASS_MAX_MIN_SCORE.replace("{{rangeType}}", Keys.Range.Class.name())
-                .replace("{{targetType}}", Keys.Target.Subject.name())
+                .replace("{{targetType}}", Target.Subject.name())
                 .replace("{{targetId}}", subjectId)
                 .replace("{{table}}", tableName);
         projectDao.execute(clazz);
