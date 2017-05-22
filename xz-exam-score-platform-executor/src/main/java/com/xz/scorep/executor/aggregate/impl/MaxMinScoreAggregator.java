@@ -67,6 +67,7 @@ public class MaxMinScoreAggregator extends Aggregator {
         initializeTable(projectDao);
 
         processProjectData(projectDao, projectId);
+        LOG.info("完成项目ID {} 总分最高分,最低分统计....", projectId);
 
         processSubjectData(projectDao, projectId, subjects);
 
@@ -101,11 +102,12 @@ public class MaxMinScoreAggregator extends Aggregator {
     private void processSubjectData(DAO projectDao, String projectId, List<ExamSubject> subjects) {
         subjects.forEach(subject -> {
             String subjectId = subject.getId();
-            processSubjectData(projectDao, projectId, subjectId);
+            processSubjectData(projectDao, subjectId);
+            LOG.info("完成项目ID {} ,科目ID {} 最高分,最低分统计....", projectId, subjectId);
         });
     }
 
-    private void processSubjectData(DAO projectDao, String projectId, String subjectId) {
+    private void processSubjectData(DAO projectDao, String subjectId) {
         String tableName = "score_subject_" + subjectId;
         String province = INSERT_PROJECT_MAX_MIN_SCORE.replace("{{rangeType}}", Keys.Range.Province.name())
                 .replace("{{rangeId}}", Range.PROVINCE_RANGE.getId())
