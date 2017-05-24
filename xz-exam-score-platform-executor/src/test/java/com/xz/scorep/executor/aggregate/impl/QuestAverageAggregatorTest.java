@@ -5,15 +5,13 @@ import com.xz.scorep.executor.aggregate.AggregateParameter;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.junit.Assert.*;
-
 /**
  * @author luckylo
  */
 public class QuestAverageAggregatorTest extends BaseTest{
 
     @Autowired
-    QuestAverageAggregator averageAggregator;
+    QuestAverageMaxScoreAggregator averageAggregator;
 
     @Test
     public void aggregate() throws Exception {

@@ -18,32 +18,31 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 每一道题目的平均分
+ * 每一道题目的平均分和最高分(最高分目前主要应用于留痕主观题得分详情)
  *
  * @author luckylo
  */
 @Component
 @AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
 @AggragateOrder(53)
-public class QuestAverageAggregator extends Aggregator {
+public class QuestAverageMaxScoreAggregator extends Aggregator {
 
-    private static Logger LOG = LoggerFactory.getLogger(QuestAverageAggregator.class);
+    private static Logger LOG = LoggerFactory.getLogger(QuestAverageMaxScoreAggregator.class);
 
     private static final String DROP_TABLE = "drop table if exists quest_average_score";
 
     private static final String CREATE_TABLE = "create table quest_average_score(" +
             " quest_id varchar(40),quest_no varchar(20),exam_subject varchar(10)," +
-            " full_score decimal(4,1),average_score decimal(4,2)," +
+            " full_score decimal(4,1),average_score decimal(4,2),max_score decimal(4,2)," +
             " objective varchar(5),range_type varchar(20),range_id varchar(40))";
 
     private static final String CREATE_INDEX = "create index idxqas on quest_average_score(quest_id,quest_no,range_type,range_id)";
 
     private static final String PROJECT_AVERAGE_SCORE = "" +
             "select \"{{questId}}\" quest_id,\"{{questNo}}\" quest_no,\"{{subjectId}}\" exam_subject,{{fullScore}} full_score,\n" +
-            "AVG(score.score) average_score ," +
+            "AVG(score.score) average_score , max(score.score) max_score," +
             "\"{{objective}}\" objective,\"{{rangeType}}\" range_type,\"{{rangeId}}\" range_id\n" +
             "from `{{table}}` score\n" +
             "where student_id not in (\n" +
@@ -56,7 +55,8 @@ public class QuestAverageAggregator extends Aggregator {
 
     private static final String SCHOOL_AVERAGE_SCORE = "" +
             "select \"{{questId}}\" quest_id,\"{{questNo}}\" quest_no,\"{{subjectId}}\" exam_subject,{{fullScore}} full_score,\n" +
-            "AVG(score.score) average_score ,\"{{rangeType}}\" range_type,s.school_id range_id,\"{{objective}}\" objective \n" +
+            "AVG(score.score) average_score ,max(score.score) max_score," +
+            "\"{{rangeType}}\" range_type,s.school_id range_id,\"{{objective}}\" objective \n" +
             "from `{{table}}` score,student s\n" +
             "where s.id = score.student_id\n" +
             "and student_id not in (\n" +
@@ -70,7 +70,8 @@ public class QuestAverageAggregator extends Aggregator {
 
     private static final String CLASS_AVERAGE_SCORE = "" +
             "select \"{{questId}}\" quest_id,\"{{questNo}}\" quest_no,\"{{subjectId}}\" exam_subject,{{fullScore}} full_score,\n" +
-            "AVG(score.score) average_score ,\"{{rangeType}}\" range_type,s.class_id range_id,\"{{objective}}\" objective \n" +
+            "AVG(score.score) average_score ,max(score.score) max_score," +
+            "\"{{rangeType}}\" range_type,s.class_id range_id,\"{{objective}}\" objective \n" +
             "from `{{table}}` score,student s\n" +
             "where s.id = score.student_id\n" +
             "and student_id not in (\n" +
