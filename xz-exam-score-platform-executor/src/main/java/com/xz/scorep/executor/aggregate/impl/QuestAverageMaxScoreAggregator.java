@@ -31,14 +31,14 @@ public class QuestAverageMaxScoreAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(QuestAverageMaxScoreAggregator.class);
 
-    private static final String DROP_TABLE = "drop table if exists quest_average_score";
+    private static final String DROP_TABLE = "drop table if exists quest_average_max_score";
 
-    private static final String CREATE_TABLE = "create table quest_average_score(" +
+    private static final String CREATE_TABLE = "create table quest_average_max_score(" +
             " quest_id varchar(40),quest_no varchar(20),exam_subject varchar(10)," +
             " full_score decimal(4,1),average_score decimal(4,2),max_score decimal(4,2)," +
             " objective varchar(5),range_type varchar(20),range_id varchar(40))";
 
-    private static final String CREATE_INDEX = "create index idxqas on quest_average_score(quest_id,quest_no,range_type,range_id)";
+    private static final String CREATE_INDEX = "create index idxqams on quest_average_max_score(quest_id,quest_no,range_type,range_id)";
 
     private static final String PROJECT_AVERAGE_SCORE = "" +
             "select \"{{questId}}\" quest_id,\"{{questNo}}\" quest_no,\"{{subjectId}}\" exam_subject,{{fullScore}} full_score,\n" +
@@ -103,7 +103,7 @@ public class QuestAverageMaxScoreAggregator extends Aggregator {
         ThreadPoolExecutor pool = Executors.newBlockingThreadPoolExecutor(20, 20, 1);
 
         List<ExamQuest> quests = questService.queryQuests(projectId);
-        AsyncCounter counter = new AsyncCounter("正在统计项目题目平均分 ", quests.size());
+        AsyncCounter counter = new AsyncCounter("正在统计项目题目平均分最高分 ", quests.size());
         quests.forEach(quest -> pool.submit(() -> insertData(projectDao, quest, counter)));
     }
 
@@ -146,7 +146,7 @@ public class QuestAverageMaxScoreAggregator extends Aggregator {
                 .replace("{{fullScore}}", String.valueOf(fullScore))
                 .replace("{{rangeType}}", Keys.Range.Class.name());
         insertRow.addAll(projectDao.query(clazz));
-        projectDao.insert(insertRow, "quest_average_score");
+        projectDao.insert(insertRow, "quest_average_max_score");
         count.count();
     }
 
