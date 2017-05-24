@@ -42,6 +42,12 @@ public class QuestService {
                 ExamQuest.class, "select * from quest where id=?", questId);
     }
 
+    public ExamQuest findQuest(String projectId, String subjectId, String questNo){
+        return daoFactory.getProjectDao(projectId).queryFirst(
+                ExamQuest.class, "select * from quest where exam_subject = ? and quest_no = ?", subjectId, questNo
+        );
+    }
+
     public List<ExamQuest> queryQuests(String projectId) {
         SimpleCache cache = cacheFactory.getProjectCache(projectId);
         String cacheKey = "quests:";

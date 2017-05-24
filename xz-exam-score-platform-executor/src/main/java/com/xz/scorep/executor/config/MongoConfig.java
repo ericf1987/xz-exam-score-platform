@@ -9,6 +9,16 @@ public class MongoConfig {
 
     private String scannerDbs;
 
+    private String aggrDbs;
+
+    public String getAggrDbs() {
+        return aggrDbs;
+    }
+
+    public void setAggrDbs(String aggrDbs) {
+        this.aggrDbs = aggrDbs;
+    }
+
     public String getScannerDbs() {
         return scannerDbs;
     }

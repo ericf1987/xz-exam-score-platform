@@ -1,8 +1,10 @@
 package com.xz.scorep.executor.mongo;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
 import com.xz.scorep.executor.config.MongoConfig;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +26,24 @@ public class MongoClientFactory {
 
     private List<MongoClient> scannerMongoClients = new ArrayList<>();
 
+    private MongoClient aggrMongoClient;
+
+    public void setAggrMongoClient(MongoClient aggrMongoClient) {
+        this.aggrMongoClient = aggrMongoClient;
+    }
+
     @PostConstruct
     private void initMongoClients() {
+        //初始化网阅Mongo
+        initScannerMongoClients();
+        //初始化统计Mongo
+        initAggrMongoClient();
+    }
+
+    /**
+     * 初始化网阅Mongo数据库的连接
+     */
+    private void initScannerMongoClients() {
         String dbString = mongoConfig.getScannerDbs();
         String[] clusters = dbString.split(";");
 
@@ -39,6 +57,31 @@ public class MongoClientFactory {
             }
             scannerMongoClients.add(new MongoClient(addresses));
         }
+    }
+
+    /**
+     * 初始化统计Mongo数据库的连接
+     */
+    private void initAggrMongoClient() {
+        String dbString = mongoConfig.getAggrDbs();
+        List<ServerAddress> serverAddresses = readAggrMongoServerAddress(dbString);
+        MongoClientOptions options = MongoClientOptions.builder().build();//默认连接池大小为100
+        setAggrMongoClient(new MongoClient(serverAddresses, options));
+    }
+
+    private List<ServerAddress> readAggrMongoServerAddress(String dbString) {
+        String[] split = dbString.split(",");
+        List<ServerAddress> seeds = new ArrayList<>();
+
+        for (String s : split) {
+            if (StringUtils.isBlank(s) || !s.contains(":")) {
+                continue;
+            }
+
+            String[] host_port = s.split(":");
+            seeds.add(new ServerAddress(host_port[0], Integer.parseInt(host_port[1])));
+        }
+        return seeds;
     }
 
     /**
@@ -57,6 +100,10 @@ public class MongoClientFactory {
         LOG.info("项目 {} 所属网阅数据库：{}", projectId, mongoClient.getAddress());
 
         return mongoClient;
+    }
+
+    public MongoClient getAggrMongoClient(){
+        return aggrMongoClient;
     }
 
     private boolean projectExists(MongoClient client, String project) {

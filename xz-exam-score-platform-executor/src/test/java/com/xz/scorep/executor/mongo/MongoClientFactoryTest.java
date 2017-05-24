@@ -1,7 +1,10 @@
 package com.xz.scorep.executor.mongo;
 
 import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.xz.scorep.executor.BaseTest;
+import org.bson.Document;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,4 +34,12 @@ public class MongoClientFactoryTest extends BaseTest {
                 .forEach((Consumer<? super String>) System.out::println);
     }
 
+    @Test
+    public void testGetAggrMongoClient() throws Exception {
+        MongoClient aggrMongoClient = mongoClientFactory.getAggrMongoClient();
+        MongoDatabase project_data = aggrMongoClient.getDatabase("project_data");
+        MongoCollection<Document> project_config = project_data.getCollection("project_config");
+        Document first = project_config.find().first();
+        System.out.println(first);
+    }
 }
