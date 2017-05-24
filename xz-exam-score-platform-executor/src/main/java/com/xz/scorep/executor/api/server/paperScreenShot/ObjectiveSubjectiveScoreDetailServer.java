@@ -2,7 +2,7 @@ package com.xz.scorep.executor.api.server.paperScreenShot;
 
 import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.lang.Result;
-import com.xz.scorep.executor.aggritems.SubjectiveObjectiveQuery;
+import com.xz.scorep.executor.api.service.SubjectiveObjectiveService;
 import com.xz.scorep.executor.api.annotation.Function;
 import com.xz.scorep.executor.api.annotation.Parameter;
 import com.xz.scorep.executor.api.annotation.Type;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 public class ObjectiveSubjectiveScoreDetailServer implements Server {
 
     @Autowired
-    private SubjectiveObjectiveQuery subjectiveObjectiveQuery;
+    private SubjectiveObjectiveService subjectiveObjectiveService;
 
     @Override
     public Result execute(Param param) {

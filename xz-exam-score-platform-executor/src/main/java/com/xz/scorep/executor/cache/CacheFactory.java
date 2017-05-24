@@ -22,6 +22,9 @@ public class CacheFactory {
     // 生成 Excel 期间使用的缓存，完毕后应删除
     private final Map<String, SimpleCacheWrapper> reportCache = new HashMap<>();
 
+    // 生成试卷留痕期间使用的缓存
+    private final Map<String, SimpleCacheWrapper> paperCache = new HashMap<>();
+
     private SimpleCacheWrapper globalCache;
 
     @PostConstruct
@@ -32,6 +35,20 @@ public class CacheFactory {
     public SimpleCache getGlobalCache() {
         return globalCache.getSimpleCache();
     }
+
+
+    public synchronized SimpleCache getPaperCache(String projectId) {
+        shrink(paperCache);
+
+        SimpleCacheWrapper result = paperCache.get(projectId);
+        if (result != null) {
+            return result.getSimpleCache();
+        } else {
+            Function<String, SimpleCacheWrapper> creator = k -> createCache("paper:" + projectId);
+            return paperCache.computeIfAbsent(projectId, creator).getSimpleCache();
+        }
+    }
+
 
     public synchronized SimpleCache getReportCache(String projectId) {
         shrink(reportCache);

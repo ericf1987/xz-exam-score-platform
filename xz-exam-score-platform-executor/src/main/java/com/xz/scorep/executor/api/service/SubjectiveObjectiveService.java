@@ -1,4 +1,4 @@
-package com.xz.scorep.executor.aggritems;
+package com.xz.scorep.executor.api.service;
 
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.NaturalOrderComparator;
@@ -9,6 +9,7 @@ import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,12 +19,10 @@ import java.util.stream.Collectors;
  *
  * @author luckylo
  */
-@Component
-public class SubjectiveObjectiveQuery {
+@Service
+public class SubjectiveObjectiveService {
 
-    private static final String QUERY_SUBJECTIVE_SCORE_DETAIL = "";
 
-    private static final String QUERY_OBJECTIVE_SCORE_DETAIL = "";
 
     @Autowired
     private DAOFactory daoFactory;
@@ -61,11 +60,12 @@ public class SubjectiveObjectiveQuery {
         }
         Row row = rows.get(0);
         if (quest.isObjective()) {//客观题
+            String scoreRule = quest.getScoreRule();
             String answer = row.getString("objective_answer");
             // TODO: 2017-05-24 班级得分率
         } else {//主观题
             double score = row.getDouble("score", 0);
-            // TODO: 2017-05-24 班级最高分
+            // TODO: 2017-05-24 班级最高分,平均分可以取到
         }
     }
 

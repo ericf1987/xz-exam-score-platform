@@ -1,7 +1,6 @@
 package com.xz.scorep.executor.aggritems;
 
 import com.hyd.dao.DAO;
-import com.xz.ajiaedu.common.lang.DoubleValue;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

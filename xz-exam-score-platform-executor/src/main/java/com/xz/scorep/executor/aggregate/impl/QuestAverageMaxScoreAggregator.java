@@ -34,14 +34,14 @@ public class QuestAverageMaxScoreAggregator extends Aggregator {
     private static final String DROP_TABLE = "drop table if exists quest_average_max_score";
 
     private static final String CREATE_TABLE = "create table quest_average_max_score(" +
-            " quest_id varchar(40),quest_no varchar(20),exam_subject varchar(10)," +
+            " quest_id varchar(40),quest_no varchar(20),subject_id varchar(10)," +
             " full_score decimal(4,1),average_score decimal(4,2),max_score decimal(4,2)," +
             " objective varchar(5),range_type varchar(20),range_id varchar(40))";
 
     private static final String CREATE_INDEX = "create index idxqams on quest_average_max_score(quest_id,quest_no,range_type,range_id)";
 
     private static final String PROJECT_AVERAGE_SCORE = "" +
-            "select \"{{questId}}\" quest_id,\"{{questNo}}\" quest_no,\"{{subjectId}}\" exam_subject,{{fullScore}} full_score,\n" +
+            "select \"{{questId}}\" quest_id,\"{{questNo}}\" quest_no,\"{{subjectId}}\" subject_id,{{fullScore}} full_score,\n" +
             "AVG(score.score) average_score , max(score.score) max_score," +
             "\"{{objective}}\" objective,\"{{rangeType}}\" range_type,\"{{rangeId}}\" range_id\n" +
             "from `{{table}}` score\n" +
@@ -54,7 +54,7 @@ public class QuestAverageMaxScoreAggregator extends Aggregator {
             ");";
 
     private static final String SCHOOL_AVERAGE_SCORE = "" +
-            "select \"{{questId}}\" quest_id,\"{{questNo}}\" quest_no,\"{{subjectId}}\" exam_subject,{{fullScore}} full_score,\n" +
+            "select \"{{questId}}\" quest_id,\"{{questNo}}\" quest_no,\"{{subjectId}}\" subject_id,{{fullScore}} full_score,\n" +
             "AVG(score.score) average_score ,max(score.score) max_score," +
             "\"{{rangeType}}\" range_type,s.school_id range_id,\"{{objective}}\" objective \n" +
             "from `{{table}}` score,student s\n" +
@@ -69,7 +69,7 @@ public class QuestAverageMaxScoreAggregator extends Aggregator {
             "GROUP BY s.school_id";
 
     private static final String CLASS_AVERAGE_SCORE = "" +
-            "select \"{{questId}}\" quest_id,\"{{questNo}}\" quest_no,\"{{subjectId}}\" exam_subject,{{fullScore}} full_score,\n" +
+            "select \"{{questId}}\" quest_id,\"{{questNo}}\" quest_no,\"{{subjectId}}\" subject_id,{{fullScore}} full_score,\n" +
             "AVG(score.score) average_score ,max(score.score) max_score," +
             "\"{{rangeType}}\" range_type,s.class_id range_id,\"{{objective}}\" objective \n" +
             "from `{{table}}` score,student s\n" +
