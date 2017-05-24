@@ -2,13 +2,16 @@ package com.xz.scorep.executor.api.server.paperScreenShot;
 
 import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.lang.Result;
-import com.xz.scorep.executor.api.service.SubjectiveObjectiveService;
 import com.xz.scorep.executor.api.annotation.Function;
 import com.xz.scorep.executor.api.annotation.Parameter;
 import com.xz.scorep.executor.api.annotation.Type;
 import com.xz.scorep.executor.api.server.Server;
+import com.xz.scorep.executor.api.service.SubjectiveObjectiveService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author luckylo
@@ -24,7 +27,7 @@ import org.springframework.stereotype.Service;
 public class ObjectiveSubjectiveScoreDetailServer implements Server {
 
     @Autowired
-    private SubjectiveObjectiveService subjectiveObjectiveService;
+    private SubjectiveObjectiveService service;
 
     @Override
     public Result execute(Param param) {
@@ -33,8 +36,12 @@ public class ObjectiveSubjectiveScoreDetailServer implements Server {
         String classId = param.getString("classId");
         String subjectId = param.getString("subjectId");
 
+        List<Map<String, Object>> objective =
+                service.queryObjectiveScoreDetail(projectId, subjectId, classId, studentId);
+        List<Map<String, Object>> subjective =
+                service.querySubjectiveScoreDetail(projectId, subjectId, classId, studentId);
         return Result.success()
-                .set("subjective", null)
-                .set("objective", null);
+                .set("subjective", subjective)
+                .set("objective", objective);
     }
 }
