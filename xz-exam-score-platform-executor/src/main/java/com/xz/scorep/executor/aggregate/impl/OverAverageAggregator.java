@@ -57,7 +57,6 @@ public class OverAverageAggregator extends Aggregator {
         LOG.info("正在统计项目ID {} 超均率", projectId);
 
         processProjectData(projectId, projectDao);
-
         processSubjectData(projectId, projectDao, examSubjects);
     }
 
