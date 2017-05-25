@@ -62,6 +62,46 @@ public class ProjectService {
         // 考试项目总分表（科目总分表和题目得分表分别在 SubjectService 和 ScoreService）
         dao.execute("create table score_project(student_id VARCHAR(40) primary key,score decimal(5,1))");
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        //平均分
+        dao.execute("create table average_score(range_type varchar(20)," +
+                "range_id VARCHAR(40),target_type VARCHAR(20),target_id VARCHAR(40)," +
+                "average_score decimal(5,2))");
+        dao.execute("create index idxavgscore on average_score(range_type,range_id,target_type,target_id)");
+
+        //考试项目总分超均率....(科目超均率在SubjectService )
+        dao.execute("CREATE TABLE over_average_project (range_id VARCHAR(40), range_type VARCHAR(16), target_id VARCHAR(40), target_type VARCHAR(16), over_average DECIMAL(6,4))");
+        dao.execute("CREATE INDEX idxova ON over_average_project (range_id, range_type, target_id, target_type)");
+
+        //考试项目得分率....(科目得分率在SubjectService)
+        dao.execute("CREATE TABLE score_rate_project (student_id VARCHAR(40), score_level VARCHAR(10), score_rate DECIMAL(6,4))");
+        dao.execute("CREATE INDEX idxsrp ON score_rate_project (student_id)");
+
+        //最高分  最低分,科目,总分，班级,学校,项目
+        dao.execute("create table max_min_score(range_type varchar(20),range_id VARCHAR(40)," +
+                "target_type VARCHAR(20),target_id VARCHAR(40)," +
+                "max_score decimal(5,2),min_score decimal(5,2))");
+        dao.execute("create index idxmaxminscore on max_min_score(range_type,range_id,target_type,target_id)");
+
+        //每一道题目的平均分和最高分
+        dao.execute("create table quest_average_max_score(" +
+                " quest_id varchar(40),quest_no varchar(20),subject_id varchar(10)," +
+                " full_score decimal(4,1),average_score decimal(4,2),max_score decimal(4,2)," +
+                " objective varchar(5),range_type varchar(20),range_id varchar(40))");
+        dao.execute("create index idxqams on quest_average_max_score(quest_id,quest_no,range_type,range_id)");
+
+        //客观题班级得分率
+        dao.execute("create table objective_score_rate(quest_id varchar(40),quest_no varchar(20)," +
+                "subject_id varchar(20),range_id varchar(40),range_type varchar(20)," +
+                "answer text,score_rate decimal(5,2))");
+        dao.execute("create index idxocr on objective_score_rate(quest_id,range_id,range_type)");
+
+        //标准差
+        dao.execute("create table std_deviation(range_type varchar(20),range_id VARCHAR(40)," +
+                "target_type VARCHAR(20),target_id VARCHAR(40),std_Deviation decimal(5,2))");
+        dao.execute("create index idxstd on std_deviation(range_type,range_id,target_type,target_id)");
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //全科及格和全科不及格率
         dao.execute("create table all_pass_or_fail (range_type varchar(20), range_id varchar(40),all_pass_count int(11),all_pass_rate decimal(5,2),all_fail_count int(11),all_fail_rate decimal(5,2))");
         dao.execute("create index idxapfri on all_pass_or_fail(range_id)");

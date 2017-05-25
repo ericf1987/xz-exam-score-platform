@@ -95,6 +95,13 @@ public class SubjectService {
     public void createSubjectScoreTable(String projectId, String subjectId) {
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
+
+        createSubjectScoreTables(subjectId, projectDao);
+        createAggrResultTables(projectDao, subjectId);
+
+    }
+
+    private void createSubjectScoreTables(String subjectId, DAO projectDao) {
         projectDao.execute("create table if not exists " +
                 "score_subject_" + subjectId +
                 "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0,real_score decimal(4,1) not null default 0,paper_score_type VARCHAR(6))");
@@ -106,6 +113,24 @@ public class SubjectService {
         projectDao.execute("create table if not exists " +
                 "score_subjective_" + subjectId +
                 "(student_id VARCHAR(36) primary key,score decimal(4,1) not null default 0,paper_score_type VARCHAR(6))");
+    }
+
+    private void createAggrResultTables(DAO projectDao, String subjectId) {
+        //科目超均率表
+        projectDao.execute("CREATE TABLE over_average_" + subjectId + " (range_id VARCHAR(40), range_type VARCHAR(16)," +
+                " target_id VARCHAR(40), target_type VARCHAR(16), over_average DECIMAL(6,4))");
+        projectDao.execute("CREATE INDEX idxova_" + subjectId +
+                " ON over_average_" + subjectId + " (range_id, range_type, target_id, target_type)");
+
+        //科目得分率
+        projectDao.execute("CREATE TABLE score_rate_" + subjectId +
+                " (student_id VARCHAR(40), score_level VARCHAR(10), score_rate DECIMAL(6,4))");
+        projectDao.execute("CREATE INDEX idxsr_" + subjectId + " ON score_rate_" + subjectId + " (student_id)");
+
+        //科目贡献度
+        projectDao.execute("CREATE TABLE subject_rate_" + subjectId + " (range_id VARCHAR(40), range_type VARCHAR(16), subject_rate DECIMAL(6,4))");
+        projectDao.execute("CREATE INDEX idxsbr_" + subjectId + " ON subject_rate_" + subjectId + " (range_id, range_type)");
+
     }
 
     //在科目拆分的情况,使用缓存可能导致查出的科目信息与预期的不相符

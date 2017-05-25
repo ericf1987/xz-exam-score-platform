@@ -102,7 +102,7 @@ public class MongoClientFactory {
         return mongoClient;
     }
 
-    public MongoClient getAggrMongoClient(){
+    public MongoClient getAggrMongoClient() {
         return aggrMongoClient;
     }
 

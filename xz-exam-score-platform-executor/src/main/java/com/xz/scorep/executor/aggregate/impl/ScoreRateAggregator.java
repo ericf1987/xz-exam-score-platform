@@ -36,18 +36,6 @@ import java.util.Map;
 @Component
 public class ScoreRateAggregator extends Aggregator {
 
-    public static final String CREATE_SUBJECT_TABLE = "CREATE TABLE score_rate_{{subjectId}} (student_id VARCHAR(40), score_level VARCHAR(10), score_rate DECIMAL(6,4))";
-
-    public static final String CREATE_PROJECT_TABLE = "CREATE TABLE score_rate_project (student_id VARCHAR(40), score_level VARCHAR(10), score_rate DECIMAL(6,4))";
-
-    public static final String CREATE_SUBJECT_INDEX = "CREATE INDEX idxsr_{{subjectId}} ON score_rate_{{subjectId}}(student_id)";
-
-    public static final String CREATE_PROJECT_INDEX = "CREATE INDEX idxsrp ON score_rate_project (student_id)";
-
-    public static final String DROP_SUBJECT_TABLE = "DROP TABLE IF EXISTS score_rate_{{subjectId}}";
-
-    public static final String DROP_PROJECT_TABLE = "DROP TABLE IF EXISTS score_rate_project";
-
     public static final String SUBJECT_TABLE_NAME = "score_rate_{{subjectId}}";
 
     public static final String PROJECT_TABLE_NAME = "score_rate_project";
@@ -74,8 +62,7 @@ public class ScoreRateAggregator extends Aggregator {
 
         List<ExamSubject> examSubjects = subjectService.listSubjects(projectId);
 
-        doInitial(projectDao, examSubjects);
-
+        projectDao.execute("truncate table score_rate_project");
         //处理项目数据
         processProjectData(projectId, projectDao);
 
@@ -84,13 +71,6 @@ public class ScoreRateAggregator extends Aggregator {
 
     }
 
-    public void doInitial(DAO projectDao, List<ExamSubject> examSubjects) {
-        SqlUtils.initialTable(null, projectDao, DROP_PROJECT_TABLE, CREATE_PROJECT_TABLE, CREATE_PROJECT_INDEX);
-        for (ExamSubject subject : examSubjects) {
-            String subjectId = subject.getId();
-            SqlUtils.initialTable(subjectId, projectDao, DROP_SUBJECT_TABLE, CREATE_SUBJECT_TABLE, CREATE_SUBJECT_INDEX);
-        }
-    }
 
     private void processProjectData(String projectId, DAO projectDao) {
 
@@ -110,6 +90,9 @@ public class ScoreRateAggregator extends Aggregator {
     private void processSubjectData(String projectId, DAO projectDao, List<ExamSubject> examSubjects) {
         for (ExamSubject es : examSubjects) {
             String subjectId = es.getId();
+            String sql = "truncate table score_rate_{{subjectId}}";
+            projectDao.execute(sql.replace("{{subjectId}}", subjectId));
+
             Target target = Target.subject(subjectId);
             List<Row> rows = scoreQuery.listStudentScore(projectId, Range.PROVINCE_RANGE, target);
             Double fullScore = es.getFullScore();

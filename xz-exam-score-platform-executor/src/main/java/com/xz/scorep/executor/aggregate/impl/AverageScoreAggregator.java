@@ -11,7 +11,6 @@ import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.DoubleUtils;
-import com.xz.scorep.executor.utils.SqlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,14 +29,6 @@ import java.util.List;
 @AggragateOrder(51)
 public class AverageScoreAggregator extends Aggregator {
 
-    private static final String DROP_AVERAGE_SCORE_TABLE = "drop table if exists average_score";
-
-    private static final String CREATE_AVERAGE_SCORE_TABLE = "create table average_score(" +
-            "range_type varchar(20),range_id VARCHAR(40),target_type VARCHAR(20),target_id VARCHAR(40)," +
-            "average_score decimal(5,2))";
-
-    private static final String CREATE_AVERAGE_SCORE_INDEX = "create index idxavgscore on average_score(range_type,range_id,target_type,target_id)";
-
     private static Logger LOG = LoggerFactory.getLogger(AverageScoreAggregator.class);
     @Autowired
     private SubjectService subjectService;
@@ -50,7 +41,7 @@ public class AverageScoreAggregator extends Aggregator {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<ExamSubject> subjects = subjectService.listSubjects(projectId);
 
-        initializeTable(projectDao);
+        projectDao.execute("truncate table average_score");
 
         addProjectData(projectDao, projectId);
 
@@ -58,9 +49,6 @@ public class AverageScoreAggregator extends Aggregator {
 
     }
 
-    private void initializeTable(DAO projectDao) {
-        SqlUtils.initialTable(projectDao, DROP_AVERAGE_SCORE_TABLE, CREATE_AVERAGE_SCORE_TABLE, CREATE_AVERAGE_SCORE_INDEX);
-    }
 
     private void addProjectData(DAO projectDao, String projectId) {
         List<AverageScore> averageScores = new ArrayList<>();

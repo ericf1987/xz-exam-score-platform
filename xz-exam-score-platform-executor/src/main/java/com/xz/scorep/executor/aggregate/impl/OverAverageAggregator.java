@@ -10,7 +10,8 @@ import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.DoubleUtils;
-import com.xz.scorep.executor.utils.SqlUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,24 +27,11 @@ import java.util.Optional;
 @Component
 public class OverAverageAggregator extends Aggregator {
 
-    public static final String CREATE_SUBJECT_TABLE = "CREATE TABLE over_average_{{subjectId}} (range_id VARCHAR(40), range_type VARCHAR(16), target_id VARCHAR(40), target_type VARCHAR(16), over_average DECIMAL(6,4))";
-
-    public static final String CREATE_PROJECT_TABLE = "CREATE TABLE over_average_project (range_id VARCHAR(40), range_type VARCHAR(16), target_id VARCHAR(40), target_type VARCHAR(16), over_average DECIMAL(6,4))";
-
-    public static final String CREATE_SUBJECT_INDEX = "CREATE INDEX idxova_{{subjectId}} ON over_average_{{subjectId}}(range_id, range_type, target_id, target_type)";
-
-    public static final String CREATE_PROJECT_INDEX = "CREATE INDEX idxova ON over_average_project (range_id, range_type, target_id, target_type)";
-
-    public static final String DROP_SUBJECT_TABLE = "DROP TABLE IF EXISTS over_average_{{subjectId}}";
-
-    public static final String DROP_PROJECT_TABLE = "DROP TABLE IF EXISTS over_average_project";
+    private static Logger LOG = LoggerFactory.getLogger(OverAverageAggregator.class);
 
     public static final String SUBJECT_TABLE_NAME = "over_average_{{subjectId}}";
 
     public static final String PROJECT_TABLE_NAME = "over_average_project";
-
-    @Autowired
-    AverageQuery averageQuery;
 
     @Autowired
     DAOFactory daoFactory;
@@ -64,20 +52,15 @@ public class OverAverageAggregator extends Aggregator {
 
         List<ExamSubject> examSubjects = subjectService.listSubjects(projectId);
 
-        doInitial(projectDao, examSubjects);
+        projectDao.execute("truncate table over_average_project");
+
+        LOG.info("正在统计项目ID {} 超均率", projectId);
 
         processProjectData(projectId, projectDao);
 
         processSubjectData(projectId, projectDao, examSubjects);
     }
 
-    public void doInitial(DAO projectDao, List<ExamSubject> examSubjects) {
-        SqlUtils.initialTable(null, projectDao, DROP_PROJECT_TABLE, CREATE_PROJECT_TABLE, CREATE_PROJECT_INDEX);
-        for (ExamSubject subject : examSubjects) {
-            String subjectId = subject.getId();
-            SqlUtils.initialTable(subjectId, projectDao, DROP_SUBJECT_TABLE, CREATE_SUBJECT_TABLE, CREATE_SUBJECT_INDEX);
-        }
-    }
 
     //处理考试项目数据
     private void processProjectData(String projectId, DAO projectDao) {
@@ -97,6 +80,9 @@ public class OverAverageAggregator extends Aggregator {
 
         for (ExamSubject subject : examSubjects) {
             String subjectId = subject.getId();
+            String sql = "truncate table over_average_{{subjectId}}";
+            projectDao.execute(sql.replace("{{subjectId}}", subjectId));
+
             List<Row> provinceRows = projectDao.query(AverageQuery.AVG_PROJECT_PROVINCE_GROUP.replace("{{table}}", "score_subject_" + subjectId));
             List<Row> schoolRows = projectDao.query(AverageQuery.AVG_PROJECT_SCHOOL_GROUP.replace("{{table}}", "score_subject_" + subjectId));
             List<Row> classRows = projectDao.query(AverageQuery.AVG_PROJECT_CLASSES_GROUP.replace("{{table}}", "score_subject_" + subjectId));

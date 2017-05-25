@@ -1,28 +1,17 @@
 package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
-import com.hyd.dao.Row;
+import com.xz.ajiaedu.common.report.Keys;
 import com.xz.scorep.executor.aggregate.*;
-import com.xz.scorep.executor.aggritems.AverageQuery;
 import com.xz.scorep.executor.bean.ExamSubject;
-import com.xz.scorep.executor.bean.StdDeviation;
 import com.xz.scorep.executor.db.DAOFactory;
-import com.xz.scorep.executor.project.ClassService;
-import com.xz.scorep.executor.project.SchoolService;
-import com.xz.scorep.executor.project.ScoreDetailService;
 import com.xz.scorep.executor.project.SubjectService;
-import com.xz.scorep.executor.utils.SqlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
-import static com.xz.ajiaedu.common.report.Keys.Range;
-import static com.xz.ajiaedu.common.report.Keys.Target;
 
 /**
  * @author by fengye on 2017/5/16.
@@ -34,31 +23,33 @@ public class StdDeviationAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(StdDeviationAggregator.class);
 
-    public static final String DROP_DEVIATION_TABLE = "DROP TABLE IF EXISTS std_deviation";
+    private static final String INSERT_PROVINCE_DATA = "insert into std_deviation (range_type,range_id," +
+            "target_type,target_id,std_deviation) select \"Province\" range_type,s.province range_id,\n" +
+            "\"{{targetType}}\" target_type,\"{{targetId}}\" target_id,\n" +
+            "STD(score.score) std_deviation from {{table}} score,student s\n" +
+            "where s.id = score.student_id\n" +
+            "GROUP BY s.province";
 
-    public static final String CREATE_DEVIATION_TABLE = "create table std_deviation(" +
-            "range_type varchar(20),range_id VARCHAR(40),target_type VARCHAR(20),target_id VARCHAR(40)," +
-            "std_Deviation decimal(5,2))";
+    private static final String INSERT_SCHOOL_DATA = "insert into std_deviation (range_type,range_id," +
+            "target_type,target_id,std_deviation) select \"School\" range_type,s.school_id range_id,\n" +
+            "\"{{targetType}}\" target_type,\"{{targetId}}\" target_id,\n" +
+            "STD(score.score) std_deviation from {{table}} score,student s\n" +
+            "where s.id = score.student_id\n" +
+            "GROUP BY school_id";
 
-    public static final String CREATE_DEVIATION_INDEX = "create index idxstd on std_deviation(range_type,range_id,target_type,target_id)";
+    private static final String INSERT_CLASS_DATA = "insert into std_deviation (range_type,range_id," +
+            "target_type,target_id,std_deviation) select \"Class\" range_type,s.class_id range_id,\n" +
+            "\"{{targetType}}\" target_type,\"{{targetId}}\" target_id,\n" +
+            "STD(score.score) std_deviation from {{table}} score,student s\n" +
+            "where s.id = score.student_id\n" +
+            "GROUP BY s.class_id";
+
 
     @Autowired
-    AverageQuery averageQuery;
+    private DAOFactory daoFactory;
 
     @Autowired
-    DAOFactory daoFactory;
-
-    @Autowired
-    ClassService classService;
-
-    @Autowired
-    SchoolService schoolService;
-
-    @Autowired
-    ScoreDetailService scoreDetailService;
-
-    @Autowired
-    SubjectService subjectService;
+    private SubjectService subjectService;
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
@@ -66,88 +57,62 @@ public class StdDeviationAggregator extends Aggregator {
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
+        projectDao.execute("truncate table std_deviation");
+
         List<ExamSubject> examSubjects = subjectService.listSubjects(projectId);
 
-        initializeTable(projectDao);
+        LOG.info("正在统计项目ID {} 标准差...", projectId);
 
-        processProjectData(projectId, projectDao);
+        processProjectData(projectDao, projectId);
 
-        processSubjectData(projectId, projectDao, examSubjects);
-
-    }
-
-    private void processSubjectData(String projectId, DAO projectDao, List<ExamSubject> subjects) throws InterruptedException {
-
-        subjects.forEach(subject -> processSubjectData(projectId, projectDao, subject));
+        processSubjectData(projectDao, projectId, examSubjects);
 
     }
 
-    private void initializeTable(DAO projectDao) {
-        SqlUtils.initialTable(projectDao, DROP_DEVIATION_TABLE, CREATE_DEVIATION_TABLE, CREATE_DEVIATION_INDEX);
+    private void processSubjectData(DAO projectDao, String projectId, List<ExamSubject> subjects) {
+        subjects.forEach(subject -> {
+            String subjectId = subject.getId();
+            String table = "score_subject_" + subjectId;
 
+            String province = INSERT_PROVINCE_DATA
+                    .replace("{{targetType}}", Keys.Target.Subject.name())
+                    .replace("{{targetId}}", subjectId)
+                    .replace("{{table}}", table);
+
+            projectDao.execute(province);
+            String school = INSERT_SCHOOL_DATA
+                    .replace("{{targetType}}", Keys.Target.Subject.name())
+                    .replace("{{targetId}}", subjectId)
+                    .replace("{{table}}", table);
+
+            projectDao.execute(school);
+            String clazz = INSERT_CLASS_DATA
+                    .replace("{{targetType}}", Keys.Target.Subject.name())
+                    .replace("{{targetId}}", subjectId)
+                    .replace("{{table}}", table);
+            projectDao.execute(clazz);
+        });
     }
 
-    private void processProjectData(String projectId, DAO projectDao) {
+    private void processProjectData(DAO projectDao, String projectId) {
+        String province = INSERT_PROVINCE_DATA
+                .replace("{{targetType}}", Keys.Target.Project.name())
+                .replace("{{targetId}}", projectId)
+                .replace("{{table}}", "score_project");
 
-        List<StdDeviation> stdDeviations = new ArrayList<>();
+        projectDao.execute(province);
+        String school = INSERT_SCHOOL_DATA
+                .replace("{{targetType}}", Keys.Target.Project.name())
+                .replace("{{targetId}}", projectId)
+                .replace("{{table}}", "score_project");
 
-        List<Row> provinceRows = projectDao.query(AverageQuery.AVG_PROJECT_PROVINCE_GROUP.replace("{{table}}", "score_project"));
-        Map<String, List<Row>> projectScores = scoreDetailService.getStudentProjectScores(projectId, "score_project");
-        Map<String, Double> projectStdDeviation = AggregatorHelper.calculateRangeStdDeviation(provinceRows, projectScores);
-
-        addStdDeviationList(stdDeviations, projectStdDeviation, Range.Province.name(), Target.Project.name(), projectId);
-
-        List<Row> schoolRows = projectDao.query(AverageQuery.AVG_PROJECT_SCHOOL_GROUP.replace("{{table}}", "score_project"));
-        Map<String, List<Row>> schoolScores = scoreDetailService.getStudentSchoolScores(projectId, "score_project");
-        Map<String, Double> schoolStdDeviation = AggregatorHelper.calculateRangeStdDeviation(schoolRows, schoolScores);
-
-        addStdDeviationList(stdDeviations, schoolStdDeviation, Range.School.name(), Target.Project.name(), projectId);
-
-        List<Row> classRows = projectDao.query(AverageQuery.AVG_PROJECT_CLASSES_GROUP.replace("{{table}}", "score_project"));
-        Map<String, List<Row>> classScores = scoreDetailService.getStudentClassScores(projectId, "score_project");
-        Map<String, Double> classStdDeviation = AggregatorHelper.calculateRangeStdDeviation(classRows, classScores);
-
-        addStdDeviationList(stdDeviations, classStdDeviation, Range.Class.name(), Target.Project.name(), projectId);
-        projectDao.insert(stdDeviations, "std_deviation");
-
-        LOG.info("完成项目ID{}总分的标准差统计....,大小 ..{}", projectId, stdDeviations.size());
-
+        projectDao.execute(school);
+        String clazz = INSERT_CLASS_DATA
+                .replace("{{targetType}}", Keys.Target.Project.name())
+                .replace("{{targetId}}", projectId)
+                .replace("{{table}}", "score_project");
+        projectDao.execute(clazz);
     }
 
-    private void addStdDeviationList(List<StdDeviation> stdDeviations, Map<String, Double> projectStdDeviation,
-                                     String rangType, String targetType, String targetId) {
-        for (Map.Entry<String, Double> entry : projectStdDeviation.entrySet()) {
-            String rangeId = entry.getKey();
-            double stdDeviation = entry.getValue();
-            stdDeviations.add(new StdDeviation(rangeId, rangType, targetId, targetType, stdDeviation));
-        }
 
-    }
-
-    private void processSubjectData(String projectId, DAO projectDao, ExamSubject subject) {
-        List<StdDeviation> stdDeviations = new ArrayList<>();
-        String subjectId = subject.getId();
-        String tableName = "score_subject_" + subjectId;
-
-        List<Row> provinceRows = projectDao.query(AverageQuery.AVG_PROJECT_PROVINCE_GROUP.replace("{{table}}", tableName));
-        Map<String, List<Row>> projectScores = scoreDetailService.getStudentProjectScores(projectId, tableName);
-        Map<String, Double> projectStdDeviation = AggregatorHelper.calculateRangeStdDeviation(provinceRows, projectScores);
-
-        addStdDeviationList(stdDeviations, projectStdDeviation, Range.Province.name(), Target.Subject.name(), subjectId);
-
-        List<Row> schoolRows = projectDao.query(AverageQuery.AVG_PROJECT_SCHOOL_GROUP.replace("{{table}}", tableName));
-        Map<String, List<Row>> schoolScores = scoreDetailService.getStudentSchoolScores(projectId, tableName);
-        Map<String, Double> schoolStdDeviation = AggregatorHelper.calculateRangeStdDeviation(schoolRows, schoolScores);
-
-        addStdDeviationList(stdDeviations, schoolStdDeviation, Range.School.name(), Target.Subject.name(), subjectId);
-
-        List<Row> classRows = projectDao.query(AverageQuery.AVG_PROJECT_CLASSES_GROUP.replace("{{table}}", tableName));
-        Map<String, List<Row>> classScores = scoreDetailService.getStudentClassScores(projectId, tableName);
-        Map<String, Double> classStdDeviation = AggregatorHelper.calculateRangeStdDeviation(classRows, classScores);
-
-        addStdDeviationList(stdDeviations, classStdDeviation, Range.Class.name(), Target.Subject.name(), subjectId);
-        projectDao.insert(stdDeviations, "std_deviation");
-
-        LOG.info("完成项目{},科目{} 总分的标准差 ,大小为 ..{}", projectId, subjectId, stdDeviations.size());
-    }
 }

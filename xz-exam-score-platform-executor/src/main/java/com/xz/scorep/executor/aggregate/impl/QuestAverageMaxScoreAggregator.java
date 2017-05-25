@@ -9,7 +9,6 @@ import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.utils.AsyncCounter;
-import com.xz.scorep.executor.utils.SqlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,15 +29,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class QuestAverageMaxScoreAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(QuestAverageMaxScoreAggregator.class);
-
-    private static final String DROP_TABLE = "drop table if exists quest_average_max_score";
-
-    private static final String CREATE_TABLE = "create table quest_average_max_score(" +
-            " quest_id varchar(40),quest_no varchar(20),subject_id varchar(10)," +
-            " full_score decimal(4,1),average_score decimal(4,2),max_score decimal(4,2)," +
-            " objective varchar(5),range_type varchar(20),range_id varchar(40))";
-
-    private static final String CREATE_INDEX = "create index idxqams on quest_average_max_score(quest_id,quest_no,range_type,range_id)";
 
     private static final String PROJECT_AVERAGE_SCORE = "" +
             "select \"{{questId}}\" quest_id,\"{{questNo}}\" quest_no,\"{{subjectId}}\" subject_id,{{fullScore}} full_score,\n" +
@@ -94,8 +84,7 @@ public class QuestAverageMaxScoreAggregator extends Aggregator {
         String projectId = aggregateParameter.getProjectId();
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        initializeTable(projectDao);
-
+        projectDao.execute("truncate table quest_average_max_score");
         processQuestAverage(projectDao, projectId);
     }
 
@@ -150,7 +139,5 @@ public class QuestAverageMaxScoreAggregator extends Aggregator {
         count.count();
     }
 
-    private void initializeTable(DAO projectDao) {
-        SqlUtils.initialTable(projectDao, DROP_TABLE, CREATE_TABLE, CREATE_INDEX);
-    }
+
 }

@@ -8,7 +8,6 @@ import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.SubjectService;
-import com.xz.scorep.executor.utils.SqlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +26,6 @@ import java.util.List;
 public class MaxMinScoreAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(MaxMinScoreAggregator.class);
-    private static final String DROP_MAX_MIN_SCORE_TABLE = "drop table if exists max_min_score";
-
-    private static final String CREATE_MAX_MIN_SCORE_TABLE = "create table max_min_score(" +
-            "range_type varchar(20),range_id VARCHAR(40),target_type VARCHAR(20),target_id VARCHAR(40)," +
-            "max_score decimal(5,2),min_score decimal(5,2))";
-
-    private static final String CREATE_MAX_MIN_SCORE_INDEX = "create index idxmaxminscore on max_min_score(range_type,range_id,target_type,target_id)";
 
     public static final String INSERT_PROJECT_MAX_MIN_SCORE = "insert into max_min_score(range_type,range_id,target_type,target_id,max_score,min_score)" +
             " select '{{rangeType}}' range_type,'{{rangeId}}' range_id,'{{targetType}}'target_type,'{{targetId}}' target_id,\n" +
@@ -64,7 +56,7 @@ public class MaxMinScoreAggregator extends Aggregator {
         List<ExamSubject> subjects = subjectService.listSubjects(projectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        initializeTable(projectDao);
+        projectDao.execute("truncate table max_min_score");
 
         processProjectData(projectDao, projectId);
         LOG.info("完成项目ID {} 总分最高分,最低分统计....", projectId);
@@ -73,9 +65,6 @@ public class MaxMinScoreAggregator extends Aggregator {
 
     }
 
-    private void initializeTable(DAO projectDao) {
-        SqlUtils.initialTable(projectDao, DROP_MAX_MIN_SCORE_TABLE, CREATE_MAX_MIN_SCORE_TABLE, CREATE_MAX_MIN_SCORE_INDEX);
-    }
 
     private void processProjectData(DAO projectDao, String projectId) {
         String province = INSERT_PROJECT_MAX_MIN_SCORE.replace("{{rangeType}}", Keys.Range.Province.name())
