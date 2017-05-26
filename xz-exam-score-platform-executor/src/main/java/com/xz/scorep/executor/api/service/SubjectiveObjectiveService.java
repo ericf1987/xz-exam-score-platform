@@ -46,18 +46,11 @@ public class SubjectiveObjectiveService {
         map.put("questNo", questNo);
 
         Row studentRow = query.queryStudentRow(projectId, studentId, questId);
-        if (studentRow.isEmpty()) {
-            return;
-        }
 
         if (quest.isObjective()) {//客观题
             String studentAnswer = studentRow.getString("objective_answer");
             map.put("studentAnswer", studentAnswer);
             Row detailRow = query.queryObjectiveDetail(projectId, questId, classId);
-
-            if (detailRow == null) {
-                return;
-            }
 
             String answer = detailRow.getString("answer");
             String scoreRate = DoubleUtils.toPercent(detailRow.getDouble("score_rate", 0));
@@ -68,10 +61,6 @@ public class SubjectiveObjectiveService {
             double score = studentRow.getDouble("score", 0);
             map.put("score", score);
             Row detailRow = query.querySubjectiveDetail(projectId, questId, classId);
-
-            if (detailRow == null) {
-                return;
-            }
 
             double averageScore = detailRow.getDouble("average_score", 0);
             double maxScore = detailRow.getDouble("max_score", 0);
@@ -99,14 +88,33 @@ public class SubjectiveObjectiveService {
 
 
     //主观题 : 与班级单题得分差距较大的TOP5
-    public List<Map<String,Object>> querySubjectiveTop5(String subjectId,String studentId){
+    public List<Map<String, Object>> querySubjectiveTop5(String subjectId, String studentId) {
+        // TODO: 2017-05-26
         return null;
     }
 
 
     //客观题 : 与班级单题得分人数最多,且自己没得分的题目TOP5 (人数为得满分人数)
-    public List<Map<String,Object>> queryObjectiveTop5(String subjectId,String studentId){
+    public List<Map<String, Object>> queryObjectiveTop5(String subjectId, String studentId) {
+        // TODO: 2017-05-26
         return null;
     }
 
+
+    //主观题(总分,我的得分,得分排名,班级平均分,班级最高分)
+    public Map<String, Object> subjectiveDetail(String projectId, String subjectId, String classId, String studentId) {
+        Map<String, Double> fullScore = query.querySubjectiveObjectiveFullScore(projectId, subjectId);
+        Map<String, Object> subjective = query.querySubjectiveScoreRank(projectId, subjectId, classId, studentId);
+        subjective.put("fullScore", fullScore.get("subjective"));
+        return subjective;
+    }
+
+
+    //客观题(总分,我的得分,得分排名,班级平均分,班级最高分)
+    public Map<String, Object> objectiveDetail(String projectId, String subjectId, String classId, String studentId) {
+        Map<String, Double> fullScore = query.querySubjectiveObjectiveFullScore(projectId, subjectId);
+        Map<String, Object> subjective = query.queryObjectiveScoreRank(projectId, subjectId, classId, studentId);
+        subjective.put("fullScore", fullScore.get("objective"));
+        return subjective;
+    }
 }
