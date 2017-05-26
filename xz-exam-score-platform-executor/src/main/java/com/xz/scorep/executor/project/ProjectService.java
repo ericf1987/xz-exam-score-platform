@@ -130,6 +130,13 @@ public class ProjectService {
         dao.execute("create table rank_class(student_id varchar(40) not null,subject_id varchar(10) not null,rank int)");
         dao.execute("create index idxrct on rank_class(student_id)");
 
+        // 班级客观题排名
+        dao.execute("create table rank_objective(student_id varchar(40) not null,subject_id varchar(10) not null,rank int)");
+        dao.execute("create index idxotr on rank_objective(student_id)");
+        // 班级主观题排名
+        dao.execute("create table rank_subjective(student_id varchar(40) not null,subject_id varchar(10) not null,rank int)");
+        dao.execute("create index idxstr on rank_subjective(student_id)");
+
         // 客观题选项选择率
         dao.execute("create table objective_option_rate(" +
                 "quest_id varchar(40),`option` varchar(10)," +

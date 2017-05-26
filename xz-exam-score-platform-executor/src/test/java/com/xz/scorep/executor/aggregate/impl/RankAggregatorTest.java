@@ -23,7 +23,7 @@ public class RankAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        rankAggregator.aggregate(new AggregateParameter(PROJECT_ID));
+        rankAggregator.aggregate(new AggregateParameter("430300-29c4d40d93bf41a5a82baffe7e714dd9"));
     }
 
     @Test

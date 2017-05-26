@@ -3,7 +3,6 @@ package com.xz.scorep.executor.api.service;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.NaturalOrderComparator;
 import com.xz.scorep.executor.bean.ExamQuest;
-import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.utils.DoubleUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +18,6 @@ import java.util.stream.Collectors;
  */
 @Service
 public class SubjectiveObjectiveService {
-
-    @Autowired
-    private ReportCacheInitializer reportCache;
 
     @Autowired
     private SubjectiveObjectiveQuery query;
@@ -100,4 +96,17 @@ public class SubjectiveObjectiveService {
         objectiveQuests.forEach(quest -> fillStudentScore(projectId, classId, studentId, quest, result));
         return result;
     }
+
+
+    //主观题 : 与班级单题得分差距较大的TOP5
+    public List<Map<String,Object>> querySubjectiveTop5(String subjectId,String studentId){
+        return null;
+    }
+
+
+    //客观题 : 与班级单题得分人数最多,且自己没得分的题目TOP5 (人数为得满分人数)
+    public List<Map<String,Object>> queryObjectiveTop5(String subjectId,String studentId){
+        return null;
+    }
+
 }
