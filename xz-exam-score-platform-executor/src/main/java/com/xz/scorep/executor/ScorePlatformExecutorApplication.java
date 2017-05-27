@@ -26,6 +26,13 @@ public class ScorePlatformExecutorApplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(ScorePlatformExecutorApplication.class);
 
+    static {
+        if (!"production".equals(System.getProperty("env"))) {
+            System.setProperty("socksProxyHost", "127.0.0.1");
+            System.setProperty("socksProxyPort", "2346");
+        }
+    }
+
     public static void main(String[] args) {
         String serverAddress = System.getProperty("server.address");
         String serverPort = System.getProperty("server.port");
