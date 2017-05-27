@@ -42,6 +42,12 @@ public class SubjectiveObjectiveQuery {
             "exam_subject = '{{subjectId}}' " +
             "and objective = 'true' ";
 
+
+    private static final String QUERY_CORRECT_STUDENT_COUNT = "select COUNT(1) as `count` from `{{table}}` \n" +
+            "where \n" +
+            "is_right = \"true\"\n" +
+            "and student_id in (select id from student where class_id =\"{{classId}}\")";
+
     @Autowired
     private CacheFactory cacheFactory;
 
@@ -53,20 +59,26 @@ public class SubjectiveObjectiveQuery {
 
     //查询学生答案
     public Row queryStudentRow(String projectId, String studentId, String questId) {
+        ArrayList<Row> rows = getQuestCache(projectId, questId);
+
+        return rows.stream()
+                .filter(row -> studentId.equals(row.getString("student_id")))
+                .findFirst().get();
+    }
+
+
+    //获得题目缓存..
+    private ArrayList<Row> getQuestCache(String projectId, String questId) {
         SimpleCache cache = cacheFactory.getPaperCache(projectId);
         String cacheKey = "quest:" + questId;
         String table = "score_" + questId;
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        ArrayList<Row> rows = cache.get(cacheKey, () -> {
+        return cache.get(cacheKey, () -> {
             return new ArrayList<>(projectDao.query("select * from `" + table + "`"));
         });
-
-        return rows.stream()
-                .filter(row -> studentId.equals(row.getString("student_id")))
-                .findFirst()
-                .get();
     }
+
 
     //查询客观题得分详情,每一道题的正确答案和班级得分率....
     public Row queryObjectiveDetail(String projectId, String questId, String classId) {
@@ -83,7 +95,7 @@ public class SubjectiveObjectiveQuery {
     }
 
 
-    //查询主观题得分详情...每一道题的最高分做低分
+    //查询主观题得分详情...每一道题的最高分平均分
     public Row querySubjectiveDetail(String projectId, String questId, String classId) {
         SimpleCache cache = cacheFactory.getPaperCache(projectId);
         String cacheKey = "subjective:";
@@ -99,6 +111,7 @@ public class SubjectiveObjectiveQuery {
                 .findFirst().get();
 
     }
+
 
     //查询学生主观题得分信息(我的得分,得分排名,班级平均分,班级最高分...信息)
     public Map<String, Object> querySubjectiveScoreRank(String projectId, String subjectId, String classId, String studentId) {
@@ -127,6 +140,7 @@ public class SubjectiveObjectiveQuery {
         return projectDao.queryFirst(replace);
     }
 
+
     //查询每个科目的主观题,客观题分值
     public Map<String, Double> querySubjectiveObjectiveFullScore(String projectId, String subjectId) {
         Map<String, Double> result = new HashMap<>();
@@ -149,4 +163,45 @@ public class SubjectiveObjectiveQuery {
     }
 
 
+    //获得学生做错了的客观题.......(当学生作对了,则返回 null)
+    public Row queryStudentFalseObjectiveQuest(String projectId, String questId, String studentId) {
+        ArrayList<Row> rows = getQuestCache(projectId, questId);
+
+        return rows.stream()
+                .filter(row -> "false".equals(row.getString("is_right"))
+                        && studentId.equals(row.getString("student_id")))
+                .findFirst().orElse(null);
+    }
+
+    //查学生单题与班级平均分差距较大的TOP5
+    public Row queryStudentSubjectiveQuest(String projectId, String questId, String studentId) {
+        ArrayList<Row> rows = getQuestCache(projectId, questId);
+        return rows.stream()
+                .filter(row -> studentId.equals(row.getString("student_id")))
+                .findFirst().orElse(null);
+    }
+
+    //查班级单题的平均分得分
+    public Row queryClassAverageScore(String projectId, String questId, String classId) {
+        SimpleCache cache = cacheFactory.getPaperCache(projectId);
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String cacheKey = "average_score";
+
+        ArrayList<Row> rows = cache.get(cacheKey,
+                () -> new ArrayList<>(projectDao.query("select * from quest_average_max_score")));
+        return rows.stream()
+                .filter(row -> questId.equals(row.getString("quest_id")))
+                .filter(row -> classId.equals(row.getString("range_id")) && "Class".equals(row.getString("range_type")))
+                .findFirst().orElse(null);
+    }
+
+    //查询客观题学生答对人数(班级)
+    public int queryStudentCorrectCount(String projectId, String questId, String classId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String table = "score_" + questId;
+        return projectDao.queryFirst(QUERY_CORRECT_STUDENT_COUNT
+                .replace("{{table}}", table)
+                .replace("{{classId}}", classId)).getInteger("count", 0);
+
+    }
 }

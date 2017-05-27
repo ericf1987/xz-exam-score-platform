@@ -87,17 +87,91 @@ public class SubjectiveObjectiveService {
     }
 
 
-    //主观题 : 与班级单题得分差距较大的TOP5
-    public List<Map<String, Object>> querySubjectiveTop5(String subjectId, String studentId) {
-        // TODO: 2017-05-26
-        return null;
+    //主观题 : 与班级单题得分差距较大的TOP5(差值的绝对值最大)
+    public List<Map.Entry<String, Row>> querySubjectiveTop5(String projectId, String subjectId, String studentId, String classId) {
+        Map<String, Row> result = new HashMap<>();
+
+        questService.queryQuests(projectId)
+                .stream()
+                .filter(quest -> !quest.isObjective() && subjectId.equals(quest.getExamSubject()))
+                .forEach(quest -> queryStudentSubjectiveEachRow(projectId, studentId, classId, result, quest));
+
+        if (result.isEmpty()) {
+            return null;
+        }
+
+        List<Map.Entry<String, Row>> collect = result.entrySet()
+                .stream()
+                .sorted((entry1, entry2) -> sorted(entry1, entry2))
+                .limit(5)
+                .collect(Collectors.toList());
+
+        return collect;
+    }
+
+    //学生主观题每一行
+    private void queryStudentSubjectiveEachRow(String projectId, String studentId, String classId, Map<String, Row> result, ExamQuest quest) {
+        String questId = quest.getId();
+        Row studentRow = query.queryStudentSubjectiveQuest(projectId, questId, studentId);
+        if (studentRow != null) {
+            Row averageRow = query.queryClassAverageScore(projectId, questId, classId);
+            studentRow.put("quest_no", quest.getQuestNo());
+            studentRow.put("full_score", quest.getFullScore());
+            studentRow.put("score", studentRow.getDouble("score", 0));
+            studentRow.put("average_score", averageRow.getDouble("average_row", 0));
+            result.put(questId, studentRow);
+        }
+    }
+
+    private int sorted(Map.Entry<String, Row> entry1, Map.Entry<String, Row> entry2) {
+        double score1 = entry1.getValue().getDouble("score", 0);
+        double averageScore1 = entry1.getValue().getDouble("average_score", 0);
+        double sub1 = Math.abs((averageScore1 - score1));
+
+        double score2 = entry2.getValue().getDouble("score", 0);
+        double averageScore2 = entry2.getValue().getDouble("average_score", 0);
+        double sub2 = Math.abs((averageScore2 - score2));
+
+        return (sub2 > sub1) ? 1 : 0;
     }
 
 
     //客观题 : 与班级单题得分人数最多,且自己没得分的题目TOP5 (人数为得满分人数)
-    public List<Map<String, Object>> queryObjectiveTop5(String subjectId, String studentId) {
-        // TODO: 2017-05-26
-        return null;
+    public List<Map.Entry<String, Row>> queryObjectiveTop5(String projectId, String subjectId, String classId, String studentId) {
+        Map<String, Row> studentFailQuestMap = new HashMap<>();
+
+        questService.queryQuests(projectId)
+                .stream()
+                .filter(quest -> subjectId.equals(quest.getExamSubject()) && quest.isObjective())
+                .forEach(quest -> queryObjectiveTop5EachRow(projectId, classId, studentId, studentFailQuestMap, quest));
+
+        if (studentFailQuestMap.isEmpty()) {
+            return null;
+        }
+
+        //少于5直接返回,超过5就取前5
+        List<Map.Entry<String, Row>> collect = studentFailQuestMap.entrySet()
+                .stream()
+                .sorted((entry1, entry2) -> entry2.getValue().getInteger("correct_count", 0)
+                        - entry1.getValue().getInteger("correct_count", 0))
+                .limit(5)
+                .collect(Collectors.toList());
+
+        return collect;
+    }
+
+    //客观题与班级答对人数差距较大的每一行
+    private void queryObjectiveTop5EachRow(String projectId, String classId, String studentId, Map<String, Row> studentFailQuestMap, ExamQuest quest) {
+        String questId = quest.getId();
+        Row row = query.queryStudentFalseObjectiveQuest(projectId, questId, studentId);
+        if (null != row) {
+            //查该题在班级中答对的人数
+            int correctCount = query.queryStudentCorrectCount(projectId, questId, classId);
+            row.put("correct_count", correctCount);
+            row.put("quest_no", quest.getQuestNo());
+            row.put("full_score", quest.getFullScore());
+            studentFailQuestMap.put(questId, row);
+        }
     }
 
 

@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * @author luckylo
  */
-@Function(description = "查询学生考试情况", parameters = {
+@Function(description = "查询学生考试主客观题得分,排名,班级平均分和班级最高分", parameters = {
         @Parameter(name = "projectId", type = Type.String, description = "考试项目ID", required = true),
         @Parameter(name = "studentId", type = Type.String, description = "学生ID", required = true),
         @Parameter(name = "subjectId", type = Type.String, description = "科目ID", required = true),
