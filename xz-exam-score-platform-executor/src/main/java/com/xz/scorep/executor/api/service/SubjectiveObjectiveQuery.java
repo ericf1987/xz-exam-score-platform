@@ -190,9 +190,13 @@ public class SubjectiveObjectiveQuery {
         ArrayList<Row> rows = cache.get(cacheKey,
                 () -> new ArrayList<>(projectDao.query("select * from quest_average_max_score")));
         return rows.stream()
-                .filter(row -> questId.equals(row.getString("quest_id")))
-                .filter(row -> classId.equals(row.getString("range_id")) && "Class".equals(row.getString("range_type")))
+                .filter(row -> isaBoolean(questId, classId, row))
                 .findFirst().orElse(null);
+    }
+
+    private boolean isaBoolean(String questId, String classId, Row row) {
+        return questId.equals(row.getString("quest_id")) && classId.equals(row.getString("range_id"))
+                && "Class".equals(row.getString("range_type"));
     }
 
     //查询客观题学生答对人数(班级)

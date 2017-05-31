@@ -1,6 +1,5 @@
 package com.xz.scorep.executor.api.server.paperScreenShot;
 
-import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.api.annotation.Function;
@@ -37,8 +36,8 @@ public class ObjectiveSubjectiveTop5Server implements Server {
         String classId = param.getString("classId");
         String studentId = param.getString("studentId");
 
-        List<Map.Entry<String, Row>> objectiveTop5 = service.queryObjectiveTop5(projectId, subjectId, classId, studentId);
-        List<Map.Entry<String, Row>> subjectiveTop5 = service.querySubjectiveTop5(projectId, subjectId, studentId, classId);
+        List<Map<String, Object>> objectiveTop5 = service.queryObjectiveTop5(projectId, subjectId, classId, studentId);
+        List<Map<String, Object>> subjectiveTop5 = service.querySubjectiveTop5(projectId, subjectId, studentId, classId);
         return Result.success()
                 .set("objective", objectiveTop5)
                 .set("subjective", subjectiveTop5);
