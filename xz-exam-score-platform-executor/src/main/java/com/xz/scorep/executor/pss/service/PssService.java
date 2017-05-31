@@ -6,6 +6,7 @@ import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.project.ScannerDBService;
 import com.xz.scorep.executor.project.StudentService;
+import com.xz.scorep.executor.pss.bean.PssForStudent;
 import com.xz.scorep.executor.pss.utils.PaintUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -41,7 +42,7 @@ public class PssService {
 
     public static final String BASE64_HEADER = "data:image/png;base64,";
 
-    public static final String URL = "http://192.168.1.58:8080/pss/showImg?";
+    public static final String PDF_URL = "http://192.168.1.58:8080/pss/showImg?";
 
     public static final boolean A4_MODE = true;
 
@@ -58,49 +59,58 @@ public class PssService {
     private void runTaskByClassAndSubject(String projectId, String schoolId, String classId, ExamSubject examSubject, Map<String, Object> configFromCMS) {
         List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(classId));
 
-        Map<String, Map<String, String>> paramMap = new HashMap<>();
+        List<PssForStudent> PssForStudents = new ArrayList<>();
         for (String studentId : studentList) {
-            Map<String, Object> oneStudentCardSlice = scannerDBService.getOneStudentCardSlice(projectId, studentId, examSubject.getId());
-            String paper_positive = MapUtils.getString(oneStudentCardSlice, "paper_positive", "");
-            String paper_reverse = MapUtils.getString(oneStudentCardSlice, "paper_reverse", "");
-
-            //将图片转码成字符串
-            String positive_img_string = doConvert(paper_positive, PaintUtils.PNG);
-            String reverse_img_string = doConvert(paper_reverse, PaintUtils.PNG);
-
-            Map<String, String> studentMap = new HashMap<>();
-            studentMap.put("positive", positive_img_string);
-            studentMap.put("reverse", reverse_img_string);
-            paramMap.put(studentId, studentMap);
+            PssForStudent pssForStudent = new PssForStudent(
+                    projectId, schoolId, classId, examSubject.getId(), studentId
+            );
+            PssForStudents.add(pssForStudent);
         }
 
-        processResultData(projectId, schoolId, classId, examSubject.getId(), paramMap);
+        processResultData(PssForStudents);
 
         LOG.info("--------数据生成成功：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", projectId, schoolId, classId, examSubject.getId(), studentList.size());
     }
 
-    private void processResultData(String projectId, String schoolId, String classId, String subjectId, Map<String, Map<String, String>> paramMap) {
-        //生成图片保存的相对路径
-        String savePath = StringUtil.joinPaths(projectId, schoolId, classId, subjectId);
-        for (String studentId : paramMap.keySet()) {
-            Map<String, String> map = paramMap.get(studentId);
+    private void processResultData(List<PssForStudent> pssForStudents) {
 
-            for (String key : map.keySet()) {
-                String fileName = studentId + "_" + key + PaintUtils.SCREEN_SHOT_SUFFIX_PNG;
-                String isPositive = "positive".equals(key) ? "true" : "false";
-                String requestUrl = getURL(projectId, subjectId, studentId, isPositive, map.get(key));
-                sendToPDF(savePath, fileName, requestUrl);
-            }
+        for (PssForStudent pssForStudent : pssForStudents) {
+
+            String projectId = pssForStudent.getProjectId();
+            String schoolId = pssForStudent.getSchoolId();
+            String classId = pssForStudent.getClassId();
+            String subjectId = pssForStudent.getSubjectId();
+            String studentId = pssForStudent.getStudentId();
+
+            String savePath = StringUtil.joinPaths(projectId, schoolId,
+                    classId, subjectId);
+
+            String positiveFileName = studentId + "_positive" + PaintUtils.SCREEN_SHOT_SUFFIX_PNG;
+            String reverseFileName = studentId + "_reverse" + PaintUtils.SCREEN_SHOT_SUFFIX_PNG;
+
+            //请求生成正面信息
+            String url1 = getURL(projectId, subjectId, studentId, "true");
+            //请求生成反面信息
+            String url2 = getURL(projectId, subjectId, studentId, "false");
+
+            sendToPDF(savePath, positiveFileName, url1);
+            sendToPDF(savePath, reverseFileName, url2);
         }
+
     }
 
-
+    /**
+     * 发送请求到PDF服务器生成PDF文件
+     * @param savePath      文件保存相对路径
+     * @param fileName      文件名
+     * @param requestUrl    PDF服务器请求URL
+     */
     private void sendToPDF(String savePath, String fileName, String requestUrl) {
 
     }
 
-    private String getURL(String projectId, String subjectId, String studentId, String isPositive, String imgUrl) {
-        StringBuilder builder = new StringBuilder(URL);
+    private String getURL(String projectId, String subjectId, String studentId, String isPositive) {
+        StringBuilder builder = new StringBuilder(PDF_URL);
         builder.append("projectId=").append(projectId).append("&")
                 .append("subjectId=").append(subjectId).append("&")
                 .append("studentId=").append(studentId).append("&")

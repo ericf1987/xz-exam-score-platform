@@ -57,7 +57,7 @@ public class ScannerDBService {
             List<Document> newObjectiveList = objectiveList.stream().filter(doc -> doc.getBoolean("isEffective")).collect(Collectors.toList());
             List<Document> newSubjectiveList = subjectiveList.stream().filter(doc -> doc.getBoolean("isEffective")).collect(Collectors.toList());
 
-            map.put("studentId", DocumentUtils.getString(document, "student", ""));
+            map.put("studentId", DocumentUtils.getString(document, "studentId", ""));
             map.put("paper_positive", DocumentUtils.getString(document, "paper_positive", ""));
             map.put("paper_reverse", DocumentUtils.getString(document, "paper_reverse", ""));
             map.put("objectiveList", newObjectiveList);
