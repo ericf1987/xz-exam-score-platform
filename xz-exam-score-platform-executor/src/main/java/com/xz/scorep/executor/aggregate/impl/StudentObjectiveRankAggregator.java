@@ -19,12 +19,13 @@ import java.util.stream.Collectors;
 
 /**
  * 学生主客观题排名统计(只统计班级维度)
+ * 必须在主客观题分数统计之后
  *
  * @author luckylo
  */
 @Component
-@AggragateOrder(50)
-@AggregateTypes({AggregateType.Advanced})
+@AggragateOrder(9)
+@AggregateTypes(AggregateType.Basic)
 public class StudentObjectiveRankAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(StudentObjectiveRankAggregator.class);
@@ -62,12 +63,11 @@ public class StudentObjectiveRankAggregator extends Aggregator {
                 .stream()
                 .filter(subject -> !Boolean.valueOf(subject.getVirtualSubject()))
                 .collect(Collectors.toList());
+
         LOG.info("开始统计项目ID  {} 主客观题排名....", projectId);
-
         ThreadPoolExecutor pool = Executors.newBlockingThreadPoolExecutor(10, 10, 1);
-
         subjects.forEach(subject -> processRank(projectDao, subject, projectId, pool));
-
+        LOG.info("项目ID  {} 主客观题排名统计完成....", projectId);
     }
 
     private void processRank(DAO projectDao, ExamSubject subject, String projectId, ThreadPoolExecutor pool) {

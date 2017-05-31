@@ -14,12 +14,13 @@ import java.util.List;
 
 /**
  * 客观题班级得分率
+ * 目前只应用与留痕
  *
  * @author luckylo
  */
 @Component
-@AggregateTypes({AggregateType.Advanced})
-@AggragateOrder(54)
+@AggregateTypes(AggregateType.Basic)
+@AggragateOrder(9)
 public class QuestScoreRateAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(QuestScoreRateAggregator.class);
@@ -59,10 +60,10 @@ public class QuestScoreRateAggregator extends Aggregator {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         projectDao.execute("truncate table objective_score_rate");
 
-        LOG.info("项目ID {}在统计班级客观题得分率 .....", projectId);
+        LOG.info("项目ID {} 在统计班级客观题得分率 .....", projectId);
         //目前只统计每一题目的班级得分率(客观题)....
         processClassData(projectId, projectDao);
-        LOG.info("项目ID {}班级客观题得分率统计完成 .....", projectId);
+        LOG.info("项目ID {} 班级客观题得分率统计完成 .....", projectId);
     }
 
 

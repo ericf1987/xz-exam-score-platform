@@ -21,12 +21,13 @@ import java.util.List;
 
 /**
  * 平均分统计,(个人觉得,快速报表也有平均分,建议提前)
+ * 必须在科目得分和总分统计之后
  *
  * @author luckylo
  */
 @Component
-@AggregateTypes({AggregateType.Advanced, AggregateType.Advanced})
-@AggragateOrder(51)
+@AggregateTypes(AggregateType.Basic)
+@AggragateOrder(8)
 public class AverageScoreAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(AverageScoreAggregator.class);
@@ -41,11 +42,11 @@ public class AverageScoreAggregator extends Aggregator {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<ExamSubject> subjects = subjectService.listSubjects(projectId);
 
+        LOG.info("开始统计项目ID {} 平均分..........", projectId);
         projectDao.execute("truncate table average_score");
-
         addProjectData(projectDao, projectId);
-
         addSubjectData(projectDao, projectId, subjects);
+        LOG.info("项目ID {} 平均分统计完成.........", projectId);
 
     }
 
@@ -62,7 +63,7 @@ public class AverageScoreAggregator extends Aggregator {
         convertToRows(averageScores, classRows, Range.Class.name(), Target.Project.name(), projectId);
 
         projectDao.insert(averageScores, "average_score");
-        LOG.info("项目ID {}  总分平均分统计完成...", projectId);
+
     }
 
     private void convertToRows(List<AverageScore> averageScores, List<Row> rows, String rangType, String targetType, String projectId) {
@@ -88,7 +89,7 @@ public class AverageScoreAggregator extends Aggregator {
             convertToRows(averageScores, classRows, Range.Class.name(), Target.Subject.name(), subjectId);
 
             projectDao.insert(averageScores, "average_score");
-            LOG.info("项目ID {} ,科目 ID {} 平均分统计完成...", projectId, subjectId);
+
         });
     }
 }

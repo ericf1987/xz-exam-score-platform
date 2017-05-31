@@ -99,6 +99,7 @@ public class AllPassOrFailAggregator extends Aggregator {
         //////////////////////////////////////////////////////////////
 
         aggregateData(projectDao, rows, provinceStudentCount, schoolStudentCount, classStudentCount);
+        LOG.info("项目ID {}  全科及格全科不及格率统计完成....", projectId);
     }
 
     private String generateSql(List<ExamSubject> subjects, Map<String, Double> passScores) {

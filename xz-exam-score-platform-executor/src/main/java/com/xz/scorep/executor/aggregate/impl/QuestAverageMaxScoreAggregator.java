@@ -24,8 +24,8 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @author luckylo
  */
 @Component
-@AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
-@AggragateOrder(53)
+@AggregateTypes(AggregateType.Basic)
+@AggragateOrder(10)
 public class QuestAverageMaxScoreAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(QuestAverageMaxScoreAggregator.class);
@@ -84,8 +84,10 @@ public class QuestAverageMaxScoreAggregator extends Aggregator {
         String projectId = aggregateParameter.getProjectId();
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
+        LOG.info("开始统计项目ID {} 每一题目的平均分和最高分.....", projectId);
         projectDao.execute("truncate table quest_average_max_score");
         processQuestAverage(projectDao, projectId);
+        LOG.info("项目ID {} 每一题目的平均分和最高分统计完成.....", projectId);
     }
 
     private void processQuestAverage(DAO projectDao, String projectId) {

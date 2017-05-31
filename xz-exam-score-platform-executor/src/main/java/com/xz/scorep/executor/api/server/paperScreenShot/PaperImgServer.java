@@ -53,20 +53,40 @@ public class PaperImgServer implements Server {
         //图片数据
         String imgString = pssService.getOneStudentOnePage(projectId, subjectId, studentId, isPositive, null);
 
-        List<Map<String, Object>> objective =
-                subjectiveObjectiveService.queryObjectiveScoreDetail(projectId, subjectId, classId, studentId);
-        List<Map<String, Object>> subjective =
-                subjectiveObjectiveService.querySubjectiveScoreDetail(projectId, subjectId, classId, studentId);
+        if (isPositive) {
+            //  学生主客观题得分详情(每一道题目得分,平均分,最高分或者班级得分率....)
+            List<Map<String, Object>> objectiveList =
+                    subjectiveObjectiveService.queryObjectiveScoreDetail(projectId, subjectId, classId, studentId);
+            List<Map<String, Object>> subjectiveList =
+                    subjectiveObjectiveService.querySubjectiveScoreDetail(projectId, subjectId, classId, studentId);
 
+            return Result.success().set("imgString", imgString)
+                    .set("objectiveList", objectiveList)
+                    .set("subjectiveList", subjectiveList);
+        }
+
+        //  学生得分(总分,科目得分,科目主客观题得分 .....)
         Map<String, Object> studentScore = studentExamQuery.queryStudentScore(projectId, subjectId, studentId);
+        //  学生超过班级平均分和超过学校平均分 .......
         Map<String, Object> overAverage = studentExamQuery.queryStudentOverAverage(projectId, subjectId, schoolId, classId, studentId);
+        //  学生的班级排名和学校排名 .......
         Map<String, Object> rankMap = studentExamQuery.queryStudentRank(projectId, subjectId, studentId);
 
+        //  学生的主客观题情况(主客观题满分,主客观题得分,学学生主客观题排名,主客观题班级平均分,主客观题班级最高分)
+        Map<String, Object> objectiveScoreRank = subjectiveObjectiveService.objectiveDetail(projectId, subjectId, classId, studentId);
+        Map<String, Object> subjectiveScoreRank = subjectiveObjectiveService.subjectiveDetail(projectId, subjectId, classId, studentId);
+
+        //  学生主客观题与班级答对人数或班级平均分差距较大的TOP5
+        List<Map<String, Object>> objectiveTop5 = subjectiveObjectiveService.queryObjectiveTop5(projectId, subjectId, classId, studentId);
+        List<Map<String, Object>> subjectiveTop5 = subjectiveObjectiveService.querySubjectiveTop5(projectId, subjectId, studentId, classId);
+
         return Result.success().set("imgString", imgString)
-                .set("objective", objective)
-                .set("subjective", subjective)
                 .set("studentScore", studentScore)
+                .set("rankMap", rankMap)
                 .set("overAverage", overAverage)
-                .set("rankMap", rankMap);
+                .set("objectiveScoreRank", objectiveScoreRank)
+                .set("subjectiveScoreRank", subjectiveScoreRank)
+                .set("objectiveTop5", objectiveTop5)
+                .set("subjectiveTop5", subjectiveTop5);
     }
 }
