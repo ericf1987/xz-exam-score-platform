@@ -7,6 +7,7 @@ import com.xz.scorep.executor.api.annotation.Function;
 import com.xz.scorep.executor.api.annotation.Parameter;
 import com.xz.scorep.executor.api.annotation.Type;
 import com.xz.scorep.executor.api.server.Server;
+import com.xz.scorep.executor.api.service.SubjectiveObjectiveQuery;
 import com.xz.scorep.executor.api.service.SubjectiveObjectiveService;
 import com.xz.scorep.executor.pss.service.PssService;
 import org.apache.commons.lang.BooleanUtils;
@@ -33,10 +34,13 @@ import java.util.Map;
 public class PaperImgServer implements Server {
 
     @Autowired
-    PssService pssService;
+    private PssService pssService;
 
     @Autowired
     private StudentExamQuery studentExamQuery;
+
+    @Autowired
+    private SubjectiveObjectiveQuery query;
 
     @Autowired
     private SubjectiveObjectiveService subjectiveObjectiveService;
@@ -50,6 +54,11 @@ public class PaperImgServer implements Server {
         String studentId = param.getString("studentId");
         boolean isPositive = BooleanUtils.toBoolean(param.getString("isPositive"));
 
+        //判断某学生是否被排除(由于报表配置排除缺考,0分等可能导致学生没数据,故被排除)
+        boolean exclude = query.studentIsExclude(projectId, subjectId, studentId);
+        if (exclude) {
+            return Result.success().set("hasData", false);
+        }
         //图片数据
         String imgString = pssService.getOneStudentOnePage(projectId, subjectId, studentId, isPositive, null);
 
@@ -60,7 +69,9 @@ public class PaperImgServer implements Server {
             List<Map<String, Object>> subjectiveList =
                     subjectiveObjectiveService.querySubjectiveScoreDetail(projectId, subjectId, classId, studentId);
 
-            return Result.success().set("imgString", imgString)
+            return Result.success()
+                    .set("hasData", true)
+                    .set("imgString", imgString)
                     .set("objectiveList", objectiveList)
                     .set("subjectiveList", subjectiveList);
         }
@@ -80,7 +91,9 @@ public class PaperImgServer implements Server {
         List<Map<String, Object>> objectiveTop5 = subjectiveObjectiveService.queryObjectiveTop5(projectId, subjectId, classId, studentId);
         List<Map<String, Object>> subjectiveTop5 = subjectiveObjectiveService.querySubjectiveTop5(projectId, subjectId, studentId, classId);
 
-        return Result.success().set("imgString", imgString)
+        return Result.success()
+                .set("hasData", true)
+                .set("imgString", imgString)
                 .set("studentScore", studentScore)
                 .set("rankMap", rankMap)
                 .set("overAverage", overAverage)
@@ -89,4 +102,5 @@ public class PaperImgServer implements Server {
                 .set("objectiveTop5", objectiveTop5)
                 .set("subjectiveTop5", subjectiveTop5);
     }
+
 }

@@ -6,6 +6,8 @@ import com.hyd.simplecache.SimpleCache;
 import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.SubjectService;
+import com.xz.scorep.executor.reportconfig.ReportConfig;
+import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,11 +50,16 @@ public class SubjectiveObjectiveQuery {
             "is_right = \"true\"\n" +
             "and student_id in (select id from student where class_id =\"{{classId}}\")";
 
+    private static final String ZERO_SQL = "select * from `{{table}}` where  score = 0 and student_id = '{{studentId}}'";
+
     @Autowired
     private CacheFactory cacheFactory;
 
     @Autowired
     private SubjectService subjectService;
+
+    @Autowired
+    private ReportConfigService reportConfigService;
 
     @Autowired
     private DAOFactory daoFactory;
@@ -74,9 +81,7 @@ public class SubjectiveObjectiveQuery {
         String table = "score_" + questId;
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        return cache.get(cacheKey, () -> {
-            return new ArrayList<>(projectDao.query("select * from `" + table + "`"));
-        });
+        return cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from `" + table + "`")));
     }
 
 
@@ -86,9 +91,7 @@ public class SubjectiveObjectiveQuery {
         String cacheKey = "objective:";
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        ArrayList<Row> rows = cache.get(cacheKey, () -> {
-            return new ArrayList<>(projectDao.query("select * from objective_score_rate"));
-        });
+        ArrayList<Row> rows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from objective_score_rate")));
         return rows.stream()
                 .filter(row -> questId.equals(row.getString("quest_id")) && classId.equals(row.getString("range_id")))
                 .findFirst().get();
@@ -101,9 +104,7 @@ public class SubjectiveObjectiveQuery {
         String cacheKey = "subjective:";
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        ArrayList<Row> rows = cache.get(cacheKey, () -> {
-            return new ArrayList<>(projectDao.query("select * from quest_average_max_score"));
-        });
+        ArrayList<Row> rows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from quest_average_max_score")));
         return rows.stream()
                 .filter(row -> "Class".equals(row.getString("range_type")))
                 .filter(row -> classId.equals(row.getString("range_id")))
@@ -207,5 +208,79 @@ public class SubjectiveObjectiveQuery {
                 .replace("{{table}}", table)
                 .replace("{{classId}}", classId)).getInteger("count", 0);
 
+    }
+
+    //判断学生是否需要排除
+    public boolean studentIsExclude(String projectId, String subjectId, String studentId) {
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
+
+        if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
+            boolean absent = isAbsent(projectId, subjectId, studentId);
+            if (absent) {
+                return true;
+            }
+        }
+
+        if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
+            boolean cheat = isCheat(projectId, subjectId, studentId);
+            if (cheat) {
+                return true;
+            }
+        }
+
+        if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
+            boolean zero = isZeroScore(projectId, subjectId, studentId);
+            if (zero) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    //学生是否为0分
+    private boolean isZeroScore(String projectId, String subjectId, String studentId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        Row row = projectDao.queryFirst(ZERO_SQL
+                .replace("{{table}}", "score_subject_" + subjectId)
+                .replace("{{studentId}}", studentId));
+        return row == null;
+    }
+
+    //学生是否作弊
+    private boolean isCheat(String projectId, String subjectId, String studentId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        SimpleCache cache = cacheFactory.getPaperCache(projectId);
+        String cacheKey = "cheat :";
+        ArrayList<Row> cheatRows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from cheat")));
+
+        return null == cheatRows.stream()
+                .filter(row -> subjectId.equals(row.getString("subject_id")) && studentId.equals(row.getString("student_id")))
+                .findFirst().orElse(null);
+    }
+
+    //学生是否是缺考
+    private boolean isAbsent(String projectId, String subjectId, String studentId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+
+        SimpleCache cache = cacheFactory.getPaperCache(projectId);
+        String absentKey = "absent :";
+        String lostKey = "lost :";
+
+        ArrayList<Row> absentRows = cache.get(absentKey, () -> new ArrayList<>(projectDao.query("select * from absent")));
+        ArrayList<Row> lostRows = cache.get(lostKey, () -> new ArrayList<>(projectDao.query("select * from lost")));
+
+        Row absent = absentRows.stream()
+                .filter(row -> subjectId.equals(row.getString("subject_id")) && studentId.equals(row.getString("student_id")))
+                .findFirst().orElse(null);
+
+        Row lost = lostRows.stream()
+                .filter(row -> subjectId.equals(row.getString("subject_id")) && studentId.equals(row.getString("student_id")))
+                .findFirst().orElse(null);
+
+        if (absent == null || lost == null) {
+            return true;
+        }
+        return false;
     }
 }
