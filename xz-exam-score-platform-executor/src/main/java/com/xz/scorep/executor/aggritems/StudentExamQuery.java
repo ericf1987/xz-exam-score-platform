@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.aggritems;
 
 import com.hyd.dao.DAO;
+import com.hyd.dao.Row;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -52,6 +53,13 @@ public class StudentExamQuery {
     private static final String QUERY_STUDENT_SUBJECT_SCORE = "" +
             "select * from score_subject_{{subjectId}} where student_id = \'{{studentId}}\'";
 
+
+    private static final String QUERY_STUDENT_INFO = "" +
+            "select school.name school_name,class.name class_name,student.name student_name \n" +
+            "from student,school,class\n" +
+            "where student.class_id = class.id\n" +
+            "and student.school_id = school.id\n" +
+            "and student.id = '{{studentId}}'";
     @Autowired
     private DAOFactory daoFactory;
 
@@ -98,5 +106,12 @@ public class StudentExamQuery {
         result.put("overClassAverage", new BigDecimal(String.valueOf(score)).subtract(new BigDecimal(String.valueOf(class_score))));
 
         return result;
+    }
+
+    //查询学生基本信息
+    public Row queryStudentInfo(String projectId, String studentId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String replace = QUERY_STUDENT_INFO.replace("{{studentId}}", studentId);
+        return projectDao.queryFirst(replace);
     }
 }

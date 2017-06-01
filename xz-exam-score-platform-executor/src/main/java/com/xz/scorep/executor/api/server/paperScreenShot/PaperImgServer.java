@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.api.server.paperScreenShot;
 
+import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.aggritems.StudentExamQuery;
@@ -9,6 +10,7 @@ import com.xz.scorep.executor.api.annotation.Type;
 import com.xz.scorep.executor.api.server.Server;
 import com.xz.scorep.executor.api.service.SubjectiveObjectiveQuery;
 import com.xz.scorep.executor.api.service.SubjectiveObjectiveService;
+import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.pss.service.PssService;
 import org.apache.commons.lang.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,9 @@ public class PaperImgServer implements Server {
     private SubjectiveObjectiveQuery query;
 
     @Autowired
+    private ProjectService projectService;
+
+    @Autowired
     private SubjectiveObjectiveService subjectiveObjectiveService;
 
     @Override
@@ -61,6 +66,9 @@ public class PaperImgServer implements Server {
         }
         //图片数据
         String imgString = pssService.getOneStudentOnePage(projectId, subjectId, studentId, isPositive, null);
+        String projectName = projectService.findProject(projectId).getName();
+        Row studentRow = studentExamQuery.queryStudentInfo(projectId, studentId);
+        studentRow.put("project_name", projectName);
 
         if (isPositive) {
             //  学生主客观题得分详情(每一道题目得分,平均分,最高分或者班级得分率....)
@@ -71,6 +79,7 @@ public class PaperImgServer implements Server {
 
             return Result.success()
                     .set("hasData", true)
+                    .set("studentInfo", studentRow)
                     .set("imgString", imgString)
                     .set("objectiveList", objectiveList)
                     .set("subjectiveList", subjectiveList);
@@ -94,6 +103,7 @@ public class PaperImgServer implements Server {
         return Result.success()
                 .set("hasData", true)
                 .set("imgString", imgString)
+                .set("studentInfo", studentRow)
                 .set("studentScore", studentScore)
                 .set("rankMap", rankMap)
                 .set("overAverage", overAverage)
