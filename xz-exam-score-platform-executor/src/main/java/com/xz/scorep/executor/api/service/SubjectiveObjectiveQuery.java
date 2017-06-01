@@ -270,6 +270,10 @@ public class SubjectiveObjectiveQuery {
         ArrayList<Row> absentRows = cache.get(absentKey, () -> new ArrayList<>(projectDao.query("select * from absent")));
         ArrayList<Row> lostRows = cache.get(lostKey, () -> new ArrayList<>(projectDao.query("select * from lost")));
 
+        if (absentRows.isEmpty() && lostRows.isEmpty()) {
+            return false;
+        }
+
         Row absent = absentRows.stream()
                 .filter(row -> subjectId.equals(row.getString("subject_id")) && studentId.equals(row.getString("student_id")))
                 .findFirst().orElse(null);
