@@ -5,11 +5,6 @@ import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.BaseTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureOrder;
-
-import java.util.Map;
-
-import static org.junit.Assert.*;
 
 /**
  * @author by fengye on 2017/5/22.
@@ -22,9 +17,13 @@ public class PaperImgServerTest extends BaseTest {
     @Test
     public void testExecute() throws Exception {
 
-        Param param = new Param().setParameter("projectId", "123")
-                .setParameter("schoolId", "456");
-        Result result = paperImgServer.execute(param);
-        Map<String, Object> data = result.getData();
+        Param param = new Param();
+        param.setParameter("subjectId", "001");
+        param.setParameter("projectId", "430700-a5a39f1f86b3408d9ced3cf82eb8a1c9");
+        param.setParameter("classId", "d82f9ca1-6020-4557-ad5f-335821f1b9bc");
+        param.setParameter("studentId", "04c4f670-babe-42bb-84f3-f1012c71dbad");
+        param.setParameter("isPositive", true);
+        Result execute = paperImgServer.execute(param);
+        System.out.println(execute.getData().toString());
     }
 }

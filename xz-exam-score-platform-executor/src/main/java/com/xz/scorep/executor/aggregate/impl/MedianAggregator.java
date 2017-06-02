@@ -2,6 +2,7 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
+import com.xz.ajiaedu.common.concurrent.Executors;
 import com.xz.ajiaedu.common.report.Keys;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamSubject;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 import static com.xz.ajiaedu.common.report.Keys.Range.Class;
@@ -76,20 +78,22 @@ public class MedianAggregator extends Aggregator {
         projectDao.execute("truncate table median");
 
         LOG.info("开始统计项目 ID {} 中位数....", projectId);
-        aggregatorMedian(projectId, projectDao, subjects);
+        ThreadPoolExecutor pool = Executors.newBlockingThreadPoolExecutor(10, 10, 1);
+        aggregatorMedian(projectId, projectDao, subjects, pool);
         LOG.info("项目 ID {} 中位数统计完成....", projectId);
 
     }
 
-    private void aggregatorMedian(String projectId, DAO projectDao, List<ExamSubject> subjects) {
+    private void aggregatorMedian(String projectId, DAO projectDao, List<ExamSubject> subjects, ThreadPoolExecutor pool) {
 
         List<Row> studentRows = projectDao.query("select * from student");
 
         //统计总分维度的中位数
-        aggregatorProjectMedian(projectId, projectDao, studentRows);
+        pool.submit(() -> aggregatorProjectMedian(projectId, projectDao, studentRows));
 
         //统计科目维度的中位数
-        aggregatorSubjectMedian(projectId, projectDao, subjects, studentRows);
+        subjects.forEach(subject ->
+                pool.submit(() -> aggregatorSubjectMedian(projectId, projectDao, subject, studentRows)));
     }
 
     private void aggregatorProjectMedian(String projectId, DAO projectDao, List<Row> studentRows) {
@@ -137,53 +141,50 @@ public class MedianAggregator extends Aggregator {
         projectDao.insert(insertMap, "median");
     }
 
-    private void aggregatorSubjectMedian(String projectId, DAO projectDao, List<ExamSubject> subjects, List<Row> studentRows) {
+    private void aggregatorSubjectMedian(String projectId, DAO projectDao, ExamSubject subject, List<Row> studentRows) {
         List<Map<String, Object>> insertMap = new ArrayList<>();
-        subjects.forEach(subject -> {
-            String subjectId = subject.getId();
-            List<Row> rows = projectDao.query(QUERY_SUBJECT_SCORE.replace("{{table}}", "score_subject_" + subjectId));
+        String subjectId = subject.getId();
+        List<Row> rows = projectDao.query(QUERY_SUBJECT_SCORE.replace("{{table}}", "score_subject_" + subjectId));
 
-            double median = calculateMedian(rows);
-            Map<String, Object> provinceMap = createMap(Province.name(), "430000", Keys.Target.Subject.name(), subjectId, median);
-            insertMap.add(provinceMap);
+        double median = calculateMedian(rows);
+        Map<String, Object> provinceMap = createMap(Province.name(), "430000", Keys.Target.Subject.name(), subjectId, median);
+        insertMap.add(provinceMap);
 
-            schoolService.listSchool(projectId)
-                    .forEach(school -> {
-                        String schoolId = school.getId();
-                        List<String> studentList = studentRows.stream()
-                                .filter(row -> schoolId.equals(row.getString("school_id")))
-                                .map(row -> row.getString("id"))
-                                .collect(Collectors.toList());
+        schoolService.listSchool(projectId)
+                .forEach(school -> {
+                    String schoolId = school.getId();
+                    List<String> studentList = studentRows.stream()
+                            .filter(row -> schoolId.equals(row.getString("school_id")))
+                            .map(row -> row.getString("id"))
+                            .collect(Collectors.toList());
 
-                        List<Row> studentScoreRows = rows.stream()
-                                .filter(row -> studentList.contains(row.getString("student_id")))
-                                .collect(Collectors.toList());
-                        double schoolMedian = calculateMedian(studentScoreRows);
-                        Map<String, Object> schoolMap = createMap(School.name(), schoolId, Keys.Target.Subject.name(), subjectId, schoolMedian);
-                        insertMap.add(schoolMap);
-                    });
+                    List<Row> studentScoreRows = rows.stream()
+                            .filter(row -> studentList.contains(row.getString("student_id")))
+                            .collect(Collectors.toList());
+                    double schoolMedian = calculateMedian(studentScoreRows);
+                    Map<String, Object> schoolMap = createMap(School.name(), schoolId, Keys.Target.Subject.name(), subjectId, schoolMedian);
+                    insertMap.add(schoolMap);
+                });
 
-            classService.listClasses(projectId)
-                    .forEach(clazz -> {
-                        String classId = clazz.getId();
-                        List<String> studentList = studentRows.stream()
-                                .filter(row -> classId.equals(row.getString("class_id")))
-                                .map(row -> row.getString("id"))
-                                .collect(Collectors.toList());
+        classService.listClasses(projectId)
+                .forEach(clazz -> {
+                    String classId = clazz.getId();
+                    List<String> studentList = studentRows.stream()
+                            .filter(row -> classId.equals(row.getString("class_id")))
+                            .map(row -> row.getString("id"))
+                            .collect(Collectors.toList());
 
-                        List<Row> studentScoreRows = rows.stream()
-                                .filter(row -> studentList.contains(row.getString("student_id")))
-                                .collect(Collectors.toList());
+                    List<Row> studentScoreRows = rows.stream()
+                            .filter(row -> studentList.contains(row.getString("student_id")))
+                            .collect(Collectors.toList());
 
-                        double classMedian = calculateMedian(studentScoreRows);
-                        Map<String, Object> classMap = createMap(Class.name(), classId, Keys.Target.Subject.name(), subjectId, classMedian);
-                        insertMap.add(classMap);
-                    });
+                    double classMedian = calculateMedian(studentScoreRows);
+                    Map<String, Object> classMap = createMap(Class.name(), classId, Keys.Target.Subject.name(), subjectId, classMedian);
+                    insertMap.add(classMap);
+                });
 
-        });
         projectDao.insert(insertMap, "median");
     }
-
 
     private double calculateMedian(List<Row> rows) {
         if (rows.isEmpty()) {
