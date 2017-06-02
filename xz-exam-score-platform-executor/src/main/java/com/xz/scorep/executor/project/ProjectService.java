@@ -101,6 +101,9 @@ public class ProjectService {
                 "target_type VARCHAR(20),target_id VARCHAR(40),std_Deviation decimal(5,2))");
         dao.execute("create index idxstd on std_deviation(range_type,range_id,target_type,target_id)");
 
+        dao.execute("create table median(range_type varchar(20),range_id varchar(40)," +
+                "target_type varchar(20),target_id varchar(40),median decimal(6,2))");
+        dao.execute("create index idxm on median(range_type,range_id,target_type,target_id)");
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //全科及格和全科不及格率
         dao.execute("create table all_pass_or_fail (range_type varchar(20), range_id varchar(40),all_pass_count int(11),all_pass_rate decimal(5,2),all_fail_count int(11),all_fail_rate decimal(5,2))");
