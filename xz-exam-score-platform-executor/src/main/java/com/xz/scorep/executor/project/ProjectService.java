@@ -98,8 +98,12 @@ public class ProjectService {
 
         //标准差
         dao.execute("create table std_deviation(range_type varchar(20),range_id VARCHAR(40)," +
-                "target_type VARCHAR(20),target_id VARCHAR(40),std_Deviation decimal(5,2))");
+                "target_type VARCHAR(20),target_id VARCHAR(40),std_deviation decimal(5,2))");
         dao.execute("create index idxstd on std_deviation(range_type,range_id,target_type,target_id)");
+
+        //；学科T值
+        dao.execute("create table t_value(range_type varchar(20),range_id varchar(40)," +
+                "subject_id varchar(20),value decimal(6,2))");
 
         dao.execute("create table median(range_type varchar(20),range_id varchar(40)," +
                 "target_type varchar(20),target_id varchar(40),median decimal(6,2))");
