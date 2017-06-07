@@ -52,19 +52,51 @@ public class PssService {
 
     public static final String BASE64_HEADER = "data:image/png;base64,";
 
+    //封装多个任务
     public void dispatchOneClassTask(String projectId, String schoolId, String classId, List<ExamSubject> examSubjects, Map<String, Object> configFromCMS) {
-        for (ExamSubject subject : examSubjects) {
+        List<PssTaskBean> pssTaskBeans = new ArrayList<>();
+        for (ExamSubject examSubject : examSubjects) {
             try {
-                runTaskByClassAndSubject(projectId, schoolId, classId, subject.getId(), configFromCMS);
+                PssTaskBean pssTaskBean = packPssTask(projectId, schoolId, classId, examSubject.getId(), configFromCMS);
+                pssTaskBean.start();
+                pssTaskBeans.add(pssTaskBean);
             } catch (Exception e) {
-                LOG.info("----生成失败：项目{}，学校{}，班级{}，科目{}", projectId, schoolId, classId, subject.getId());
+                LOG.info("----分发任务失败：项目{}，学校{}，班级{}，科目{}", projectId, schoolId, classId, examSubject.getId());
             }
         }
+
+        joinAllPssTask(pssTaskBeans);
+    }
+
+     public void joinAllPssTask(List<PssTaskBean> pssTaskBeans){
+         for (PssTaskBean pssTaskBean : pssTaskBeans) {
+             try {
+                 pssTaskBean.join();
+             } catch (InterruptedException e) {
+                 LOG.error("线程中断，执行pss任务失败！");
+             }
+         }
+     }
+
+    //封装单个任务，每个任务执行一个学生列表
+    private PssTaskBean packPssTask(String projectId, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
+        List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(classId));
+        List<PssForStudent> pssForStudents = packPssForStudents(projectId, schoolId, classId, subjectId, studentList);
+        return new PssTaskBean(pssForStudents);
     }
 
     public void runTaskByClassAndSubject(String projectId, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
         List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(classId));
 
+        List<PssForStudent> PssForStudents = packPssForStudents(projectId, schoolId, classId, subjectId, studentList);
+
+        processResultData(PssForStudents);
+
+        LOG.info("--------数据生成成功：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", projectId, schoolId, classId, subjectId, studentList.size());
+    }
+
+    //返回单个pss任务对应的学生列表
+    private List<PssForStudent> packPssForStudents(String projectId, String schoolId, String classId, String subjectId, List<String> studentList) {
         List<PssForStudent> PssForStudents = new ArrayList<>();
         for (String studentId : studentList) {
             PssForStudent pssForStudent = new PssForStudent(
@@ -72,10 +104,7 @@ public class PssService {
             );
             PssForStudents.add(pssForStudent);
         }
-
-        processResultData(PssForStudents);
-
-        LOG.info("--------数据生成成功：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", projectId, schoolId, classId, subjectId, studentList.size());
+        return PssForStudents;
     }
 
     private void processResultData(List<PssForStudent> pssForStudents) {
@@ -193,6 +222,19 @@ public class PssService {
         String imgUrl = isPositive ? MapUtils.getString(studentCardSlices, "paper_positive")
                 : MapUtils.getString(studentCardSlices, "paper_reverse");
         return doConvert(imgUrl, PaintUtils.PNG);
+    }
+
+    class PssTaskBean extends Thread{
+        List<PssForStudent> students;
+
+        public PssTaskBean(List<PssForStudent> students){
+            this.students = students;
+        }
+
+        @Override
+        public void run() {
+            processResultData(students);
+        }
     }
 
 }

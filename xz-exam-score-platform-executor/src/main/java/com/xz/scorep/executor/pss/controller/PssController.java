@@ -1,14 +1,13 @@
 package com.xz.scorep.executor.pss.controller;
 
 import com.xz.ajiaedu.common.lang.Result;
+import com.xz.scorep.executor.pss.mamage.PssTaskManager;
 import com.xz.scorep.executor.pss.service.PssService;
-import org.apache.commons.lang.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
 
 /**
  * @author by fengye on 2017/5/24.
@@ -19,18 +18,8 @@ public class PssController {
     @Autowired
     PssService pssService;
 
-    @PostMapping("/img/showImg")
-    @ResponseBody
-    public ModelAndView showImg(
-            @RequestParam("projectId") String projectId,
-            @RequestParam("subjectId") String subjectId,
-            @RequestParam("studentId") String studentId,
-            @RequestParam("isPositive") String isPositive
-    ){
-        String imgString = pssService.getOneStudentOnePage(projectId, subjectId, studentId,
-                BooleanUtils.toBoolean(isPositive), null);
-        return new ModelAndView("img").addObject("imgString", imgString);
-    }
+    @Autowired
+    PssTaskManager pssTaskManager;
 
     @PostMapping("/img/showImgReport")
     @ResponseBody
@@ -39,8 +28,17 @@ public class PssController {
             @RequestParam("schoolId") String schoolId,
             @RequestParam("classId") String classId,
             @RequestParam("subjectId") String subjectId
-    ){
+    ) {
         pssService.runTaskByClassAndSubject(projectId, schoolId, classId, subjectId, null);
+        return Result.success();
+    }
+
+    @PostMapping("/img/task/start")
+    @ResponseBody
+    public Result startPssTask(
+            @RequestParam("projectId") String projectId
+    ) {
+        pssTaskManager.startPssTask(projectId, null, true);
         return Result.success();
     }
 }

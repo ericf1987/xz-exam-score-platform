@@ -10,7 +10,9 @@ import com.xz.scorep.executor.api.annotation.Type;
 import com.xz.scorep.executor.api.server.Server;
 import com.xz.scorep.executor.api.service.SubjectiveObjectiveQuery;
 import com.xz.scorep.executor.api.service.SubjectiveObjectiveService;
+import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.project.ProjectService;
+import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.pss.service.PssService;
 import org.apache.commons.lang.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +50,9 @@ public class PaperImgServer implements Server {
     private ProjectService projectService;
 
     @Autowired
+    SubjectService subjectService;
+
+    @Autowired
     private SubjectiveObjectiveService subjectiveObjectiveService;
 
     @Override
@@ -70,6 +75,10 @@ public class PaperImgServer implements Server {
         Row studentRow = studentExamQuery.queryStudentInfo(projectId, studentId);
         studentRow.put("project_name", projectName);
 
+        //查询当前科目
+        ExamSubject subject = subjectService.findSubject(projectId, subjectId);
+
+
         if (isPositive) {
             //  学生主客观题得分详情(每一道题目得分,平均分,最高分或者班级得分率....)
             List<Map<String, Object>> objectiveList =
@@ -81,6 +90,7 @@ public class PaperImgServer implements Server {
                     .set("hasData", true)
                     .set("studentInfo", studentRow)
                     .set("imgString", imgString)
+                    .set("subjectName", subject.getName())
                     .set("objectiveList", objectiveList)
                     .set("subjectiveList", subjectiveList);
         }
@@ -103,6 +113,7 @@ public class PaperImgServer implements Server {
         return Result.success()
                 .set("hasData", true)
                 .set("imgString", imgString)
+                .set("subjectName", subject.getName())
                 .set("studentInfo", studentRow)
                 .set("studentScore", studentScore)
                 .set("rankMap", rankMap)
