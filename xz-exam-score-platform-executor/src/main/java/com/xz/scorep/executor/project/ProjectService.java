@@ -105,6 +105,12 @@ public class ProjectService {
         dao.execute("create table t_value(range_type varchar(20),range_id varchar(40)," +
                 "subject_id varchar(20),value decimal(6,2))");
 
+        //客观题区分度 (省,学校,班级)
+        dao.execute("create table distinction(quest_id varchar(40),range_type varchar(20)," +
+                "range_id varchar(40),value decimal(6,2))");
+        dao.execute("create index idxdsc on distinction(quest_id,range_id)");
+
+
         dao.execute("create table median(range_type varchar(20),range_id varchar(40)," +
                 "target_type varchar(20),target_id varchar(40),median decimal(6,2))");
         dao.execute("create index idxm on median(range_type,range_id,target_type,target_id)");
