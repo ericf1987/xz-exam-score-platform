@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.pss.controller;
 
+import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.pss.service.PssService;
 import org.apache.commons.lang.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,5 +30,17 @@ public class PssController {
         String imgString = pssService.getOneStudentOnePage(projectId, subjectId, studentId,
                 BooleanUtils.toBoolean(isPositive), null);
         return new ModelAndView("img").addObject("imgString", imgString);
+    }
+
+    @PostMapping("/img/showImgReport")
+    @ResponseBody
+    public Result runTaskByClassAndSubject(
+            @RequestParam("projectId") String projectId,
+            @RequestParam("schoolId") String schoolId,
+            @RequestParam("classId") String classId,
+            @RequestParam("subjectId") String subjectId
+    ){
+        pssService.runTaskByClassAndSubject(projectId, schoolId, classId, subjectId, null);
+        return Result.success();
     }
 }
