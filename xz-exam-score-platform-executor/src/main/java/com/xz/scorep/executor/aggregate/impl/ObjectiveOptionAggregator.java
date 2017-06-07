@@ -14,7 +14,6 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.db.MultipleBatchExecutor;
 import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
 import com.xz.scorep.executor.project.*;
-import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -151,8 +150,12 @@ public class ObjectiveOptionAggregator extends Aggregator {
                         options.add("*");
                     } else {
                         char[] chars = stuAnswer.toCharArray();
-                        for (char c : chars) {
-                            options.add(Character.toString(c));
+                        if (!quest.isMultiChoice() && chars.length > 1) {//单选题含有多个选项,统计为不选!
+                            options.add("*");
+                        } else {
+                            for (char c : chars) {
+                                options.add(Character.toString(c));
+                            }
                         }
                     }
 

@@ -334,7 +334,8 @@ public class ImportScoreHelper {
 
         // 强制给分
         if (giveFullScore) {
-            return new ScoreValue(fullScore, true);
+            //送分题强制给分,也保留学生答案
+            return new ScoreValue(fullScore, studentAnswer, true);
         }
 
         // 按照答案或给分规则打分
@@ -362,11 +363,14 @@ public class ImportScoreHelper {
     private static String readStudentAnswer(ExamQuest quest, Document scoreDoc) {
         String s = defaultString(scoreDoc.getString("answerContent"), "*").toUpperCase();
 
+/*
+        //需求更改,单选题多选 选项需保留.....
         // 单选题出现多个选择时，一律置为 "*"
         // 旧版答题卡可能没有 multiChoice 属性，此时根据答案的长度来判断
         if (!quest.isMultiChoice() && quest.getAnswer().length() == 1 && s.length() > 1) {
             s = "*";
         }
+*/
 
         //判断答案  是否在选项列表中......
         String options = quest.getOptions().toUpperCase();
