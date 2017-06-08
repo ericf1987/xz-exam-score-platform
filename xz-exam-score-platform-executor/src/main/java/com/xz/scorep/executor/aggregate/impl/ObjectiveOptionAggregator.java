@@ -149,10 +149,10 @@ public class ObjectiveOptionAggregator extends Aggregator {
                     if (StringUtil.isBlank(stuAnswer) || stuAnswer.trim().equals("*")) {
                         options.add("*");
                     } else {
-                        char[] chars = stuAnswer.toCharArray();
-                        if (!quest.isMultiChoice() && chars.length > 1) {//单选题含有多个选项,统计为不选!
+                        if (!quest.isMultiChoice() && stuAnswer.length() > 1) {//单选题含有多个选项,统计为不选!
                             options.add("*");
                         } else {
+                            char[] chars = stuAnswer.toCharArray();
                             for (char c : chars) {
                                 options.add(Character.toString(c));
                             }
