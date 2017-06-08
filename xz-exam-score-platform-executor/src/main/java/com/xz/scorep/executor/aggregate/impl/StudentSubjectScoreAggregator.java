@@ -23,9 +23,12 @@ import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * 项目学生的每个科目得分
+ */
 @Component
 @AggragateOrder(0)
-@AggregateTypes({AggregateType.Basic, AggregateType.Quick})
+@AggregateTypes({AggregateType.Check, AggregateType.Quick})
 public class StudentSubjectScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentSubjectScoreAggregator.class);
@@ -76,42 +79,42 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
         updateSubjectScore(projectId, subjects);
 
-        //同云报表平台处理
-        LOG.info("删除项目{}缺卷学生...", projectId);
-        removeLostStudents(projectId, subjects);
-        LOG.info("项目 {} 缺卷考生删除完毕。", projectId);
-
-        // 根据报表配置删除零分记录(该0分为卷面0分)
-        if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
-            LOG.info("删除项目 {} 的科目零分记录。", projectId);
-            removeZeroScores(projectId, subjects);
-            LOG.info("项目 {} 的科目零分记录删除完毕。", projectId);
-        }
-
-        // 根据报表配置删除作弊学生
-        if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
-            LOG.info("删除项目 {} 作弊考生...", projectId);
-            removeCheatStudent(projectId, subjects);
-            LOG.info("项目 {} 作弊考生删除完毕...", projectId);
-        }
-
-        // 根据报表配置删除缺考考生记录
-        if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
-            LOG.info("删除项目 {} 缺考考生...", projectId);
-            removeAbsentStudents(projectId, subjects);
-            LOG.info("项目 {} 缺考考生删除完毕。", projectId);
-        }
+//        //同云报表平台处理
+//        LOG.info("删除项目{}缺卷学生...", projectId);
+//        removeLostStudents(projectId, subjects);
+//        LOG.info("项目 {} 缺卷考生删除完毕。", projectId);
+//
+//        // 根据报表配置删除零分记录(该0分为卷面0分)
+//        if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
+//            LOG.info("删除项目 {} 的科目零分记录。", projectId);
+//            removeZeroScores(projectId, subjects);
+//            LOG.info("项目 {} 的科目零分记录删除完毕。", projectId);
+//        }
+//
+//        // 根据报表配置删除作弊学生
+//        if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
+//            LOG.info("删除项目 {} 作弊考生...", projectId);
+//            removeCheatStudent(projectId, subjects);
+//            LOG.info("项目 {} 作弊考生删除完毕...", projectId);
+//        }
+//
+//        // 根据报表配置删除缺考考生记录
+//        if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
+//            LOG.info("删除项目 {} 缺考考生...", projectId);
+//            removeAbsentStudents(projectId, subjects);
+//            LOG.info("项目 {} 缺考考生删除完毕。", projectId);
+//        }
 
         // 将 score 拷贝到 real_score
         LOG.info("拷贝项目 {} 的科目分数 score 到 real_score...", projectId);
         copyToRealScore(projectId, subjects);
 
-        // 根据报表配置补完接近及格的分数
-        if (Boolean.valueOf(reportConfig.getFillAlmostPass())) {
-            LOG.info("提升项目 {} 的接近及格分数...", projectId);
-            Double almostPassOffset = reportConfig.getAlmostPassOffset();
-            fillAlmostPass(projectId, subjects, almostPassOffset, reportConfig);
-        }
+//        // 根据报表配置补完接近及格的分数
+//        if (Boolean.valueOf(reportConfig.getFillAlmostPass())) {
+//            LOG.info("提升项目 {} 的接近及格分数...", projectId);
+//            Double almostPassOffset = reportConfig.getAlmostPassOffset();
+//            fillAlmostPass(projectId, subjects, almostPassOffset, reportConfig);
+//        }
     }
 
     private void updateSubjectScore(String projectId, List<ExamSubject> subjects) {
@@ -212,6 +215,8 @@ public class StudentSubjectScoreAggregator extends Aggregator {
 
     private void accumulateSubjectScores(String projectId, DAO projectDao, ThreadPoolExecutor executor, List<ExamSubject> subjects) {
 
+        AtomicInteger count = new AtomicInteger(0);
+
         subjects.forEach(subject -> {
             String subjectId = subject.getId();
             String tableName = "score_subject_" + subjectId;
@@ -221,9 +226,28 @@ public class StudentSubjectScoreAggregator extends Aggregator {
             projectDao.execute("insert into " + tableName + "(student_id,score) select id, 0 from student");
             LOG.info("项目 {} 的科目 {} 总分已清空", projectId, subjectId);
 
+            //根据主客观题累加分数
+            accumulateSubjectScore(subjectId, projectDao);
+
+            int current = count.incrementAndGet();
+            LOG.info("项目ID {} 科目总分统计已完成 ... {} / {}", projectId, current, subjects.size());
+
             // 累加分数
-            accumulateQuestScores(projectId, projectDao, executor, subjectId, tableName);
+//            accumulateQuestScores(projectId, projectDao, executor, subjectId, tableName);
         });
+    }
+
+    private void accumulateSubjectScore(String subjectId, DAO projectDao) {
+        String tableName = "score_subject_" + subjectId;
+        String subjectiveTableName = "score_subjective_" + subjectId;
+        String objectiveTableName = "score_objective_" + subjectId;
+        String subSql = "update " + tableName + " p inner join  `" + subjectiveTableName + "` q " +
+                "using (student_id) set p.score = p.score + ifnull(q.score,0)";
+        String objSql = "update " + tableName + " p inner join   `" + objectiveTableName + "` q " +
+                "using (student_id) set p.score = p.score + ifnull(q.score,0)";
+
+        projectDao.execute(subSql);
+        projectDao.execute(objSql);
     }
 
     private void accumulateQuestScores(String projectId, DAO projectDao, ThreadPoolExecutor executor, String subjectId, String tableName) {

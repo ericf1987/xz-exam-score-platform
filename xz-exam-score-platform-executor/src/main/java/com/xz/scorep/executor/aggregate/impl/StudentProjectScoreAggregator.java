@@ -15,9 +15,13 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+
+/**
+ * 项目的学生总得分
+ */
 @Component
-@AggragateOrder(1)
-@AggregateTypes({AggregateType.Basic, AggregateType.Quick})
+@AggragateOrder(2)
+@AggregateTypes({AggregateType.Check, AggregateType.Quick})
 public class StudentProjectScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentProjectScoreAggregator.class);
@@ -53,7 +57,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
                             projectId, counter.incrementAndGet(), subjects.size());
                 });
 
-        //删除项目总分为0分,且没有缺考没有作弊记录的学生成绩
+        /*//删除项目总分为0分,且没有缺考没有作弊记录的学生成绩
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
             removeZeroScores(projectId, subjects);
         }
@@ -66,7 +70,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
         //根据报表配置删除全科作弊考生记录
         if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
             removeCheatStudent(projectDao, subjects);
-        }
+        }*/
 
 
     }

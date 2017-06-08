@@ -25,8 +25,8 @@ import java.util.concurrent.ThreadPoolExecutor;
  * 主客观题分数统计
  */
 @Component
-@AggregateTypes(AggregateType.Basic)
-@AggragateOrder(5)
+@AggregateTypes({AggregateType.Check, AggregateType.Quick})
+@AggragateOrder(0)
 public class StudentObjectiveScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentObjectiveScoreAggregator.class);
@@ -89,15 +89,16 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
                 LOG.error("统计主客观题失败", e);
             }
 
-            updateObjectiveScore(projectId, projectDao, subjectId, objectiveTableName, subjectiveTableName);
+            //更新主客观题得分来源(新统计可有可无...)
+            updateSubObjScore(projectDao, subjectId, objectiveTableName, subjectiveTableName);
+
+//            updateObjectiveScore(projectId, projectDao, subjectId, objectiveTableName, subjectiveTableName);
         });
 
 
     }
 
-    private void updateObjectiveScore(String projectId, DAO projectDao, String subjectId, String objectiveTableName, String subjectiveTableName) {
-        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
-
+    private void updateSubObjScore(DAO projectDao, String subjectId, String objectiveTableName, String subjectiveTableName) {
         //先更新主客观题得分表的得分来源
         projectDao.execute(UPDATE_OBJECTIVE_SCORE_INFO
                 .replace("{{tableName}}", objectiveTableName)
@@ -106,6 +107,10 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
         projectDao.execute(UPDATE_OBJECTIVE_SCORE_INFO
                 .replace("{{tableName}}", subjectiveTableName)
                 .replace("{{subjectId}}", subjectId));
+    }
+
+    private void updateObjectiveScore(String projectId, DAO projectDao, String subjectId, String objectiveTableName, String subjectiveTableName) {
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
 
         //默认删除丢卷学生
         projectDao.execute(DEL_LOST_SCORE
