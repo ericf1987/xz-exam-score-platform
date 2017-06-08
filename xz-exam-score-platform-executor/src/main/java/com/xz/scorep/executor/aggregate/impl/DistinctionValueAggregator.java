@@ -87,20 +87,24 @@ public class DistinctionValueAggregator extends Aggregator {
         String table = "score_" + questId;
         List<Row> questScoreRows = projectDao.query(QUERY_QUEST.replace("{{table}}", table));
 
-        //处理Province维度区分度
-        processProvinceData(quest, studentTotalScoreList, insertMap, questScoreRows);
+        try {
+            //处理Province维度区分度
+            processProvinceData(quest, studentTotalScoreList, insertMap, questScoreRows);
 
-        //处理School维度区分度
-        schoolService.listSchool(projectId)
-                .forEach(school -> processSchoolData(quest, school, studentTotalScoreList, insertMap, questScoreRows, studentInfoList));
+            //处理School维度区分度
+            schoolService.listSchool(projectId)
+                    .forEach(school -> processSchoolData(quest, school, studentTotalScoreList, insertMap, questScoreRows, studentInfoList));
 
-        //处理Class维度区分度
-        classService.listClasses(projectId)
-                .forEach(clazz -> processClassData(quest, clazz, studentTotalScoreList, insertMap, questScoreRows, studentInfoList));
+            //处理Class维度区分度
+            classService.listClasses(projectId)
+                    .forEach(clazz -> processClassData(quest, clazz, studentTotalScoreList, insertMap, questScoreRows, studentInfoList));
+        } finally {
+
+            projectDao.insert(insertMap, "distinction");
+            counter.count();
+        }
 
 
-        projectDao.insert(insertMap, "distinction");
-        counter.count();
     }
 
     private void processClassData(ExamQuest quest, ProjectClass clazz, List<Row> studentTotalScoreList,
@@ -148,10 +152,12 @@ public class DistinctionValueAggregator extends Aggregator {
     private void processSchoolData(ExamQuest quest, ProjectSchool school, List<Row> studentTotalScoreList,
                                    List<Map<String, Object>> insertMap, List<Row> questScoreRows, List<Row> studentInfoList) {
         String schoolId = school.getId();
+        //学校学生列表
         List<String> schoolStudentList = studentInfoList.stream()
                 .filter(row -> schoolId.equals(row.getString("school_id")))
                 .map(row -> row.getString("id"))
                 .collect(Collectors.toList());
+        //学校学生总成绩
         List<Row> schoolStudentTotalScoreRows = studentTotalScoreList
                 .stream()
                 .filter(row -> schoolStudentList.contains(row.getString("student_id")))
@@ -159,20 +165,24 @@ public class DistinctionValueAggregator extends Aggregator {
 
         int schoolCount = (int) Math.ceil(schoolStudentTotalScoreRows.size() * 0.27);
 
+        //学校学生成绩前27%的列表
         List<String> studentIdDesc = schoolStudentTotalScoreRows
                 .stream()
                 .limit(schoolCount)
                 .map(row -> row.getString("student_id"))
                 .collect(Collectors.toList());
+        //学校学生成绩后27%的学生列表
         List<String> studentIdAsc = schoolStudentTotalScoreRows.stream()
                 .sorted((row1, row2) -> sored(row1, row2))
                 .limit(schoolCount)
                 .map(row -> row.getString("student_id"))
                 .collect(Collectors.toList());
 
+        //学校学学生成绩前27%的学生成绩
         List<Row> studentQuestDescRows = questScoreRows.stream()
                 .filter(row -> studentIdDesc.contains(row.getString("student_id")))
                 .collect(Collectors.toList());
+        //学校学学生成绩后27%的学生成绩
         List<Row> studentQuestAscRows = questScoreRows.stream()
                 .filter(row -> studentIdAsc.contains(row.getString("student_id")))
                 .collect(Collectors.toList());
