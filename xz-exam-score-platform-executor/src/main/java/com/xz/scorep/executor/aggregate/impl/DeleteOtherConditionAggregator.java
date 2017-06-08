@@ -22,10 +22,10 @@ import java.util.List;
  */
 @Component
 @AggregateTypes(AggregateType.Quick)
-@AggragateOrder(3)
-public class DeleteExceptionConditionAggregator extends Aggregator {
+@AggregateOrder(3)
+public class DeleteOtherConditionAggregator extends Aggregator {
 
-    private static Logger LOG = LoggerFactory.getLogger(DeleteExceptionConditionAggregator.class);
+    private static Logger LOG = LoggerFactory.getLogger(DeleteOtherConditionAggregator.class);
 
 
     //只删除卷面0分(科目)

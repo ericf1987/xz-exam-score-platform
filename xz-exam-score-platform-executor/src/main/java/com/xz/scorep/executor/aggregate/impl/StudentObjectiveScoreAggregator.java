@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 @Component
 @AggregateTypes({AggregateType.Check, AggregateType.Quick})
-@AggragateOrder(0)
+@AggregateOrder(0)
 public class StudentObjectiveScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentObjectiveScoreAggregator.class);

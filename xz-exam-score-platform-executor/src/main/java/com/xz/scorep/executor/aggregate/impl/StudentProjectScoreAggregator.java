@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 项目的学生总得分
  */
 @Component
-@AggragateOrder(2)
+@AggregateOrder(2)
 @AggregateTypes({AggregateType.Check, AggregateType.Quick})
 public class StudentProjectScoreAggregator extends Aggregator {
 

@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * @author by fengye on 2017/5/15.
  */
 @AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
-@AggragateOrder(62)
+@AggregateOrder(62)
 @Component
 public class SubjectRateAggregator extends Aggregator {
 

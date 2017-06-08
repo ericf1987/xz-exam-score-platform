@@ -4,11 +4,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.hyd.dao.DAO;
 import com.hyd.dao.DAOException;
 import com.xz.scorep.executor.aggregate.*;
-import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
-import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
@@ -27,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 项目学生的每个科目得分
  */
 @Component
-@AggragateOrder(0)
+@AggregateOrder(1)
 @AggregateTypes({AggregateType.Check, AggregateType.Quick})
 public class StudentSubjectScoreAggregator extends Aggregator {
 

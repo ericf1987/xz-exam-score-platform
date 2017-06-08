@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
-@AggragateOrder(82)
+@AggregateOrder(82)
 public class DistinctionValueAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(DistinctionValueAggregator.class);

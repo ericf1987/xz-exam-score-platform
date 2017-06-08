@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * @author luckylo
  */
 @Component
-@AggragateOrder(9)
+@AggregateOrder(9)
 @AggregateTypes(AggregateType.Basic)
 public class StudentObjectiveRankAggregator extends Aggregator {
 

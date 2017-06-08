@@ -27,7 +27,7 @@ import java.util.List;
  */
 @Component
 @AggregateTypes(AggregateType.Basic)
-@AggragateOrder(8)
+@AggregateOrder(8)
 public class AverageScoreAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(AverageScoreAggregator.class);

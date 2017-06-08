@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * 统计排名
  */
 @AggregateTypes(AggregateType.Basic)
-@AggragateOrder(4)
+@AggregateOrder(4)
 @Component
 public class RankAggregator extends Aggregator {
 

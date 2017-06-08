@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  *
  * @author luckylo
  */
-@AggragateOrder(7)
+@AggregateOrder(7)
 @AggregateTypes(AggregateType.Basic)
 @Component
 public class AllPassOrFailAggregator extends Aggregator {

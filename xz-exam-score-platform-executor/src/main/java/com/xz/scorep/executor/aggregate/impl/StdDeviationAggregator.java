@@ -17,7 +17,7 @@ import java.util.List;
  * @author by fengye on 2017/5/16.
  */
 @AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
-@AggragateOrder(65)
+@AggregateOrder(65)
 @Component
 public class StdDeviationAggregator extends Aggregator {
 
