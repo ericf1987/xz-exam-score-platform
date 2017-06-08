@@ -4,8 +4,6 @@ import com.hyd.dao.DAO;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.project.SubjectService;
-import com.xz.scorep.executor.reportconfig.ReportConfig;
-import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 
 /**
@@ -26,16 +23,21 @@ public class StudentProjectScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(StudentProjectScoreAggregator.class);
 
-    @Autowired
-    private SubjectService subjectService;
+
+    private static final String UPDATE_PROJECT_SCORE = "update score_project set paper_score_type = " +
+            "case " +
+            "when student_id in (select a.student_id from (select student_id,COUNT(*) counts from lost GROUP BY student_id) a where a.counts = {{count}})then \"lost\"\n" +
+            "when student_id in (select b.student_id from (select student_id,COUNT(*) counts from absent GROUP BY student_id) b where b.counts = {{count}})then \"absent\"\n" +
+            "when student_id in (select c.student_id from (select student_id,COUNT(*) counts from cheat GROUP BY student_id) c where c.counts = {{count}})then \"cheat\"\n" +
+            "else\"paper\" end";
+
 
     @Autowired
-    private ReportConfigService reportConfigService;
+    private SubjectService subjectService;
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
         String projectId = aggregateParameter.getProjectId();
-        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
         projectDao.execute("truncate table score_project");
@@ -44,9 +46,7 @@ public class StudentProjectScoreAggregator extends Aggregator {
 
         AtomicInteger counter = new AtomicInteger(0);
 
-
         List<ExamSubject> subjects = AggregatorHelper.getSubjects(aggregateParameter, subjectService);
-
 
         subjects.stream()
                 .filter(subject -> subject.getVirtualSubject().equals("false"))
@@ -57,104 +57,17 @@ public class StudentProjectScoreAggregator extends Aggregator {
                             projectId, counter.incrementAndGet(), subjects.size());
                 });
 
-        /*//删除项目总分为0分,且没有缺考没有作弊记录的学生成绩
-        if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
-            removeZeroScores(projectId, subjects);
-        }
-
-        //根据报表配置删除全科缺考考生记录
-        if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
-            removeAbsentStudent(projectDao, subjects);
-        }
-
-        //根据报表配置删除全科作弊考生记录
-        if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
-            removeCheatStudent(projectDao, subjects);
-        }*/
-
+        //全科卷面0分,全科作弊,全科缺考才会进入
+        updateProjectScore(subjects, projectDao);
 
     }
 
-    private void removeCheatStudent(DAO projectDao, List<ExamSubject> subjects) {
-        //学生作弊的科目数,  当学生作弊的科目数等于参考科目数,该学生为全科作弊
-        String query = "select student_id,COUNT(*) counts from cheat  GROUP BY student_id ";
+    private void updateProjectScore(List<ExamSubject> subjects, DAO projectDao) {
         int subjectCount = (int) subjects.stream()
                 .filter(subject -> subject.getVirtualSubject().equals("false"))
                 .count();
-
-        List<String> studentList = projectDao.query(query).stream()
-                .filter(row -> row.getInteger("counts", 0) == subjectCount)
-                .map(row -> "\"" + row.getString("student_id") + "\"")
-                .collect(Collectors.toList());
-
-        if (studentList.isEmpty()) {
-            return;
-        }
-
-        if (studentList.size() == 1) {
-            String studentId = studentList.get(0);
-            LOG.info("删除全科作弊的考生.... ");
-            String sql = "delete from score_project where student_id = {{studentId}}";
-            projectDao.execute(sql.replace("{{studentId}}", studentId));
-            LOG.info("项目的全科作弊学生删除完毕.....");
-        } else {
-            String students = String.join(",", studentList);
-            LOG.info("删除全科作弊的考生.... ");
-            String sql = "delete from score_project where student_id in ({{condition}})";
-            projectDao.execute(sql.replace("{{condition}}", students));
-            LOG.info("项目的全科作弊学生删除完毕.....");
-        }
-
-    }
-
-    private void removeZeroScores(String projectId, List<ExamSubject> subjects) {
-        //删除项目总分为0分,且没有缺考没有作弊记录的学生成绩
-        //(语数外){语缺考,数缺考,外参考得0(应该排除);语数外均缺考得0分此处不应排除}
-        String sql = "delete from score_project where score=0 and student_id not in(" +
-                "select a.student_id from (select student_id,COUNT(*) counts from absent GROUP BY student_id) a where a.counts = {{count}}\n" +
-                "UNION\n" +
-                "select a.student_id from (select student_id,COUNT(*) counts from cheat GROUP BY student_id) a where a.counts = {{count}}" +
-                ") ";
-
-        int subjectCount = (int) subjects.stream()
-                .filter(subject -> subject.getVirtualSubject().equals("false"))
-                .count();
-
-        LOG.info("删除项目全科缺考、作弊外的零分记录...");
-        daoFactory.getProjectDao(projectId).execute(sql.replace("{{count}}", String.valueOf(subjectCount)));
-        LOG.info("项目 {} 的全科缺考、作弊外的零分记录删除完毕。", projectId);
-    }
-
-    private void removeAbsentStudent(DAO projectDao, List<ExamSubject> subjects) {
-        //学生缺考的科目数,  当学生缺考的科目数等于参考科目数,该学生为全科缺考
-        String query = "select student_id,COUNT(*) counts from absent  GROUP BY student_id ";
-        int subjectCount = (int) subjects.stream()
-                .filter(subject -> subject.getVirtualSubject().equals("false"))
-                .count();
-
-        List<String> studentList = projectDao.query(query).stream()
-                .filter(row -> row.getInteger("counts", 0) == subjectCount)
-                .map(row -> "\"" + row.getString("student_id") + "\"")
-                .collect(Collectors.toList());
-
-        if (studentList.isEmpty()) {
-            return;
-        }
-
-        if (studentList.size() == 1) {
-            LOG.info("删除全科缺考的考生记录....");
-            String studentId = studentList.get(0);
-            String sql = "delete from score_project where student_id = {{studentId}}";
-            projectDao.execute(sql.replace("{{studentId}}", studentId));
-            LOG.info("项目的全科缺考学生删除完毕.....");
-        } else {
-            String students = String.join(",", studentList);
-            LOG.info("删除全科缺考的考生记录....");
-            String sql = "delete from score_project where student_id in ({{condition}})";
-            projectDao.execute(sql.replace("{{condition}}", students));
-            LOG.info("项目的全科缺考学生删除完毕.....");
-        }
-
+        String replace = UPDATE_PROJECT_SCORE.replace("{{count}}", String.valueOf(subjectCount));
+        projectDao.execute(replace);
     }
 
 

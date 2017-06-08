@@ -9,8 +9,6 @@ import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
-import com.xz.scorep.executor.reportconfig.ReportConfig;
-import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.AsyncCounter;
 import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
@@ -39,16 +37,6 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
             "when student_id in (select student_id from cheat where subject_id like \"%{{subjectId}}%\") then \"cheat\"\n" +
             "else\"paper\" end";
 
-    private static final String DEL_ZERO_SCORE = "delete from `{{tableName}}` where student_id in (" +
-            "select student_id from `score_subject_{{subject}}` where score = 0 ) and score=0 and paper_score_type = \"paper\"";
-
-    private static final String DEL_ABS_SCORE = "delete from `{{tableName}}` where paper_score_type = \"absent\"";
-
-    private static final String DEL_CHEAT_SCORE = "delete from `{{tableName}}` where paper_score_type = \"cheat\"";
-
-    private static final String DEL_LOST_SCORE = "delete from `{{tableName}}` where paper_score_type = \"lost\"";
-
-
     @Autowired
     private DAOFactory daoFactory;
 
@@ -60,9 +48,6 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
 
     @Autowired
     private AggregateConfig aggregateConfig;
-
-    @Autowired
-    private ReportConfigService reportConfigService;
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
@@ -89,10 +74,9 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
                 LOG.error("统计主客观题失败", e);
             }
 
-            //更新主客观题得分来源(新统计可有可无...)
+            //更新主客观题得分来源
             updateSubObjScore(projectDao, subjectId, objectiveTableName, subjectiveTableName);
 
-//            updateObjectiveScore(projectId, projectDao, subjectId, objectiveTableName, subjectiveTableName);
         });
 
 
@@ -109,49 +93,6 @@ public class StudentObjectiveScoreAggregator extends Aggregator {
                 .replace("{{subjectId}}", subjectId));
     }
 
-    private void updateObjectiveScore(String projectId, DAO projectDao, String subjectId, String objectiveTableName, String subjectiveTableName) {
-        ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
-
-        //默认删除丢卷学生
-        projectDao.execute(DEL_LOST_SCORE
-                .replace("{{tableName}}", objectiveTableName)
-                .replace("{{subject}}", subjectId));
-        projectDao.execute(DEL_LOST_SCORE
-                .replace("{{tableName}}", subjectiveTableName)
-                .replace("{{subject}}", subjectId));
-
-
-        // 根据报表配置删除零分记录(该0分为卷面0分)
-        if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
-            //只删除总分为0的主客观题得分为0分的记录
-            projectDao.execute(DEL_ZERO_SCORE
-                    .replace("{{tableName}}", objectiveTableName)
-                    .replace("{{subject}}", subjectId));
-            projectDao.execute(DEL_ZERO_SCORE
-                    .replace("{{tableName}}", subjectiveTableName)
-                    .replace("{{subject}}", subjectId));
-        }
-
-        // 根据报表配置删除作弊学生
-        if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
-            projectDao.execute(DEL_CHEAT_SCORE
-                    .replace("{{tableName}}", objectiveTableName)
-                    .replace("{{subject}}", subjectId));
-            projectDao.execute(DEL_CHEAT_SCORE
-                    .replace("{{tableName}}", subjectiveTableName)
-                    .replace("{{subject}}", subjectId));
-        }
-
-        // 根据报表配置删除缺考考生记录
-        if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
-            projectDao.execute(DEL_ABS_SCORE
-                    .replace("{{tableName}}", objectiveTableName)
-                    .replace("{{subject}}", subjectId));
-            projectDao.execute(DEL_ABS_SCORE
-                    .replace("{{tableName}}", subjectiveTableName)
-                    .replace("{{subject}}", subjectId));
-        }
-    }
 
     private void startObjectiveScoreAggregation(String projectId, ExamSubject subject, ThreadPoolExecutor pool) {
         String subjectId = subject.getId();

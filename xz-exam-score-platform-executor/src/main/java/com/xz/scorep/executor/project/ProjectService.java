@@ -60,7 +60,7 @@ public class ProjectService {
         DAO dao = daoFactory.getProjectDao(projectId);
 
         // 考试项目总分表（科目总分表和题目得分表分别在 SubjectService 和 ScoreService）
-        dao.execute("create table score_project(student_id VARCHAR(40) primary key,score decimal(5,1))");
+        dao.execute("create table score_project(student_id VARCHAR(40) primary key,score decimal(5,1),paper_score_type varchar(6))");
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         //平均分
