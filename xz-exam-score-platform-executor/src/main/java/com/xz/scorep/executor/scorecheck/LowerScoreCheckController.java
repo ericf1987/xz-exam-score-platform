@@ -24,7 +24,18 @@ public class LowerScoreCheckController {
     public Result lowerScoreCheck(@PathVariable("projectId") String projectId,
                                   @PathVariable("subjectId") String subjectId,
                                   @PathVariable("score") double score) {
-        // TODO: 2017-06-09 todo something
+        return check(projectId, subjectId, score);
+    }
+
+
+    @ResponseBody
+    @GetMapping("check/{projectId}/{score}")
+    public Result lowerScoreCheck(@PathVariable("projectId") String projectId,
+                                  @PathVariable("score") double score) {
+        return check(projectId, null, score);
+    }
+
+    private Result check(String projectId, String subjectId, double score) {
         return Result.success();
     }
 }
