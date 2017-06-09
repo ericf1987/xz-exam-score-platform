@@ -20,7 +20,7 @@ import java.util.List;
  */
 @Component
 @AggregateTypes(AggregateType.Basic)
-@AggregateOrder(9)
+@AggregateOrder(15)
 public class QuestScoreRateAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(QuestScoreRateAggregator.class);
