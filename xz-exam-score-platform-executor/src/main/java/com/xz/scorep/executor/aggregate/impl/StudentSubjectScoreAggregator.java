@@ -5,20 +5,17 @@ import com.hyd.dao.DAO;
 import com.hyd.dao.DAOException;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamSubject;
-import com.xz.scorep.executor.config.AggregateConfig;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.reportconfig.ScoreLevelsHelper;
-import com.xz.scorep.executor.utils.ThreadPools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -46,9 +43,6 @@ public class StudentSubjectScoreAggregator extends Aggregator {
     private DAOFactory daoFactory;
 
     @Autowired
-    private AggregateConfig aggregateConfig;
-
-    @Autowired
     private ReportConfigService reportConfigService;
 
     @Override
@@ -60,9 +54,8 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         List<ExamSubject> subjects = AggregatorHelper.getSubjects(aggregateParameter, subjectService);
 
         LOG.info("subjectsSize ...{}", subjects.size());
-        ThreadPools.createAndRunThreadPool(aggregateConfig.getSubjectPoolSize(), 1,
-                pool -> accumulateSubjectScores(projectId, projectDao, pool, subjects));
 
+        accumulateSubjectScores(projectId, projectDao, subjects);
         updateSubjectScore(projectId, subjects);
 
         // 将 score 拷贝到 real_score
@@ -121,7 +114,7 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         });
     }
 
-    private void accumulateSubjectScores(String projectId, DAO projectDao, ThreadPoolExecutor executor, List<ExamSubject> subjects) {
+    private void accumulateSubjectScores(String projectId, DAO projectDao, List<ExamSubject> subjects) {
 
         AtomicInteger count = new AtomicInteger(0);
 
@@ -156,33 +149,4 @@ public class StudentSubjectScoreAggregator extends Aggregator {
         projectDao.execute(objSql);
     }
 
-//    private void accumulateQuestScores(String projectId, DAO projectDao, ThreadPoolExecutor executor, String subjectId, String tableName) {
-//        List<ExamQuest> examQuests = questService.queryQuests(projectId, subjectId);
-//        final AtomicInteger counter = new AtomicInteger(0);
-//
-//        Runnable accumulateTip = () -> LOG.info(
-//                "项目 {} 的科目 {} 总分合计已完成 {}/{}", projectId, subjectId, counter.incrementAndGet(), examQuests.size());
-//
-//        examQuests.forEach(
-//                examQuest -> executor.submit(
-//                        () -> accumulateQuestScores0(projectDao, tableName, examQuest, accumulateTip)));
-//    }
-
-//    private void accumulateQuestScores0(DAO projectDao, String tableName, ExamQuest examQuest, Runnable tip) {
-//        try {
-//            String questId = examQuest.getId();
-//
-//            String combineSql = "update " + tableName + " p \n" +
-//                    "  inner join `score_" + questId + "` q using(student_id)\n" +
-//                    "  set p.score=p.score+ifnull(q.score,0)";
-//
-//            projectDao.execute(combineSql);
-//
-//            if (tip != null) {
-//                tip.run();
-//            }
-//        } catch (DAOException e) {
-//            LOG.error("统计科目成绩失败", e);
-//        }
-//    }
 }

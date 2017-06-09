@@ -30,8 +30,8 @@ import java.util.stream.Collectors;
 /**
  * 成绩四率分布
  */
-@AggregateTypes({AggregateType.Basic, AggregateType.Quick})
-@AggregateOrder(5)
+@AggregateTypes( AggregateType.Quick)
+@AggregateOrder(4)
 @Component
 public class ScoreLevelRateAggregator extends Aggregator {
 
