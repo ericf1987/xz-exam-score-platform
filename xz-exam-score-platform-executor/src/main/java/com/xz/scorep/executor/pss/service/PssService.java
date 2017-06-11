@@ -68,15 +68,15 @@ public class PssService {
         joinAllPssTask(pssTaskBeans);
     }
 
-     public void joinAllPssTask(List<PssTaskBean> pssTaskBeans){
-         for (PssTaskBean pssTaskBean : pssTaskBeans) {
-             try {
-                 pssTaskBean.join();
-             } catch (InterruptedException e) {
-                 LOG.error("线程中断，执行pss任务失败！");
-             }
-         }
-     }
+    public void joinAllPssTask(List<PssTaskBean> pssTaskBeans) {
+        for (PssTaskBean pssTaskBean : pssTaskBeans) {
+            try {
+                pssTaskBean.join();
+            } catch (InterruptedException e) {
+                LOG.error("线程中断，执行pss任务失败！");
+            }
+        }
+    }
 
     //封装单个任务，每个任务执行一个学生列表
     private PssTaskBean packPssTask(String projectId, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
@@ -105,6 +105,12 @@ public class PssService {
             PssForStudents.add(pssForStudent);
         }
         return PssForStudents;
+    }
+
+    //执行单个学生的pss报告打印
+    public void runTaskByOneStudent(String projectId, String schoolId, String classId, String subjectId, String studentId, Map<String, Object> configFromCMS) {
+        PssForStudent pssForStudent = new PssForStudent(projectId, schoolId, classId, subjectId, studentId);
+        processResultData(Collections.singletonList(pssForStudent));
     }
 
     private void processResultData(List<PssForStudent> pssForStudents) {
@@ -224,10 +230,10 @@ public class PssService {
         return doConvert(imgUrl, PaintUtils.PNG);
     }
 
-    class PssTaskBean extends Thread{
+    class PssTaskBean extends Thread {
         List<PssForStudent> students;
 
-        public PssTaskBean(List<PssForStudent> students){
+        public PssTaskBean(List<PssForStudent> students) {
             this.students = students;
         }
 

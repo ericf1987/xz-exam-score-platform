@@ -41,4 +41,17 @@ public class PssController {
         pssTaskManager.startPssTask(projectId, null, true);
         return Result.success();
     }
+
+    @PostMapping("/img/task/oneStudent")
+    @ResponseBody
+    public Result startPssTask(
+            @RequestParam("projectId") String projectId,
+            @RequestParam("schoolId") String schoolId,
+            @RequestParam("classId") String classId,
+            @RequestParam("subjectId") String subjectId,
+            @RequestParam("studentId") String studentId
+    ) {
+        pssService.runTaskByOneStudent(projectId, schoolId, classId, subjectId, studentId, null);
+        return Result.success();
+    }
 }
