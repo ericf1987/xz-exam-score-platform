@@ -126,16 +126,10 @@ public class PssService {
             String savePath = StringUtil.joinPathsWith("/", projectId, schoolId,
                     classId, subjectId);
 
-            String positiveFileName = studentId + "_positive" + ".pdf";
-            String reverseFileName = studentId + "_reverse" + ".pdf";
+            String fileName = studentId + ".pdf";
 
-            //请求生成正面信息
-            String url1 = getURL(projectId, schoolId, classId, subjectId, studentId, "true");
-            //请求生成反面信息
-            String url2 = getURL(projectId, schoolId, classId, subjectId, studentId, "false");
-
-            sendToPDFByPost(savePath, positiveFileName, url1);
-            sendToPDFByPost(savePath, reverseFileName, url2);
+            String url = getURL(projectId, schoolId, classId, subjectId, studentId);
+            sendToPDFByPost(savePath, fileName, url);
         }
 
     }
@@ -158,14 +152,13 @@ public class PssService {
         HttpUtils.sendRequest(serverUrl, params);
     }
 
-    public String getURL(String projectId, String schoolId, String classId, String subjectId, String studentId, String isPositive) {
+    public String getURL(String projectId, String schoolId, String classId, String subjectId, String studentId) {
         StringBuilder builder = new StringBuilder();
         builder.append("projectId=").append(projectId).append("&")
                 .append("schoolId=").append(schoolId).append("&")
                 .append("classId=").append(classId).append("&")
                 .append("subjectId=").append(subjectId).append("&")
-                .append("studentId=").append(studentId).append("&")
-                .append("isPositive=").append(isPositive);
+                .append("studentId=").append(studentId).append("&");
         try {
             String url = URLEncoder.encode(builder.toString(), "UTF-8");
             return imgUrl + url;
@@ -212,22 +205,21 @@ public class PssService {
     }
 
     /**
-     * 返回一个学生的答题卡单页截图数据
+     * 返回学生正反面答题卡图片
      *
      * @param projectId      项目ID
      * @param subjectId      科目ID
      * @param studentId      学生ID
-     * @param isPositive     正反面
      * @param subjectRuleMap 参数显示规则
      * @return
      */
-    public String getOneStudentOnePage(String projectId, String subjectId,
-                                       String studentId, boolean isPositive,
-                                       Map<String, Object> subjectRuleMap) {
+    public Map<String, String> getStudentImgURL(String projectId, String subjectId,
+                                                String studentId, Map<String, Object> subjectRuleMap){
         Map<String, Object> studentCardSlices = scannerDBService.getOneStudentCardSlice(projectId, studentId, subjectId);
-        String imgUrl = isPositive ? MapUtils.getString(studentCardSlices, "paper_positive")
-                : MapUtils.getString(studentCardSlices, "paper_reverse");
-        return doConvert(imgUrl, PaintUtils.PNG);
+        Map<String, String> map = new HashMap<>();
+        map.put("paper_positive", doConvert(MapUtils.getString(studentCardSlices, "paper_positive"), PaintUtils.PNG));
+        map.put("paper_reverse", doConvert(MapUtils.getString(studentCardSlices, "paper_reverse"), PaintUtils.PNG));
+        return map;
     }
 
     class PssTaskBean extends Thread {

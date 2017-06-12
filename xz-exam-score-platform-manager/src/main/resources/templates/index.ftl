@@ -27,7 +27,7 @@
     <tr>
         <td>${agent.host}</td>
         <td>${agent.port?string["0"]}</td>
-        <td>${agent.status}</td>
+        <td>${agent.taskStatus}</td>
         <td>${agent.dbSize}</td>
         <td>${agent.activeProjects?size}</td>
     </tr>

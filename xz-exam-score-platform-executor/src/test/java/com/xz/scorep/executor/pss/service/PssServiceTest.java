@@ -9,11 +9,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 /**
  * @author by fengye on 2017/5/24.
@@ -34,16 +31,10 @@ public class PssServiceTest extends BaseTest {
     public static final String STUDENT_ID = "04c4f670-babe-42bb-84f3-f1012c71dbad";
 
     @Test
-    public void testGetOneStudentOnePage() throws Exception {
-        String imgString = pssService.getOneStudentOnePage(PROJECT_ID, SUBJECT_ID, STUDENT_ID, true, null);
-        System.out.println(imgString);
-    }
-
-    @Test
     public void testSendToPDF() throws Exception {
         String relativePath = StringUtil.joinPathsWith("/", PROJECT_ID, SCHOOL_ID, CLASS_ID, SUBJECT_ID);
         String pdfName = STUDENT_ID + "_POSITIVE.pdf";
-        String url = pssService.getURL(PROJECT_ID, SCHOOL_ID, CLASS_ID, SUBJECT_ID, STUDENT_ID, "true");
+        String url = pssService.getURL(PROJECT_ID, SCHOOL_ID, CLASS_ID, SUBJECT_ID, STUDENT_ID);
         pssService.sendToPDFByPost(relativePath, pdfName, url);
     }
 

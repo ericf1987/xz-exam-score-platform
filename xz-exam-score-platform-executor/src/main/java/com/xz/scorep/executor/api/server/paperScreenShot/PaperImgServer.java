@@ -14,7 +14,6 @@ import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.pss.service.PssService;
-import org.apache.commons.lang.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,8 +30,7 @@ import java.util.Map;
         @Parameter(name = "schoolId", type = Type.String, description = "学校ID", required = true),
         @Parameter(name = "classId", type = Type.String, description = "班级ID", required = true),
         @Parameter(name = "subjectId", type = Type.String, description = "科目ID", required = true),
-        @Parameter(name = "studentId", type = Type.String, description = "学生ID", required = true),
-        @Parameter(name = "isPositive", type = Type.String, description = "正反面", required = true)
+        @Parameter(name = "studentId", type = Type.String, description = "学生ID", required = true)
 })
 @Service
 public class PaperImgServer implements Server {
@@ -62,7 +60,6 @@ public class PaperImgServer implements Server {
         String classId = param.getString("classId");
         String subjectId = param.getString("subjectId");
         String studentId = param.getString("studentId");
-        boolean isPositive = BooleanUtils.toBoolean(param.getString("isPositive"));
 
         //判断某学生是否被排除(由于报表配置排除缺考,0分等可能导致学生没数据,故被排除)
         boolean exclude = query.studentIsExclude(projectId, subjectId, studentId);
@@ -70,7 +67,8 @@ public class PaperImgServer implements Server {
             return Result.success().set("hasData", false);
         }
         //图片数据
-        String imgString = pssService.getOneStudentOnePage(projectId, subjectId, studentId, isPositive, null);
+        Map<String, String> studentImgURL = pssService.getStudentImgURL(projectId, subjectId, studentId, null);
+
         String projectName = projectService.findProject(projectId).getName();
         Row studentRow = studentExamQuery.queryStudentInfo(projectId, studentId);
         studentRow.put("project_name", projectName);
@@ -78,22 +76,11 @@ public class PaperImgServer implements Server {
         //查询当前科目
         ExamSubject subject = subjectService.findSubject(projectId, subjectId);
 
-
-        if (isPositive) {
-            //  学生主客观题得分详情(每一道题目得分,平均分,最高分或者班级得分率....)
-            List<Map<String, Object>> objectiveList =
-                    subjectiveObjectiveService.queryObjectiveScoreDetail(projectId, subjectId, classId, studentId);
-            List<Map<String, Object>> subjectiveList =
-                    subjectiveObjectiveService.querySubjectiveScoreDetail(projectId, subjectId, classId, studentId);
-
-            return Result.success()
-                    .set("hasData", true)
-                    .set("studentInfo", studentRow)
-                    .set("imgString", imgString)
-                    .set("subjectName", subject.getName())
-                    .set("objectiveList", objectiveList)
-                    .set("subjectiveList", subjectiveList);
-        }
+        //  学生主客观题得分详情(每一道题目得分,平均分,最高分或者班级得分率....)
+        List<Map<String, Object>> objectiveList =
+                subjectiveObjectiveService.queryObjectiveScoreDetail(projectId, subjectId, classId, studentId);
+        List<Map<String, Object>> subjectiveList =
+                subjectiveObjectiveService.querySubjectiveScoreDetail(projectId, subjectId, classId, studentId);
 
         //  学生得分(总分,科目得分,科目主客观题得分 .....)
         Map<String, Object> studentScore = studentExamQuery.queryStudentScore(projectId, subjectId, studentId);
@@ -112,9 +99,12 @@ public class PaperImgServer implements Server {
 
         return Result.success()
                 .set("hasData", true)
-                .set("imgString", imgString)
+                .set("imgString_positive", studentImgURL.get("paper_positive"))
+                .set("imgString_reverse",  studentImgURL.get("paper_reverse"))
                 .set("subjectName", subject.getName())
                 .set("studentInfo", studentRow)
+                .set("objectiveList", objectiveList)
+                .set("subjectiveList", subjectiveList)
                 .set("studentScore", studentScore)
                 .set("rankMap", rankMap)
                 .set("overAverage", overAverage)
