@@ -76,12 +76,12 @@ public class DistinctionValueAggregator extends Aggregator {
         quests.stream()
                 .forEach(quest ->
                         pool.submit(() ->
-                                aggrQuestDistinction(projectId, projectDao, quest, studentScoreList, studentInfoList, counter)));
+                                aggrQuestDistinction(projectId, projectDao, quest, studentScoreList, studentInfoList, counter, pool)));
 
         LOG.info("项目 ID {} 统计题目区分度完成 ...", projectId);
     }
 
-    private void aggrQuestDistinction(String projectId, DAO projectDao, ExamQuest quest, List<Row> studentTotalScoreList, List<Row> studentInfoList, AsyncCounter counter) {
+    private void aggrQuestDistinction(String projectId, DAO projectDao, ExamQuest quest, List<Row> studentTotalScoreList, List<Row> studentInfoList, AsyncCounter counter, ThreadPoolExecutor pool) {
         List<Map<String, Object>> insertMap = new ArrayList<>();
         String questId = quest.getId();
         String table = "score_" + questId;
@@ -89,15 +89,15 @@ public class DistinctionValueAggregator extends Aggregator {
 
         try {
             //处理Province维度区分度
-            processProvinceData(quest, studentTotalScoreList, insertMap, questScoreRows);
+            pool.submit(() -> processProvinceData(quest, studentTotalScoreList, insertMap, questScoreRows));
 
             //处理School维度区分度
-            schoolService.listSchool(projectId)
-                    .forEach(school -> processSchoolData(quest, school, studentTotalScoreList, insertMap, questScoreRows, studentInfoList));
+            pool.submit(() -> schoolService.listSchool(projectId)
+                    .forEach(school -> processSchoolData(quest, school, studentTotalScoreList, insertMap, questScoreRows, studentInfoList)));
 
             //处理Class维度区分度
-            classService.listClasses(projectId)
-                    .forEach(clazz -> processClassData(quest, clazz, studentTotalScoreList, insertMap, questScoreRows, studentInfoList));
+            pool.submit(() -> classService.listClasses(projectId)
+                    .forEach(clazz -> processClassData(quest, clazz, studentTotalScoreList, insertMap, questScoreRows, studentInfoList)));
         } finally {
 
             projectDao.insert(insertMap, "distinction");
