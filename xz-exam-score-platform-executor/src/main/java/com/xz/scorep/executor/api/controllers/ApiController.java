@@ -36,7 +36,7 @@ public class ApiController {
         // 解析参数
         try {
             param = ParamUtils.decipherParam(function, p);
-            LOG.info("Request: " + server + "/" + param);
+            //LOG.info("Request: " + server + "/" + param);
         } catch (Exception e) {
             LOG.error("", e);
             return Result.fail(e.getMessage());

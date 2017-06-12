@@ -1,5 +1,7 @@
 package com.xz.scorep.executor.api.utils;
 
+import com.mysql.fabric.xmlrpc.base.Params;
+import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.http.HttpRequest;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -25,12 +27,9 @@ public class HttpUtils {
         }
 
         try {
-            LOG.info("发送请求：{}", url);
-            LOG.info("参数：{}", params);
             String result = httpRequest.request();
-            LOG.info("返回结果：{}", result);
         } catch (IOException e) {
-            LOG.info("请求异常：{}", url);
+            LOG.info("请求异常：{}, 参数：{}", url, params);
             e.printStackTrace();
         }
     }

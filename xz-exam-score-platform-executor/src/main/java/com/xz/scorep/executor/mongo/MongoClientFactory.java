@@ -97,7 +97,7 @@ public class MongoClientFactory {
                 .findFirst()
                 .orElse(null);
 
-        LOG.info("项目 {} 所属网阅数据库：{}", projectId, mongoClient.getAddress());
+        //LOG.info("项目 {} 所属网阅数据库：{}", projectId, mongoClient.getAddress());
 
         return mongoClient;
     }

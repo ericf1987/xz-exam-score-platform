@@ -67,10 +67,10 @@ public class PssTaskManager {
             list.add(map);
         });
 
-        LOG.info("====项目{}======, 试卷截图任务开始执行======", projectId);
+        LOG.info("====项目{}======, 生成学生成绩报告任务开始执行======", projectId);
         list.forEach(l -> {
             for (String schoolId : l.keySet()) {
-                LOG.info("====项目{}, 学校{}, 试卷截图生成开始", projectId, schoolId);
+                LOG.info("====项目{}, 学校{}, 生成开始", projectId, schoolId);
                 List<String> classIds = (List<String>)l.get(schoolId);
                 CountDownLatch countDownLatch = new CountDownLatch(classIds.size());
 
@@ -79,7 +79,7 @@ public class PssTaskManager {
                         try {
                             pssService.dispatchOneClassTask(projectId, schoolId, classId, examSubjects, configFromCMS);
                         } catch (Exception e) {
-                            LOG.info("生成试卷截图失败, 项目{}， 学校{}， 班级{}", projectId, schoolId, classId);
+                            LOG.info("班级生成失败, 项目{}， 学校{}， 班级{}", projectId, schoolId, classId);
                         } finally {
                             countDownLatch.countDown();
                         }
