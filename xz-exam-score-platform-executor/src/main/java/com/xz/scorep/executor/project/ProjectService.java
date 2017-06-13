@@ -156,6 +156,9 @@ public class ProjectService {
                 "range_type varchar(10),range_id varchar(40)," +
                 "option_count int,option_rate decimal(7,4))");
         dao.execute("create index idxoorqr on objective_option_rate(quest_id,range_type,range_id)");
+
+        //学校尖子生所占比例
+        dao.execute("create table school_top_student_rate(school_id varchar(40),count int(11),rate decimal(6,4))");
     }
 
     // 创建基础数据表
