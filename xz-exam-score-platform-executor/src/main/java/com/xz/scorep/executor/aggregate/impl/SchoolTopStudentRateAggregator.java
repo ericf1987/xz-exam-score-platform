@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 尖子生统计
+ * 学校尖子生比例统计
  *
  * @author luckylo
  * @createTime 2017-06-12.
@@ -97,7 +97,7 @@ public class SchoolTopStudentRateAggregator extends Aggregator {
         int count = schoolStudentScore.isEmpty() ? 0 : schoolStudentScore.size();
         map.put("school_id", schoolId);
         map.put("count", count);
-        map.put("rate", (count *1.0 / totalCount));
+        map.put("rate", (count * 1.0 / totalCount));
         return map;
     }
 
