@@ -15,7 +15,6 @@ import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.project.SubjectService;
-import com.xz.scorep.executor.pss.bean.PssForStudent;
 import com.xz.scorep.executor.pss.service.PssService;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,8 +128,14 @@ public class PaperImgServer implements Server {
         String paper_reverse = studentImgURL.get("paper_reverse");
         if (StringUtils.isBlank(paper_positive) || StringUtils.isBlank(paper_reverse)) {
             DAO projectDao = daoFactory.getProjectDao(projectId);
-            PssForStudent student = new PssForStudent(projectId, schoolId, classId, subjectId, studentId);
-            projectDao.insert(student, "pss_task_fail");
+/*            PssForStudent student = new PssForStudent(projectId, schoolId, classId, subjectId, studentId);
+            projectDao.insert(student, "pss_task_fail");*/
+            projectDao.runTransaction(() -> {
+                projectDao.execute("delete from pss_task_fail where project_id = ? and school_id = ? and class_id = ? and subject_id = ? and student_id = ? ",
+                        projectId, schoolId, classId, subjectId, studentId);
+                projectDao.execute("insert into pss_task_fail (project_id, school_id, class_id, subject_id, student_Id) values (?, ?, ?, ?, ?) ",
+                        projectId, schoolId, classId, subjectId, studentId);
+            });
         }
     }
 

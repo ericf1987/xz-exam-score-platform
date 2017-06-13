@@ -68,6 +68,10 @@ public class PssTaskManager {
         });
 
         LOG.info("====项目{}======, 生成学生成绩报告任务开始执行======", projectId);
+
+        //清理以往生成失败的记录
+        pssService.clearFailRecord(projectId);
+
         list.forEach(l -> {
             for (String schoolId : l.keySet()) {
                 LOG.info("====项目{}, 学校{}, 生成开始", projectId, schoolId);

@@ -216,7 +216,7 @@ public class PssService {
      * @param subjectId      科目ID
      * @param studentId      学生ID
      * @param subjectRuleMap 参数显示规则
-     * @return
+     * @return 返回结果
      */
     public Map<String, String> getStudentImgURL(String projectId, String subjectId,
                                                 String studentId, Map<String, Object> subjectRuleMap) {
@@ -230,17 +230,36 @@ public class PssService {
     /**
      * 重新生成失败学生列表的报告
      *
-     * @param projectId
+     * @param projectId 项目ID
      */
     public void regenerateFail(String projectId) {
         LOG.info("========开始重新生成========");
-        DAO projectDao = daoFactory.getProjectDao(projectId);
-        List<PssForStudent> pssForStudents = projectDao.query(PssForStudent.class, "select * from pss_task_fail where project_id = ?", projectId);
+        clearFailRecord(projectId);
+        List<PssForStudent> pssForStudents = getFailStudent(projectId);
         LOG.info("任务数为：", pssForStudents.size());
-        //清除原有数据
-        projectDao.execute("delete from pss_task_fail where project_id = ?", projectId);
         processResultData(pssForStudents);
         LOG.info("========分发完成========");
+    }
+
+    /**
+     * 清理生成失败的数据记录
+     *
+     * @param projectId 项目ID
+     */
+    public void clearFailRecord(String projectId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        projectDao.execute("delete from pss_task_fail where project_id = ?", projectId);
+    }
+
+    /**
+     * 获取生成失败的学生记录
+     *
+     * @param projectId 项目ID
+     * @return 返回结果
+     */
+    public List<PssForStudent> getFailStudent(String projectId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        return projectDao.query(PssForStudent.class, "select * from pss_task_fail where project_id = ?", projectId);
     }
 
     class PssTaskBean extends Thread {
