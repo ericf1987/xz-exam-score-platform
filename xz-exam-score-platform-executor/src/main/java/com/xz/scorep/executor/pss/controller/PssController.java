@@ -54,4 +54,13 @@ public class PssController {
         pssService.runTaskByOneStudent(projectId, schoolId, classId, subjectId, studentId, null);
         return Result.success();
     }
+
+    @PostMapping("/img/task/regenerateFail")
+    @ResponseBody
+    public Result regenerateFail(
+            @RequestParam("projectId") String projectId
+    ) {
+        pssService.regenerateFail(projectId);
+        return Result.success();
+    }
 }

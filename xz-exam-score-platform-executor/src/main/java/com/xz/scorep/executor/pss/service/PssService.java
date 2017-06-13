@@ -1,10 +1,12 @@
 package com.xz.scorep.executor.pss.service;
 
+import com.hyd.dao.DAO;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.aggritems.StudentQuery;
 import com.xz.scorep.executor.api.utils.HttpUtils;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Range;
+import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.ScannerDBService;
 import com.xz.scorep.executor.project.StudentService;
 import com.xz.scorep.executor.pss.bean.PssForStudent;
@@ -43,6 +45,9 @@ public class PssService {
 
     @Autowired
     ScannerDBService scannerDBService;
+
+    @Autowired
+    DAOFactory daoFactory;
 
     @Value("${pdf.img.url}")
     private String imgUrl;
@@ -113,7 +118,7 @@ public class PssService {
         processResultData(Collections.singletonList(pssForStudent));
     }
 
-    private void processResultData(List<PssForStudent> pssForStudents) {
+    public void processResultData(List<PssForStudent> pssForStudents) {
 
         for (PssForStudent pssForStudent : pssForStudents) {
 
@@ -214,12 +219,32 @@ public class PssService {
      * @return
      */
     public Map<String, String> getStudentImgURL(String projectId, String subjectId,
-                                                String studentId, Map<String, Object> subjectRuleMap){
+                                                String studentId, Map<String, Object> subjectRuleMap) {
         Map<String, Object> studentCardSlices = scannerDBService.getOneStudentCardSlice(projectId, studentId, subjectId);
         Map<String, String> map = new HashMap<>();
         map.put("paper_positive", doConvert(MapUtils.getString(studentCardSlices, "paper_positive"), PaintUtils.PNG));
         map.put("paper_reverse", doConvert(MapUtils.getString(studentCardSlices, "paper_reverse"), PaintUtils.PNG));
         return map;
+    }
+
+    /**
+     * 重新生成失败学生列表的报告
+     *
+     * @param projectId
+     */
+    public void regenerateFail(String projectId) {
+        LOG.info("========开始重新生成========");
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        List<PssForStudent> pssForStudents = projectDao.query(PssForStudent.class, "select * from pss_task_fail where project_id = ?", projectId);
+        if (pssForStudents.isEmpty()) {
+            LOG.info("未查询到生成报告失败的学生信息，无需生成！");
+            return;
+        }
+        LOG.info("任务数为：", pssForStudents.size());
+        //清除原有数据
+        projectDao.execute("delete from pss_task_fail where project_id = ?", projectId);
+        processResultData(pssForStudents);
+        LOG.info("========分发完成========");
     }
 
     class PssTaskBean extends Thread {

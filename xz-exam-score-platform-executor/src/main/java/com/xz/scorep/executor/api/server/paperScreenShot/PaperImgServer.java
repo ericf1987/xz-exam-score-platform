@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.api.server.paperScreenShot;
 
+import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.lang.Result;
@@ -11,9 +12,12 @@ import com.xz.scorep.executor.api.server.Server;
 import com.xz.scorep.executor.api.service.SubjectiveObjectiveQuery;
 import com.xz.scorep.executor.api.service.SubjectiveObjectiveService;
 import com.xz.scorep.executor.bean.ExamSubject;
+import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.project.SubjectService;
+import com.xz.scorep.executor.pss.bean.PssForStudent;
 import com.xz.scorep.executor.pss.service.PssService;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +57,9 @@ public class PaperImgServer implements Server {
     @Autowired
     private SubjectiveObjectiveService subjectiveObjectiveService;
 
+    @Autowired
+    DAOFactory daoFactory;
+
     @Override
     public Result execute(Param param) {
         String projectId = param.getString("projectId");
@@ -68,6 +75,9 @@ public class PaperImgServer implements Server {
         }
         //图片数据
         Map<String, String> studentImgURL = pssService.getStudentImgURL(projectId, subjectId, studentId, null);
+
+        //图片获取失败的数据，做好记录
+        checkAndRecord(projectId, schoolId, classId, subjectId, studentId, studentImgURL);
 
         String projectName = projectService.findProject(projectId).getName();
         Row studentRow = studentExamQuery.queryStudentInfo(projectId, studentId);
@@ -100,7 +110,7 @@ public class PaperImgServer implements Server {
         return Result.success()
                 .set("hasData", true)
                 .set("imgString_positive", studentImgURL.get("paper_positive"))
-                .set("imgString_reverse",  studentImgURL.get("paper_reverse"))
+                .set("imgString_reverse", studentImgURL.get("paper_reverse"))
                 .set("subjectName", subject.getName())
                 .set("studentInfo", studentRow)
                 .set("objectiveList", objectiveList)
@@ -113,5 +123,16 @@ public class PaperImgServer implements Server {
                 .set("objectiveTop5", objectiveTop5)
                 .set("subjectiveTop5", subjectiveTop5);
     }
+
+    public void checkAndRecord(String projectId, String schoolId, String classId, String subjectId, String studentId, Map<String, String> studentImgURL) {
+        String paper_positive = studentImgURL.get("paper_positive");
+        String paper_reverse = studentImgURL.get("paper_reverse");
+        if (StringUtils.isBlank(paper_positive) || StringUtils.isBlank(paper_reverse)) {
+            DAO projectDao = daoFactory.getProjectDao(projectId);
+            PssForStudent student = new PssForStudent(projectId, schoolId, classId, subjectId, studentId);
+            projectDao.insert(student, "pss_task_fail");
+        }
+    }
+
 
 }

@@ -73,4 +73,9 @@ public class PssServiceTest extends BaseTest {
                 .setParameter("pdfName", "04c4f670-babe-42bb-84f3-f1012c71dbad_POSITIVE.pdf");
         System.out.println(request.request());
     }
+
+    @Test
+    public void Test4() throws Exception{
+        pssService.regenerateFail(PROJECT_ID);
+    }
 }
