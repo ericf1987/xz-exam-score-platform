@@ -236,10 +236,6 @@ public class PssService {
         LOG.info("========开始重新生成========");
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<PssForStudent> pssForStudents = projectDao.query(PssForStudent.class, "select * from pss_task_fail where project_id = ?", projectId);
-        if (pssForStudents.isEmpty()) {
-            LOG.info("未查询到生成报告失败的学生信息，无需生成！");
-            return;
-        }
         LOG.info("任务数为：", pssForStudents.size());
         //清除原有数据
         projectDao.execute("delete from pss_task_fail where project_id = ?", projectId);
