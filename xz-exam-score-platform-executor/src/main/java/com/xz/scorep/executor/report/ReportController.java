@@ -18,6 +18,7 @@ import java.util.Map;
 public class ReportController {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReportController.class);
+    public static final String QUERY_AGGREGATION_STATUS = "select * from aggregation where subject_id = '{{subjectId}}' and project_id = '{{projectId}}' order by start_time desc";
 
     @Autowired
     private ReportManager reportManager;
@@ -51,7 +52,9 @@ public class ReportController {
 
         DAO managerDao = daoFactory.getManagerDao();
         subjectId = StringUtil.isEmpty(subjectId) ? "" : subjectId;
-        Row row = managerDao.queryFirst("select * from aggregation where subject_id = '' and project_id = '{{projectId}}' order by start_time desc");
+        Row row = managerDao.queryFirst(QUERY_AGGREGATION_STATUS
+                .replace("{{projectId}}", projectId)
+                .replace("{{subjectId}}", subjectId));
         if (!AggregateStatus.Finished.name().equals(row.getString("status"))) {
             return Result.fail(1, "项目正在统计,请稍后再试");
         }
