@@ -59,4 +59,14 @@ public class PssMonitorTest extends BaseTest {
     public void testIncreaseFinished() throws Exception {
         pssMonitor.increaseFinished(PROJECT_ID, TASK_NAME);
     }
+
+    @Test
+    public void testDeleteTaskProgress() throws Exception {
+        pssMonitor.deleteTaskProgress(PROJECT_ID, TASK_NAME);
+    }
+
+    @Test
+    public void testUpdateTaskStatus() throws Exception {
+        pssMonitor.updateTaskStatus(ACTIVE, PROJECT_ID, TASK_NAME);
+    }
 }

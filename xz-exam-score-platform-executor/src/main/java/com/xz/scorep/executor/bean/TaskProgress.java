@@ -101,7 +101,13 @@ public class TaskProgress implements Serializable {
 
     public double getProgress() {
         return this.taskCount == 0 ?
-                0 : DoubleUtils.round((double)this.taskFinished / this.taskCount);
+                0 : DoubleUtils.round((double) this.taskFinished / this.taskCount);
+    }
+
+    public void increaseFinished(TaskProgress taskProgress) {
+        synchronized (taskProgress) {
+            this.taskFinished++;
+        }
     }
 
 }

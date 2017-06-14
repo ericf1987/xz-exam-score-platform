@@ -2,12 +2,11 @@ package com.xz.scorep.executor.pss.mamage;
 
 import com.xz.ajiaedu.common.concurrent.Executors;
 import com.xz.scorep.executor.aggritems.StudentQuery;
-import com.xz.scorep.executor.bean.ExamSubject;
-import com.xz.scorep.executor.bean.ProjectClass;
-import com.xz.scorep.executor.bean.ProjectSchool;
+import com.xz.scorep.executor.bean.*;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.project.SubjectService;
+import com.xz.scorep.executor.pss.service.PssMonitor;
 import com.xz.scorep.executor.pss.service.PssService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +45,9 @@ public class PssTaskManager {
     @Autowired
     SubjectService subjectService;
 
+    @Autowired
+    PssMonitor pssMonitor;
+
     private ThreadPoolExecutor threadPoolExecutor;
 
     @PostConstruct
@@ -54,6 +56,10 @@ public class PssTaskManager {
     }
 
     public void startPssTask(final String projectId, Map<String, Object> configFromCMS, boolean async) {
+
+        //记录任务状态
+        pssMonitor.initTaskProgress(projectId, ProjectTask.Task.PSS_TASK.name(), ProjectTask.TaskStatus.ACTIVE.name());
+
         //学校ID列表
         List<String> schoolIds = schoolService.listSchool(projectId).stream().map(ProjectSchool::getId)
                 .collect(Collectors.toList());
@@ -75,7 +81,7 @@ public class PssTaskManager {
         list.forEach(l -> {
             for (String schoolId : l.keySet()) {
                 LOG.info("====项目{}, 学校{}, 生成开始", projectId, schoolId);
-                List<String> classIds = (List<String>)l.get(schoolId);
+                List<String> classIds = (List<String>) l.get(schoolId);
                 CountDownLatch countDownLatch = new CountDownLatch(classIds.size());
 
                 for (String classId : classIds) {
