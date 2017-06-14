@@ -1,7 +1,11 @@
 package com.xz.scorep.executor.report;
 
+import com.hyd.dao.DAO;
+import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
+import com.xz.scorep.executor.aggregate.AggregateStatus;
+import com.xz.scorep.executor.db.DAOFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +21,9 @@ public class ReportController {
 
     @Autowired
     private ReportManager reportManager;
+
+    @Autowired
+    private DAOFactory daoFactory;
 
     @Autowired
     private ReportArchiveService reportArchiveService;
@@ -40,6 +47,13 @@ public class ReportController {
 
         if (report == null) {
             return Result.fail(404, "没有找到报表 " + reportName);
+        }
+
+        DAO managerDao = daoFactory.getManagerDao();
+        subjectId = StringUtil.isEmpty(subjectId) ? "" : subjectId;
+        Row row = managerDao.queryFirst("select * from aggregation where subject_id = '' and project_id = '{{projectId}}' order by start_time desc");
+        if (!AggregateStatus.Finished.name().equals(row.getString("status"))) {
+            return Result.fail(1, "项目正在统计,请稍后再试");
         }
 
         try {
