@@ -234,9 +234,9 @@ public class PssService {
      */
     public void regenerateFail(String projectId) {
         LOG.info("========开始重新生成========");
-        clearFailRecord(projectId);
         List<PssForStudent> pssForStudents = getFailStudent(projectId);
         LOG.info("任务数为：", pssForStudents.size());
+        clearFailRecord(projectId);
         processResultData(pssForStudents);
         LOG.info("========分发完成========");
     }
