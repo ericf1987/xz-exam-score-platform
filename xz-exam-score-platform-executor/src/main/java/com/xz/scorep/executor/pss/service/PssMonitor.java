@@ -60,7 +60,7 @@ public class PssMonitor {
         String now = format.format(Calendar.getInstance().getTime());
         managerDao.runTransaction(() -> {
             managerDao.execute("delete from task_progress where project_id = ? and task_name = ?", projectId, task);
-            managerDao.execute("insert into task_progress (project_id, task_name, start_time, task_status)",
+            managerDao.execute("insert into task_progress (project_id, task_name, start_time, task_status) values(?, ?, ?, ?)",
                     projectId, task, now, status);
         });
     }
