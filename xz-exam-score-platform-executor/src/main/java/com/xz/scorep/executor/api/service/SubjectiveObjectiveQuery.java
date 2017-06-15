@@ -244,7 +244,7 @@ public class SubjectiveObjectiveQuery {
         Row row = projectDao.queryFirst(ZERO_SQL
                 .replace("{{table}}", "score_subject_" + subjectId)
                 .replace("{{studentId}}", studentId));
-        return row == null;
+        return row != null;
     }
 
     //学生是否作弊
@@ -254,7 +254,11 @@ public class SubjectiveObjectiveQuery {
         String cacheKey = "cheat :";
         ArrayList<Row> cheatRows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from cheat")));
 
-        return null == cheatRows.stream()
+        if (cheatRows.isEmpty()) {
+            return false;
+        }
+
+        return null != cheatRows.stream()
                 .filter(row -> subjectId.equals(row.getString("subject_id")) && studentId.equals(row.getString("student_id")))
                 .findFirst().orElse(null);
     }
@@ -283,8 +287,8 @@ public class SubjectiveObjectiveQuery {
                 .findFirst().orElse(null);
 
         if (absent == null || lost == null) {
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 }
