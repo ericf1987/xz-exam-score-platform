@@ -118,6 +118,11 @@ public class PssService {
         processResultData(Collections.singletonList(pssForStudent));
     }
 
+    /**
+     * 发送任务请求至PDF服务器
+     *
+     * @param pssForStudents 任务群体
+     */
     public void processResultData(List<PssForStudent> pssForStudents) {
 
         for (PssForStudent pssForStudent : pssForStudents) {
@@ -157,6 +162,16 @@ public class PssService {
         HttpUtils.sendRequest(serverUrl, params);
     }
 
+    /**
+     * 获取PDF转发服务器URL
+     *
+     * @param projectId 项目ID
+     * @param schoolId  学校ID
+     * @param classId   班级ID
+     * @param subjectId 科目ID
+     * @param studentId 学生ID
+     * @return 返回URL
+     */
     public String getURL(String projectId, String schoolId, String classId, String subjectId, String studentId) {
         StringBuilder builder = new StringBuilder();
         builder.append("projectId=").append(projectId).append("&")

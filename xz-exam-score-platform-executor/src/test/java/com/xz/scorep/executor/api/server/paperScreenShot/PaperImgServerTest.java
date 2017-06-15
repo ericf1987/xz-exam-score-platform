@@ -17,11 +17,11 @@ public class PaperImgServerTest extends BaseTest {
 
     @Autowired
     PaperImgServer paperImgServer;
-    private static final String PROJECT_ID = "430700-a5a39f1f86b3408d9ced3cf82eb8a1c9";
-    private static final String SCHOOL_ID = "3ce843ad-87ab-45c1-a650-c142fa438159";
-    private static final String CLASS_ID = "d82f9ca1-6020-4557-ad5f-335821f1b9bc";
-    private static final String SUBJECT_ID = "003";
-    private static final String STUDENT_ID = "04c4f670-babe-42bb-84f3-f1012c71dbad";
+    private static final String PROJECT_ID = "430100-dd3013ab961946fb8a3668e5ccc475b6";
+    private static final String SCHOOL_ID = "d9bdecc9-0185-4688-90d1-1aaf27e2dcfd";
+    private static final String CLASS_ID = "21c44641-dabd-4e98-b2fa-eef94a9d8ffc";
+    private static final String SUBJECT_ID = "001";
+    private static final String STUDENT_ID = "55c0e53c-68b9-4f8b-a148-36ecd23bc758";
 
 
     @Test
