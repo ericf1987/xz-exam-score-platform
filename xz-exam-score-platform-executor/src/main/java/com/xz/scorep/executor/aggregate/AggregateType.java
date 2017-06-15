@@ -20,7 +20,7 @@ public enum AggregateType {
     Quick,
 
     /**
-     * 仅执行基础统计,用于监控平台生成Excel
+     * 仅执行基础统计,用于监控平台生成Excel(执行Basic统计之前,必须执行Quick统计)
      */
     Basic,
 
