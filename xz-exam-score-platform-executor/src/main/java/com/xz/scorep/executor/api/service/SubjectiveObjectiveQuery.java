@@ -35,7 +35,7 @@ public class SubjectiveObjectiveQuery {
             "and rank.student_id = \"{{studentId}}\"\n" +
             ") tmp1,\n" +
             "(\n" +
-            "select avg(score) average_score,MAX(score) max_score from {{scoreTable}} \n" +
+            "select format(avg(score),2) average_score,MAX(score) max_score from {{scoreTable}} \n" +
             "where student_id in (select id from student where class_id = \"{{classId}}\")\n" +
             ")tmp2\n";
 
