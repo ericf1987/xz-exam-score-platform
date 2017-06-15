@@ -41,6 +41,8 @@ public class SubjectService {
         SUBJECT_NAMES.put("019", "道德与法治");
         SUBJECT_NAMES.put("020", "专业科目");
         SUBJECT_NAMES.put("021", "专业科目2");
+        SUBJECT_NAMES.put("022", "音乐");
+        SUBJECT_NAMES.put("023", "美术");
         ////////////////////////////////////////////////////////////
 
         SUBJECT_NAMES.put("101", "种植专业");
@@ -65,6 +67,7 @@ public class SubjectService {
         SUBJECT_NAMES.put("007008", "政治历史综合");
         SUBJECT_NAMES.put("006009", "生物地理综合");
         SUBJECT_NAMES.put("020021", "专业科目12综合");
+        SUBJECT_NAMES.put("022023", "改成艺术联考");
     }
 
     @Autowired
