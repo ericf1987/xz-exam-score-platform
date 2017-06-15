@@ -58,15 +58,15 @@ public class PssService {
     public static final String BASE64_HEADER = "data:image/png;base64,";
 
     //封装多个任务
-    public void dispatchOneClassTask(String projectId, String schoolId, String classId, List<ExamSubject> examSubjects, Map<String, Object> configFromCMS) {
+    public void dispatchOneClassTask(String projectId, String schoolId, String classId, List<String> examSubjects, Map<String, Object> configFromCMS) {
         List<PssTaskBean> pssTaskBeans = new ArrayList<>();
-        for (ExamSubject examSubject : examSubjects) {
+        for (String examSubject : examSubjects) {
             try {
-                PssTaskBean pssTaskBean = packPssTask(projectId, schoolId, classId, examSubject.getId(), configFromCMS);
+                PssTaskBean pssTaskBean = packPssTask(projectId, schoolId, classId, examSubject, configFromCMS);
                 pssTaskBean.start();
                 pssTaskBeans.add(pssTaskBean);
             } catch (Exception e) {
-                LOG.info("----分发任务失败：项目{}，学校{}，班级{}，科目{}", projectId, schoolId, classId, examSubject.getId());
+                LOG.info("----分发任务失败：项目{}，学校{}，班级{}，科目{}", projectId, schoolId, classId, examSubject);
             }
         }
 

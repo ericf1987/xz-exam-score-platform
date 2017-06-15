@@ -8,16 +8,14 @@ import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.pss.service.PssMonitor;
 import com.xz.scorep.executor.pss.service.PssService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +53,7 @@ public class PssTaskManager {
         this.threadPoolExecutor = Executors.newBlockingThreadPoolExecutor(10, 10, 100);
     }
 
-    public void startPssTask(final String projectId, Map<String, Object> configFromCMS, boolean async) {
+    public void startPssTask(final String projectId, String subjectId, Map<String, Object> configFromCMS, boolean async) {
 
         //记录任务状态
         pssMonitor.initTaskProgress(projectId, ProjectTask.Task.PSS_TASK.name(), ProjectTask.TaskStatus.ACTIVE.name());
@@ -64,7 +62,8 @@ public class PssTaskManager {
         List<String> schoolIds = schoolService.listSchool(projectId).stream().map(ProjectSchool::getId)
                 .collect(Collectors.toList());
         //所有参考科目
-        List<ExamSubject> examSubjects = subjectService.listSubjects(projectId);
+        List<String> examSubjects = !StringUtils.isEmpty(subjectId) ? Collections.singletonList(subjectId) :
+                subjectService.listSubjects(projectId).stream().map(s -> s.getId()).collect(Collectors.toList());
 
         List<Map<String, Object>> list = new ArrayList<>();
         schoolIds.forEach(schoolId -> {
@@ -120,5 +119,4 @@ public class PssTaskManager {
         LOG.info("====项目{}======, 试卷截图任务执行完毕！======", projectId);
 
     }
-
 }
