@@ -103,11 +103,11 @@ public class TValueAggregator extends Aggregator {
         projectDao.insert(insertMap, "t_value");
     }
 
-    private Map<String, Object> createMap(String rangeType, String rangeId, String subjectId, double value) {
+    private Map<String, Object> createMap(String rangeType, String rangeId, String targetId, double value) {
         Map<String, Object> map = new HashMap<>();
         map.put("range_type", rangeType);
         map.put("range_id", rangeId);
-        map.put("subject_id", subjectId);
+        map.put("target_id", targetId);
         map.put("value", value);
         return map;
     }

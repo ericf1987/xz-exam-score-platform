@@ -9,10 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author luckylo
  * @createTime 2017-06-06.
  */
-public class DistinctionValueAggregatorTest extends BaseTest {
+public class QuestDeviationAggregatorTest extends BaseTest {
 
     @Autowired
-    DistinctionValueAggregator aggregator;
+    QuestDeviationAggregator aggregator;
 
     @Test
     public void aggregate() throws Exception {

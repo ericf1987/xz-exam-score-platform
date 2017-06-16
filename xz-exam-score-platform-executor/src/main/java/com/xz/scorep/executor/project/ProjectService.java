@@ -103,12 +103,12 @@ public class ProjectService {
 
         //；学科T值
         dao.execute("create table t_value(range_type varchar(20),range_id varchar(40)," +
-                "subject_id varchar(20),value decimal(6,2))");
+                "target_id varchar(20),value decimal(6,2))");
 
         //客观题区分度 (省,学校,班级)
-        dao.execute("create table distinction(quest_id varchar(40),range_type varchar(20)," +
+        dao.execute("create table quest_deviation(quest_id varchar(40),range_type varchar(20)," +
                 "range_id varchar(40),value decimal(6,2))");
-        dao.execute("create index idxdsc on distinction(quest_id,range_id)");
+        dao.execute("create index idxdsc on quest_deviation(quest_id,range_id)");
 
 
         dao.execute("create table median(range_type varchar(20),range_id varchar(40)," +
@@ -120,10 +120,10 @@ public class ProjectService {
         dao.execute("create index idxapfri on all_pass_or_fail(range_id)");
 
         // 分数分段表
-        dao.execute("create table segments(" +
+        dao.execute("create table score_segments(" +
                 "range_type varchar(20),range_id VARCHAR(40),target_type VARCHAR(20),target_id VARCHAR(40)," +
                 "score_min decimal(5,1) not null,score_max decimal(5,1) not null,student_count int default 0 not null)");
-        dao.execute("create index idxsgmtrt on segments(range_type,range_id,target_type,target_id)");
+        dao.execute("create index idxsgmtrt on score_segments(range_type,range_id,target_type,target_id)");
 
         // 得分等级表
         dao.execute("create table scorelevelmap(" +

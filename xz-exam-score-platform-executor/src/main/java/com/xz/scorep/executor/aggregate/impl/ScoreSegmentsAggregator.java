@@ -118,7 +118,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
 
-        projectDao.execute("truncate table segments");
+        projectDao.execute("truncate table score_segments");
         LOG.info("成绩分段统计结果已清空。");
 
         aggrTotalScoreSegments(projectId, projectDao, reportConfig);
@@ -147,7 +147,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
                     row, Range.province(province), Target.subject(subjectId)));
         });
 
-        projectDao.insert(provinceSegmentRows, "segments");
+        projectDao.insert(provinceSegmentRows, "score_segments");
         LOG.info("项目 {} 的科目 {} 总体科目成绩分段统计完成", projectId, subjectId);
 
         //////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
             schoolSegmentRows.add(createCountMap(row, Range.school(schoolId), Target.subject(subjectId)));
         });
 
-        projectDao.insert(schoolSegmentRows, "segments");
+        projectDao.insert(schoolSegmentRows, "score_segments");
         LOG.info("项目 {} 的科目 {} 学校科目成绩分段统计完成", projectId, subjectId);
 
         //////////////////////////////////////////////////////////////
@@ -175,7 +175,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
             classSegmentRows.add(createCountMap(row, Range.clazz(classId), Target.subject(subjectId)));
         });
 
-        projectDao.insert(classSegmentRows, "segments");
+        projectDao.insert(classSegmentRows, "score_segments");
         LOG.info("项目 {} 的科目 {} 班级科目成绩分段统计完成", projectId, subjectId);
     }
 
@@ -187,7 +187,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
         projectDao.query(PROVINCE_PROJECT_SEGMENT.replace("{{step}}", totalStep)).forEach(row -> {
             Map<String, Object> map = createCountMap(row,
                     Range.PROVINCE_RANGE, Target.project(projectId));
-            projectDao.insert(map, "segments");
+            projectDao.insert(map, "score_segments");
         });
         LOG.info("项目 {} 的总体总分成绩分段统计完成", projectId);
 
@@ -201,7 +201,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
             schoolSegmentRows.add(createCountMap(row, Range.school(schoolId), Target.project(projectId)));
         });
 
-        projectDao.insert(schoolSegmentRows, "segments");
+        projectDao.insert(schoolSegmentRows, "score_segments");
         LOG.info("项目 {} 的学校总分成绩分段统计完成", projectId);
 
         //////////////////////////////////////////////////////////////
@@ -214,7 +214,7 @@ public class ScoreSegmentsAggregator extends Aggregator {
             classSegmentRows.add(createCountMap(row, Range.clazz(classId), Target.project(projectId)));
         });
 
-        projectDao.insert(classSegmentRows, "segments");
+        projectDao.insert(classSegmentRows, "score_segments");
         LOG.info("项目 {} 的班级总分成绩分段统计完成", projectId);
     }
 

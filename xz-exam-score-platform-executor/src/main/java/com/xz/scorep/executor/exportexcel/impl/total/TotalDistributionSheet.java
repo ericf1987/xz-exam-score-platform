@@ -84,7 +84,7 @@ public class TotalDistributionSheet extends SheetGenerator {
         String itemRangeType = range.match(Range.PROVINCE) ? "school" : "class";
         List<Row> itemSegments = projectDao.query(SQL
                 .Select("range_id as item_id", "score_min", "score_max", "student_count")
-                .From("segments")
+                .From("score_segments")
                 .Where("range_type=?", itemRangeType)
                 .And("target_type=?", target.getType())
                 .And("target_id=?", target.getId())
@@ -126,7 +126,7 @@ public class TotalDistributionSheet extends SheetGenerator {
 
         List<Row> totalSegments = projectDao.query(SQL
                 .Select("'z' as item_id", "score_min", "score_max", "student_count")
-                .From("segments")
+                .From("score_segments")
                 .Where("range_type=?", range.getType())
                 .And(range.match(Range.SCHOOL), "range_id=?", range.getId())
                 .And("target_type=?", target.getType())

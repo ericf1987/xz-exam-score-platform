@@ -36,9 +36,9 @@ import java.util.stream.Collectors;
 @Component
 @AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
 @AggragateOrder(82)
-public class DistinctionValueAggregator extends Aggregator {
+public class QuestDeviationAggregator extends Aggregator {
 
-    private static Logger LOG = LoggerFactory.getLogger(DistinctionValueAggregator.class);
+    private static Logger LOG = LoggerFactory.getLogger(QuestDeviationAggregator.class);
 
     public static final String QUERY_QUEST = "select * from `{{table}}` order by score desc";
 
@@ -59,7 +59,7 @@ public class DistinctionValueAggregator extends Aggregator {
         String projectId = aggregateParameter.getProjectId();
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        projectDao.execute("truncate table distinction");
+        projectDao.execute("truncate table quest_deviation");
 
         LOG.info("开始统计项目 ID {} 客观题区分度 ...", projectId);
         List<Row> studentScoreList = projectDao.query("select * from score_project order by score desc");
@@ -100,7 +100,7 @@ public class DistinctionValueAggregator extends Aggregator {
                     .forEach(clazz -> processClassData(quest, clazz, studentTotalScoreList, insertMap, questScoreRows, studentInfoList)));
         } finally {
 
-            projectDao.insert(insertMap, "distinction");
+            projectDao.insert(insertMap, "quest_deviation");
             counter.count();
         }
 
