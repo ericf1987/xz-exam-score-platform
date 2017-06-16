@@ -23,8 +23,8 @@ import java.util.Map;
 /**
  * 统计分数分段
  */
-@AggragateOrder(3)
 @AggregateTypes(AggregateType.Basic)
+@AggregateOrder(12)
 @Component
 public class ScoreSegmentsAggregator extends Aggregator {
 

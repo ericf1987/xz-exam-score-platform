@@ -17,7 +17,6 @@ import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.reportconfig.ScoreLevelsHelper;
 import com.xz.scorep.executor.utils.DoubleUtils;
 import com.xz.scorep.executor.utils.ScoreLevelUtils;
-import com.xz.scorep.executor.utils.SqlUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +31,7 @@ import java.util.Map;
  */
 
 @AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
-@AggragateOrder(53)
+@AggregateOrder(53)
 @Component
 public class ScoreRateAggregator extends Aggregator {
 

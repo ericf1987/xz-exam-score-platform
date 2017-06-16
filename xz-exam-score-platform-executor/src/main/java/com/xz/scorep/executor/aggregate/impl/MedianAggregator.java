@@ -33,7 +33,7 @@ import static com.xz.ajiaedu.common.report.Keys.Target.Project;
  */
 @Component
 @AggregateTypes({AggregateType.Complete})
-@AggragateOrder(71)
+@AggregateOrder(71)
 public class MedianAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(MedianAggregator.class);

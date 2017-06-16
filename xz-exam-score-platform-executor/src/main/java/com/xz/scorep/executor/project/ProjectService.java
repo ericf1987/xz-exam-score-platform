@@ -60,7 +60,7 @@ public class ProjectService {
         DAO dao = daoFactory.getProjectDao(projectId);
 
         // 考试项目总分表（科目总分表和题目得分表分别在 SubjectService 和 ScoreService）
-        dao.execute("create table score_project(student_id VARCHAR(40) primary key,score decimal(5,1))");
+        dao.execute("create table score_project(student_id VARCHAR(40) primary key,score decimal(5,1),paper_score_type varchar(6))");
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         //平均分
@@ -156,6 +156,9 @@ public class ProjectService {
                 "range_type varchar(10),range_id varchar(40)," +
                 "option_count int,option_rate decimal(7,4))");
         dao.execute("create index idxoorqr on objective_option_rate(quest_id,range_type,range_id)");
+
+        //学校尖子生所占比例
+        dao.execute("create table school_top_student_rate(school_id varchar(40),count int(11),rate decimal(6,4))");
     }
 
     // 创建基础数据表

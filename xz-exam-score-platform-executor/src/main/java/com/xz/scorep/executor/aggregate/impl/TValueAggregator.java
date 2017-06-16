@@ -25,7 +25,7 @@ import java.util.Map;
  */
 @Component
 @AggregateTypes({AggregateType.Complete})
-@AggragateOrder(75)
+@AggregateOrder(75)
 public class TValueAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(TValueAggregator.class);

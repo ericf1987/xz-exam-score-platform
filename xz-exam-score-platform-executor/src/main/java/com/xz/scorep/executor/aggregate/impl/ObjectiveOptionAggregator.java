@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @AggregateTypes(AggregateType.Basic)
-@AggragateOrder(6)
+@AggregateOrder(11)
 public class ObjectiveOptionAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(ObjectiveOptionAggregator.class);

@@ -19,13 +19,14 @@ import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * 每一道题目的平均分和最高分(最高分目前主要应用于留痕主观题得分详情)
+ * 每一道题目的平均分和最高分
+ * (最高分目前主要应用于留痕主观题得分详情)
  *
  * @author luckylo
  */
 @Component
 @AggregateTypes(AggregateType.Basic)
-@AggragateOrder(10)
+@AggregateOrder(16)
 public class QuestAverageMaxScoreAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(QuestAverageMaxScoreAggregator.class);

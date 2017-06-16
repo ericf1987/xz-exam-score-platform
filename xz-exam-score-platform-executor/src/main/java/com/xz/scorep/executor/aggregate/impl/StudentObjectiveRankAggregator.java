@@ -19,13 +19,13 @@ import java.util.stream.Collectors;
 
 /**
  * 学生主客观题排名统计(只统计班级维度)
- * 必须在主客观题分数统计之后
+ * 必须在主客观题分数统计之后(应用于答题留痕)
  *
  * @author luckylo
  */
-@Component
-@AggragateOrder(9)
 @AggregateTypes(AggregateType.Basic)
+@AggregateOrder(14)
+@Component
 public class StudentObjectiveRankAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(StudentObjectiveRankAggregator.class);

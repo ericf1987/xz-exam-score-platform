@@ -33,10 +33,10 @@ public abstract class Aggregator {
     }
 
     public int getAggregateOrder() {
-        if (!this.getClass().isAnnotationPresent(AggragateOrder.class)) {
+        if (!this.getClass().isAnnotationPresent(AggregateOrder.class)) {
             return 0;
         } else {
-            return this.getClass().getAnnotation(AggragateOrder.class).value();
+            return this.getClass().getAnnotation(AggregateOrder.class).value();
         }
     }
 
