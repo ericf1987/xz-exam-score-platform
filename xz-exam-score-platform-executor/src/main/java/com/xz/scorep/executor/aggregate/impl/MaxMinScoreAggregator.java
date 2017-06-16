@@ -21,7 +21,7 @@ import java.util.List;
  * @author luckylo
  */
 @Component
-@AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
+@AggregateTypes({AggregateType.Advanced})
 @AggregateOrder(54)
 public class MaxMinScoreAggregator extends Aggregator {
 

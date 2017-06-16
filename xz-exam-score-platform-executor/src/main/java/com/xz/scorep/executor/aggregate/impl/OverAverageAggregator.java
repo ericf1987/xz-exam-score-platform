@@ -22,7 +22,7 @@ import java.util.Optional;
 /**
  * @author by fengye on 2017/5/16.
  */
-@AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
+@AggregateTypes({AggregateType.Advanced})
 @AggregateOrder(63)
 @Component
 public class OverAverageAggregator extends Aggregator {

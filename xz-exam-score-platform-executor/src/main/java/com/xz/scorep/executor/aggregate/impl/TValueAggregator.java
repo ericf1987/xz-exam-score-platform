@@ -24,7 +24,7 @@ import java.util.Map;
  * @createTime 2017-06-05.
  */
 @Component
-@AggregateTypes({AggregateType.Complete})
+@AggregateTypes({AggregateType.Advanced})
 @AggregateOrder(75)
 public class TValueAggregator extends Aggregator {
 

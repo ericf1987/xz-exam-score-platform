@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
  * @createTime 2017-06-05
  */
 @Component
-@AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
-@AggragateOrder(82)
+@AggregateTypes({AggregateType.Advanced})
+@AggregateOrder(82)
 public class QuestDeviationAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(QuestDeviationAggregator.class);

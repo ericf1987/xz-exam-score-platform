@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * @createTime 2017-06-12.
  */
 @Component
-@AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
+@AggregateTypes({AggregateType.Advanced})
 @AggregateOrder(71)
 public class SchoolTopStudentRateAggregator extends Aggregator {
 

@@ -30,7 +30,7 @@ import java.util.Map;
  * @author by fengye on 2017/5/7.
  */
 
-@AggregateTypes({AggregateType.Advanced, AggregateType.Complete})
+@AggregateTypes({AggregateType.Advanced})
 @AggregateOrder(53)
 @Component
 public class ScoreRateAggregator extends Aggregator {

@@ -32,7 +32,7 @@ import static com.xz.ajiaedu.common.report.Keys.Target.Project;
  * @author luckylo
  */
 @Component
-@AggregateTypes({AggregateType.Complete})
+@AggregateTypes({AggregateType.Advanced})
 @AggregateOrder(71)
 public class MedianAggregator extends Aggregator {
 
