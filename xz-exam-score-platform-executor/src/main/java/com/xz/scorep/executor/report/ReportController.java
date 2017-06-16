@@ -21,6 +21,7 @@ import java.util.Map;
 public class ReportController {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReportController.class);
+
     public static final String QUERY_AGGREGATION_STATUS = "select * from aggregation where aggr_type = 'Quick' and subject_id = '{{subjectId}}' and project_id = '{{projectId}}' order by start_time desc";
 
     @Autowired
@@ -57,7 +58,7 @@ public class ReportController {
         }
 
         DAO managerDao = daoFactory.getManagerDao();
-        subjectId = StringUtil.isEmpty(subjectId) ? "" : subjectId;
+        subjectId = "000".equals(subjectId) ? "" : subjectId;
         Result result = checkProjectStatus(managerDao, projectId, subjectId);
         if (!result.isSuccess()) {
             return result;
@@ -82,6 +83,7 @@ public class ReportController {
         Row row = managerDao.queryFirst(QUERY_AGGREGATION_STATUS
                 .replace("{{projectId}}", projectId)
                 .replace("{{subjectId}}", subjectId));
+        LOG.info("项目ID {} ,科目ID {} ，row {}", projectId, subjectId, row);
         if (row == null) {
             return Result.fail(1, "尚未找到项目,请确保项目已统计");
         }
