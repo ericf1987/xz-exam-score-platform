@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 主观题,客观题得分详情
@@ -86,7 +87,7 @@ public class SubjectiveObjectiveQuery {
 
 
     //查询客观题得分详情,每一道题的正确答案和班级得分率....
-    public Row queryObjectiveDetail(String projectId, String questId, String classId) {
+    public Optional<Row> queryObjectiveDetail(String projectId, String questId, String classId) {
         SimpleCache cache = cacheFactory.getPaperCache(projectId);
         String cacheKey = "objective:";
         DAO projectDao = daoFactory.getProjectDao(projectId);
@@ -94,12 +95,12 @@ public class SubjectiveObjectiveQuery {
         ArrayList<Row> rows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from objective_score_rate")));
         return rows.stream()
                 .filter(row -> questId.equals(row.getString("quest_id")) && classId.equals(row.getString("range_id")))
-                .findFirst().get();
+                .findFirst();
     }
 
 
     //查询主观题得分详情...每一道题的最高分平均分
-    public Row querySubjectiveDetail(String projectId, String questId, String classId) {
+    public Optional<Row> querySubjectiveDetail(String projectId, String questId, String classId) {
         SimpleCache cache = cacheFactory.getPaperCache(projectId);
         String cacheKey = "subjective:";
         DAO projectDao = daoFactory.getProjectDao(projectId);
@@ -109,7 +110,7 @@ public class SubjectiveObjectiveQuery {
                 .filter(row -> "Class".equals(row.getString("range_type")))
                 .filter(row -> classId.equals(row.getString("range_id")))
                 .filter(row -> questId.equals(row.getString("quest_id")))
-                .findFirst().get();
+                .findFirst();
 
     }
 
@@ -281,14 +282,17 @@ public class SubjectiveObjectiveQuery {
         Row absent = absentRows.stream()
                 .filter(row -> subjectId.equals(row.getString("subject_id")) && studentId.equals(row.getString("student_id")))
                 .findFirst().orElse(null);
+        //缺考丢卷,不可同时判断.....
+        if (absent != null) {
+            return true;
+        }
 
         Row lost = lostRows.stream()
                 .filter(row -> subjectId.equals(row.getString("subject_id")) && studentId.equals(row.getString("student_id")))
                 .findFirst().orElse(null);
-
-        if (absent == null || lost == null) {
-            return false;
+        if (lost != null) {
+            return true;
         }
-        return true;
+        return false;
     }
 }

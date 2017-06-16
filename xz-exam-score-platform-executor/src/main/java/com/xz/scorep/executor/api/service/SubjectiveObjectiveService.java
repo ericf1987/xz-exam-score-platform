@@ -50,20 +50,25 @@ public class SubjectiveObjectiveService {
         if (quest.isObjective()) {//客观题
             String studentAnswer = studentRow.getString("objective_answer");
             map.put("studentAnswer", studentAnswer);
-            Row detailRow = query.queryObjectiveDetail(projectId, questId, classId);
-
-            String answer = detailRow.getString("answer");
-            String scoreRate = DoubleUtils.toPercent(detailRow.getDouble("score_rate", 0));
+            Optional<Row> detailRow = query.queryObjectiveDetail(projectId, questId, classId);
+            if (!detailRow.isPresent()) {
+                return;
+            }
+            String answer = detailRow.get().getString("answer");
+            Double scoreRate = DoubleUtils.round(detailRow.get().getDouble("score_rate", 0),true);
 
             map.put("answer", answer);
             map.put("scoreRate", scoreRate);
         } else {//主观题
             double score = studentRow.getDouble("score", 0);
             map.put("score", score);
-            Row detailRow = query.querySubjectiveDetail(projectId, questId, classId);
+            Optional<Row> detailRow = query.querySubjectiveDetail(projectId, questId, classId);
+            if (!detailRow.isPresent()) {
+                return;
+            }
 
-            double averageScore = detailRow.getDouble("average_score", 0);
-            double maxScore = detailRow.getDouble("max_score", 0);
+            double averageScore = detailRow.get().getDouble("average_score", 0);
+            double maxScore = detailRow.get().getDouble("max_score", 0);
 
             map.put("averageScore", averageScore);
             map.put("maxScore", maxScore);

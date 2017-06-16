@@ -28,11 +28,11 @@ public class PaperImgServerTest extends BaseTest {
     public void testExecute() throws Exception {
 
         Param param = new Param();
-        param.setParameter("subjectId", "001");
-        param.setParameter("projectId", "430100-dd3013ab961946fb8a3668e5ccc475b6");
-        param.setParameter("classId", "21c44641-dabd-4e98-b2fa-eef94a9d8ffc");
-        param.setParameter("schoolId", "d9bdecc9-0185-4688-90d1-1aaf27e2dcfd");
-        param.setParameter("studentId", "0f1d39cb-3cdb-4e8e-bddf-b9c74f373f7d");
+        param.setParameter("subjectId", "002");
+        param.setParameter("projectId", "430200-13e01c025ac24c6497d916551b3ae7a6");
+        param.setParameter("classId", "317c7b47-587c-445b-83b8-c2887e51cec1");
+        param.setParameter("schoolId", "200f3928-a8bd-48c4-a2f4-322e9ffe3700");
+        param.setParameter("studentId", "74a296ed-7dee-4f2d-8a8a-2ce358b39d0e");
         param.setParameter("isPositive", false);
         Result execute = paperImgServer.execute(param);
         System.out.println(JSON.toJSON(execute.getData()));
