@@ -19,8 +19,8 @@ import java.util.List;
  * @author luckylo
  */
 @Component
-@AggregateTypes(AggregateType.Basic)
-@AggregateOrder(15)
+@AggregateTypes(AggregateType.Quick)
+@AggregateOrder(8)
 public class QuestScoreRateAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(QuestScoreRateAggregator.class);

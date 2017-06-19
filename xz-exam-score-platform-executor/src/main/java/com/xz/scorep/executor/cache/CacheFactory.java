@@ -96,6 +96,7 @@ public class CacheFactory {
         this.globalCache.close();
         this.projectCache.values().forEach(SimpleCacheWrapper::close);
         this.reportCache.values().forEach(SimpleCacheWrapper::close);
+        this.paperCache.values().forEach(SimpleCacheWrapper::close);
     }
 
     //////////////////////////////////////////////////////////////

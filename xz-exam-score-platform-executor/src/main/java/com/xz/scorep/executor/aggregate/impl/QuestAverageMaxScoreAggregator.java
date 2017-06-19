@@ -25,8 +25,8 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @author luckylo
  */
 @Component
-@AggregateTypes(AggregateType.Basic)
-@AggregateOrder(16)
+@AggregateTypes(AggregateType.Quick)
+@AggregateOrder(9)
 public class QuestAverageMaxScoreAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(QuestAverageMaxScoreAggregator.class);
