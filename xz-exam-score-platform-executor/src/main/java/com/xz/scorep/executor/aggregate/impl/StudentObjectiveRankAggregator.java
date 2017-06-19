@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
  *
  * @author luckylo
  */
-@AggregateTypes(AggregateType.Basic)
-@AggregateOrder(14)
+@AggregateTypes(AggregateType.Quick)
+@AggregateOrder(7)
 @Component
 public class StudentObjectiveRankAggregator extends Aggregator {
 
