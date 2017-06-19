@@ -55,10 +55,11 @@ public class SubjectiveObjectiveService {
                 return;
             }
             String answer = detailRow.get().getString("answer");
-            Double scoreRate = DoubleUtils.round(detailRow.get().getDouble("score_rate", 0),true);
+            double score = DoubleUtils.round(detailRow.get().getDouble("score_rate", 0) * 100, true);
+
 
             map.put("answer", answer);
-            map.put("scoreRate", scoreRate);
+            map.put("scoreRate", score + "%");
         } else {//主观题
             double score = studentRow.getDouble("score", 0);
             map.put("score", score);
@@ -76,6 +77,7 @@ public class SubjectiveObjectiveService {
 
         result.add(map);
     }
+
 
     //客观题得分详情
     public List<Map<String, Object>> queryObjectiveScoreDetail(String projectId, String subjectId, String classId, String studentId) {

@@ -17,6 +17,8 @@ import com.xz.scorep.executor.project.ProjectService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.pss.service.PssService;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +39,8 @@ import java.util.Map;
 })
 @Service
 public class PaperImgServer implements Server {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PaperImgServer.class);
 
     @Autowired
     private PssService pssService;
@@ -67,9 +71,17 @@ public class PaperImgServer implements Server {
         String subjectId = param.getString("subjectId");
         String studentId = param.getString("studentId");
 
+        //判断某个科目是否是拆分后的科目
+        boolean excludeSubject = query.isVirtualSubject(projectId, subjectId);
+        if (excludeSubject) {
+            LOG.info("项目ID {} ,科目ID {} 为拆分后科目,不进行答题留痕打印...", projectId, subjectId);
+            return Result.success().set("hasData", false);
+        }
+
         //判断某学生是否被排除(由于报表配置排除缺考,0分等可能导致学生没数据,故被排除)
         boolean exclude = query.studentIsExclude(projectId, subjectId, studentId);
         if (exclude) {
+            LOG.info("项目ID {},科目ID {},学生ID{} 被排除...", projectId, subjectId, studentId);
             return Result.success().set("hasData", false);
         }
         //图片数据
@@ -122,6 +134,7 @@ public class PaperImgServer implements Server {
                 .set("objectiveTop5", objectiveTop5)
                 .set("subjectiveTop5", subjectiveTop5);
     }
+
 
     public void checkAndRecord(String projectId, String schoolId, String classId, String subjectId, String studentId, Map<String, String> studentImgURL) {
         String paper_positive = studentImgURL.get("paper_positive");

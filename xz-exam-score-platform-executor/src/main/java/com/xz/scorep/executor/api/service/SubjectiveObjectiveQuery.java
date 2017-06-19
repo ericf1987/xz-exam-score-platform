@@ -3,6 +3,7 @@ package com.xz.scorep.executor.api.service;
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.hyd.simplecache.SimpleCache;
+import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.SubjectService;
@@ -294,5 +295,11 @@ public class SubjectiveObjectiveQuery {
             return true;
         }
         return false;
+    }
+
+    public boolean isVirtualSubject(String projectId, String subjectId) {
+        ExamSubject subject = subjectService.findSubject(projectId, subjectId);
+
+        return Boolean.valueOf(subject.getVirtualSubject());
     }
 }
