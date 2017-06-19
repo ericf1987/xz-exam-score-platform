@@ -1,14 +1,13 @@
 package com.xz.scorep.executor.pss.service;
 
 import com.hyd.dao.DAO;
+import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.aggritems.StudentQuery;
 import com.xz.scorep.executor.api.utils.HttpUtils;
-import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.db.DAOFactory;
-import com.xz.scorep.executor.project.ScannerDBService;
-import com.xz.scorep.executor.project.StudentService;
+import com.xz.scorep.executor.project.*;
 import com.xz.scorep.executor.pss.bean.PssForStudent;
 import com.xz.scorep.executor.pss.utils.PaintUtils;
 import org.apache.commons.collections.MapUtils;
@@ -41,13 +40,22 @@ public class PssService {
     StudentQuery studentQuery;
 
     @Autowired
-    StudentService studentService;
-
-    @Autowired
     ScannerDBService scannerDBService;
 
     @Autowired
     DAOFactory daoFactory;
+
+    @Autowired
+    ProjectService projectService;
+
+    @Autowired
+    SchoolService schoolService;
+
+    @Autowired
+    ClassService classService;
+
+    @Autowired
+    StudentService studentService;
 
     @Value("${pdf.img.url}")
     private String imgUrl;
@@ -133,10 +141,21 @@ public class PssService {
             String subjectId = pssForStudent.getSubjectId();
             String studentId = pssForStudent.getStudentId();
 
-            String savePath = StringUtil.joinPathsWith("/", projectId, schoolId,
-                    classId, subjectId);
+            schoolService.findSchool(projectId, schoolId).getName();
 
-            String fileName = studentId + ".pdf";
+            /*String savePath = StringUtil.joinPathsWith("/", projectId, schoolId,
+                    classId, subjectId);*/
+
+            Row student = studentService.findStudent(projectId, studentId);
+
+            String savePath = StringUtil.joinPathsWith("/",
+                    projectService.findProject(projectId).getName() + "(" + projectId + ")",
+                    schoolService.findSchool(projectId, schoolId).getName(),
+                    classService.findClass(projectId, classId).getName(),
+                    SubjectService.getSubjectName(subjectId)
+            );
+
+            String fileName = student.getString("name") + "_" + student.getString("exam_no") + ".pdf";
 
             String url = getURL(projectId, schoolId, classId, subjectId, studentId);
             sendToPDFByPost(savePath, fileName, url);

@@ -53,4 +53,15 @@ public class ClassService {
                 .filter(c -> c.getSchoolId().equals(schoolId))
                 .collect(Collectors.toList());
     }
+
+    public ProjectClass findClass(String projectId, String classId) {
+        SimpleCache cache = cacheFactory.getProjectCache(projectId);
+        String cacheKey = "class:" + classId;
+
+        return cache.get(cacheKey, () ->
+                daoFactory.getProjectDao(projectId).queryFirst(
+                        ProjectClass.class, "select * from class where id = ? ", classId
+                )
+        );
+    }
 }
