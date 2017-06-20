@@ -177,6 +177,17 @@ public class ProjectService {
         dao.execute("CREATE INDEX idx_rank_level_school ON rank_level_school(student_id)");
         dao.execute("CREATE INDEX idx_rank_level_class ON rank_level_class(student_id)");
         dao.execute("CREATE INDEX idx_rank_level_project ON rank_level_project(student_id)");
+
+        //排名等第
+        dao.execute("CREATE TABLE rank_level_map_province(subject_id VARCHAR(10) NOT NULL,rank_level CHAR(1) NOT NULL, province VARCHAR(10) NOT NULL, cnt int NOT NULL)");
+        dao.execute("CREATE TABLE rank_level_map_school(subject_id VARCHAR(10) NOT NULL,rank_level CHAR(1), school_id VARCHAR(40), cnt int NOT NULL)");
+        dao.execute("CREATE TABLE rank_level_map_class(subject_id VARCHAR(10) NOT NULL,rank_level CHAR(1), class_id VARCHAR(40), cnt int NOT NULL)");
+        dao.execute("CREATE TABLE rank_level_map_project(project_id VARCHAR(40) NOT NULL, rank_level VARCHAR(10) NOT NULL, range_type VARCHAR(10) NOT NULL, range_id VARCHAR(40) NOT NULL, cnt INT NOT NULL)");
+
+        dao.execute("CREATE INDEX idx_rank_level_map_province ON rank_level_map_province(province, subject_id)");
+        dao.execute("CREATE INDEX idx_rank_level_map_school ON rank_level_map_school(school_id, subject_id)");
+        dao.execute("CREATE INDEX idx_rank_level_map_class ON rank_level_map_class(class_id, subject_id)");
+        dao.execute("CREATE INDEX idx_rank_level_map_project ON rank_level_map_project(range_id)");
     }
 
     // 创建基础数据表
