@@ -162,6 +162,10 @@ public class ProjectService {
                 "target_id varchar(40),count int(11),rate decimal(6,4))");
         dao.execute("create index idxtsr on top_student_rate(range_type,range_id,target_type,target_id)");
 
+        //学校,班级尖子生列表
+        dao.execute("create table top_student_list(range_type varchar(20),range_id varchar(40),target_type varchar(20)," +
+                "target_id varchar(40),student_id varchar(40))");
+        dao.execute("create index idxtsl on top_student_list(range_type,range_id,target_type,target_id)");
 
         //排名等级
         dao.execute("CREATE TABLE rank_level_province(student_id VARCHAR(40) NOT NULL,subject_id VARCHAR(10) NOT NULL,rank_level CHAR(1))");

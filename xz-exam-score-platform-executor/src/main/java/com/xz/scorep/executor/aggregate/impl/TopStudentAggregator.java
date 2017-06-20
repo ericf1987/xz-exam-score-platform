@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 学校尖子生比例统计
+ * 尖子生统计(含班级,学校尖子生列表,班级,学校尖子生比例和人数)
  *
  * @author luckylo
  * @createTime 2017-06-12.
@@ -30,9 +30,9 @@ import java.util.stream.Collectors;
 @Component
 @AggregateTypes({AggregateType.Advanced})
 @AggregateOrder(71)
-public class TopStudentRateAggregator extends Aggregator {
+public class TopStudentAggregator extends Aggregator {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TopStudentRateAggregator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TopStudentAggregator.class);
 
     //查省维度的尖子生最低分
     private static final String QUERY_PROVINCE_SCORE = "" +
@@ -92,16 +92,19 @@ public class TopStudentRateAggregator extends Aggregator {
         double rate = reportConfig.getTopStudentRate();
 
         projectDao.execute("truncate table top_student_rate");
+        projectDao.execute("truncate table top_student_list");
+
         LOG.info("开始统计项目ID {} 的学生尖子生比例......", projectId);
-        List<Row> students = projectDao.query("select * from student");
-        aggregateSchoolTopStudentRate(projectId, projectDao, rate, students);
-        aggregateClassTopStudentRate(projectId, projectDao, rate, students);
+
+        aggregateSchoolTopStudentRate(projectId, projectDao, rate);
+        aggregateClassTopStudentRate(projectId, projectDao, rate);
         LOG.info("开始统计项目ID {} 的学生尖子生比例......", projectId);
     }
 
-    private void aggregateClassTopStudentRate(String projectId, DAO projectDao, double rate, List<Row> students) {
+    private void aggregateClassTopStudentRate(String projectId, DAO projectDao, double rate) {
         List<ProjectSchool> schools = schoolService.listSchool(projectId);
-        List<Map<String, Object>> insertMap = new ArrayList<>();
+        List<Map<String, Object>> topStudentRateMap = new ArrayList<>();
+        List<Map<String, Object>> topStudentListMap = new ArrayList<>();
 
         for (ProjectSchool school : schools) {
             String schoolId = school.getId();
@@ -118,19 +121,27 @@ public class TopStudentRateAggregator extends Aggregator {
             classes.forEach(clazz -> {
                 String classId = clazz.getId();
                 if (schoolTopStudentList.isEmpty()) {
-                    insertMap.add(createMap("Class", classId, "Project", projectId, 1, null));
+                    topStudentRateMap.add(createMap("Class", classId, "Project", projectId, 1, null));
+                    return;
                 }
                 List<Row> classTopStudentList = schoolTopStudentList.stream()
                         .filter(row -> classId.equals(row.getString("class_id")))
                         .collect(Collectors.toList());
-                insertMap.add(createMap("Class", classId, "Project", projectId, schoolTopStudentList.size(), classTopStudentList));
+                topStudentRateMap.add(createMap("Class", classId, "Project", projectId, schoolTopStudentList.size(), classTopStudentList));
+                List<Map<String, Object>> listMap = createListMap("Class", classId, "Project", projectId, classTopStudentList);
+                if (!listMap.isEmpty()) {
+                    topStudentListMap.addAll(listMap);
+                }
+
             });
 
         }
-        projectDao.insert(insertMap, "top_student_rate");
+        projectDao.insert(topStudentRateMap, "top_student_rate");
+        projectDao.insert(topStudentListMap, "top_student_list");
     }
 
-    private void aggregateSchoolTopStudentRate(String projectId, DAO projectDao, double rate, List<Row> students) {
+    private void aggregateSchoolTopStudentRate(String projectId, DAO projectDao, double rate) {
+        List<Row> students = projectDao.query("select * from student");
         Row scoreRow = projectDao.queryFirst(QUERY_PROVINCE_SCORE.replace("{{rate}}", String.valueOf(rate)));
         String score = scoreRow.getString("score");
 
@@ -139,7 +150,8 @@ public class TopStudentRateAggregator extends Aggregator {
         int totalCount = provinceTopStudents.size();
         List<ProjectSchool> schools = schoolService.listSchool(projectId);
 
-        List<Map<String, Object>> insertMap = new ArrayList<>();
+        List<Map<String, Object>> topStudentRateMap = new ArrayList<>();
+        List<Map<String, Object>> topStudentListMap = new ArrayList<>();
         schools.forEach(school -> {
             String schoolId = school.getId();
 
@@ -152,17 +164,23 @@ public class TopStudentRateAggregator extends Aggregator {
                     .filter(row -> schoolStudents.contains(row.getString("student_id")))
                     .collect(Collectors.toList());
 
-            insertMap.add(createMap("School", schoolId, "Project", projectId, totalCount, schoolStudentScore));
+            topStudentRateMap.add(createMap("School", schoolId, "Project", projectId, totalCount, schoolStudentScore));
+
+            List<Map<String, Object>> listMap = createListMap("School", schoolId, "Project", projectId, schoolStudentScore);
+            if (!listMap.isEmpty()) {
+                topStudentListMap.addAll(listMap);
+            }
         });
-        projectDao.insert(insertMap, "top_student_rate");
+        projectDao.insert(topStudentRateMap, "top_student_rate");
+        projectDao.insert(topStudentListMap, "top_student_list");
 
     }
 
-    private Map<String, Object> createMap(String rangeType, String range_id, String targetType, String targetId, int totalCount, List<Row> scoreRows) {
+    private Map<String, Object> createMap(String rangeType, String rangeId, String targetType, String targetId, int totalCount, List<Row> scoreRows) {
         Map<String, Object> map = new HashMap<>();
         int count = scoreRows.isEmpty() ? 0 : scoreRows.size();
         map.put("range_type", rangeType);
-        map.put("range_id", range_id);
+        map.put("range_id", rangeId);
         map.put("target_type", targetType);
         map.put("target_id", targetId);
         map.put("count", count);
@@ -170,5 +188,23 @@ public class TopStudentRateAggregator extends Aggregator {
         return map;
     }
 
+
+    private List<Map<String, Object>> createListMap(String rangeType, String rangeId, String targetType, String targetId, List<Row> rows) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        if (rows.isEmpty()) {
+            return list;
+        }
+
+        for (Row row : rows) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("range_type", rangeType);
+            map.put("range_id", rangeId);
+            map.put("target_type", targetType);
+            map.put("target_id", targetId);
+            map.put("student_id", row.getString("student_id"));
+            list.add(map);
+        }
+        return list;
+    }
 }
 
