@@ -1,11 +1,12 @@
 package com.xz.scorep.executor.pss.controller;
 
-import ch.qos.logback.core.util.AggregationType;
+import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.aggregate.AggregateType;
 import com.xz.scorep.executor.aggregate.AggregationService;
 import com.xz.scorep.executor.pss.mamage.PssTaskManager;
 import com.xz.scorep.executor.pss.service.PssService;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,7 +46,7 @@ public class PssController {
             @RequestParam("subjectId") String subjectId
     ) {
 
-        if (null == aggregationService.getAggregateStatus(projectId, AggregateType.Basic)) {
+        if (!canStartPssTask(projectId, AggregateType.Quick, subjectId)) {
             return Result.fail("项目还未统计完成，请稍后执行。。。");
         }
 
@@ -66,7 +67,7 @@ public class PssController {
             @RequestParam("subjectId") String subjectId
     ) {
 
-        if (null == aggregationService.getAggregateStatus(projectId, AggregateType.Basic)) {
+        if (!canStartPssTask(projectId, AggregateType.Quick, subjectId)) {
             return Result.fail("项目还未统计完成，请稍后执行。。。");
         }
 
@@ -94,7 +95,7 @@ public class PssController {
             @RequestParam("studentId") String studentId
     ) {
 
-        if (null == aggregationService.getAggregateStatus(projectId, AggregateType.Basic)) {
+        if (null == aggregationService.getAggregateStatus(projectId, AggregateType.Quick)) {
             return Result.fail("项目还未统计完成，请稍后执行。。。");
         }
 
@@ -114,11 +115,20 @@ public class PssController {
             @RequestParam("projectId") String projectId
     ) {
 
-        if (null == aggregationService.getAggregateStatus(projectId, AggregateType.Basic)) {
+        if (null == aggregationService.getAggregateStatus(projectId, AggregateType.Quick)) {
             return Result.fail("项目还未统计完成，请稍后执行。。。");
         }
 
         pssService.regenerateFail(projectId);
         return Result.success();
+    }
+
+    public boolean canStartPssTask(String projectId, AggregateType aggregateType, String subjectId) {
+        if (StringUtils.isBlank(subjectId)) {
+            return null != aggregationService.getAggregateStatus(projectId, aggregateType);
+        }
+        Row r1 = aggregationService.getAggregateStatus(projectId, aggregateType, subjectId);
+        Row r2 = aggregationService.getAggregateStatus(projectId, aggregateType);
+        return null != r1 || null != r2;
     }
 }

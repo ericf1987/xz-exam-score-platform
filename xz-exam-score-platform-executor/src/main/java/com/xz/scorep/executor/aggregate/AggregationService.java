@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.aggregate;
 
+import ch.qos.logback.core.util.AggregationType;
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.hyd.dao.SQL;
@@ -46,7 +47,7 @@ public class AggregationService {
 
 
     public Row getAggregateStatus(String projectId, AggregateType aggrType) {
-        String sql = "select * from aggregation where project_id = ? and aggr_type =?  and status = 'Finished' order by start_time desc";
+        String sql = "select * from aggregation where project_id = ? and aggr_type =?  and status = 'Finished' order by end_time desc";
         return this.daoFactory.getManagerDao().queryFirst(sql, projectId, aggrType.name());
     }
 
@@ -54,6 +55,4 @@ public class AggregationService {
         String sql = "select * from aggregation where project_id = ? and aggr_type =? and subject_id =? and status = 'Finished' order by start_time desc";
         return this.daoFactory.getManagerDao().queryFirst(sql, projectId, aggrType.name(), subjectId);
     }
-
-
 }

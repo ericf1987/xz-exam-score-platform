@@ -159,6 +159,17 @@ public class ProjectService {
 
         //学校尖子生所占比例
         dao.execute("create table school_top_student_rate(school_id varchar(40),count int(11),rate decimal(6,4))");
+
+        //排名等级
+        dao.execute("CREATE TABLE rank_level_province(student_id VARCHAR(40) NOT NULL,subject_id VARCHAR(10) NOT NULL,rank_level CHAR(1))");
+        dao.execute("CREATE TABLE rank_level_school(student_id VARCHAR(40) NOT NULL,subject_id VARCHAR(10) NOT NULL,rank_level CHAR(1))");
+        dao.execute("CREATE TABLE rank_level_class(student_id VARCHAR(40) NOT NULL,subject_id VARCHAR(10) NOT NULL,rank_level CHAR(1))");
+        dao.execute("CREATE TABLE rank_level_project(student_id VARCHAR(40) NOT NULL,range_type VARCHAR(10) NOT NULL,rank_level varchar(10))");
+
+        dao.execute("CREATE INDEX idx_rank_level_province ON rank_level_province(student_id)");
+        dao.execute("CREATE INDEX idx_rank_level_school ON rank_level_school(student_id)");
+        dao.execute("CREATE INDEX idx_rank_level_class ON rank_level_class(student_id)");
+        dao.execute("CREATE INDEX idx_rank_level_project ON rank_level_project(student_id)");
     }
 
     // 创建基础数据表
