@@ -193,6 +193,10 @@ public class ProjectService {
         dao.execute("CREATE INDEX idx_rank_level_map_school ON rank_level_map_school(school_id, subject_id)");
         dao.execute("CREATE INDEX idx_rank_level_map_class ON rank_level_map_class(class_id, subject_id)");
         dao.execute("CREATE INDEX idx_rank_level_map_project ON rank_level_map_project(range_id)");
+
+        //排名分段
+        dao.execute("CREATE TABLE rank_segment(subject_id VARCHAR(10),range_id VARCHAR(40),range_type VARCHAR(20),rankPercent DECIMAL(5,2),count INT(11),rate DECIMAL(5,2))");
+        dao.execute("CREATE INDEX idx_rank_segment ON rank_segment(range_id, subject_id, rankPercent)");
     }
 
     // 创建基础数据表

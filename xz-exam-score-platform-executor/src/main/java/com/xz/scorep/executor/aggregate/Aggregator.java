@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.aggregate;
 
+import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -19,6 +20,10 @@ public abstract class Aggregator {
 
     @Autowired
     protected DAOFactory daoFactory;
+
+    public static final String[] RANGE_NAMES = new String[]{
+            Range.PROVINCE, Range.SCHOOL, Range.CLASS
+    };
 
     @PostConstruct
     public void aggregatorInitialization() {
