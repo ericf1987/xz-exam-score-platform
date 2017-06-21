@@ -105,6 +105,8 @@ public class PaperImgServer implements Server {
 
         //  学生得分(总分,科目得分,科目主客观题得分 .....)
         Map<String, Object> studentScore = studentExamQuery.queryStudentScore(projectId, subjectId, studentId);
+        double subjectScore = Double.valueOf(studentScore.get("subject_score").toString());
+
         //  学生超过班级平均分和超过学校平均分 .......
         Map<String, Object> overAverage = studentExamQuery.queryStudentOverAverage(projectId, subjectId, schoolId, classId, studentId);
         //  学生的班级排名和学校排名 .......
@@ -120,6 +122,7 @@ public class PaperImgServer implements Server {
 
         return Result.success()
                 .set("hasData", true)
+                .set("isFullScore", subject.getFullScore() == subjectScore)
                 .set("imgString_positive", studentImgURL.get("paper_positive"))
                 .set("imgString_reverse", studentImgURL.get("paper_reverse"))
                 .set("subjectName", subject.getName())
