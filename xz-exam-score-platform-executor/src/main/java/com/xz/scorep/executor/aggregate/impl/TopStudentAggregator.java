@@ -43,7 +43,7 @@ public class TopStudentAggregator extends Aggregator {
             " ) score\n";
 
     //根据省维度的尖子生最低分获取省维度的尖子生列表
-    private static final String QUERY_PROVINCE_TOP_STUDENT_LIST = "select * from score_project  where score > {{score}} or score = {{score}} order by score desc";
+    private static final String QUERY_PROVINCE_TOP_STUDENT_LIST = "select * from score_project  where score >= {{score}}  order by score desc";
 
     //查学校维度的尖子生最低分
     private static final String QUERY_SCHOOL_SCORE = "select c.score from (\n" +
@@ -67,7 +67,7 @@ public class TopStudentAggregator extends Aggregator {
             "student.class_id,student.school_id\n" +
             "from score_project score,student \n" +
             "where \n" +
-            "(score.score > {{score}} or score.score = {{score}})\n" +
+            "score.score >= {{score}} \n" +
             "and score.student_id = student.id \n" +
             "and student.school_id = '{{schoolId}}'\n" +
             "order by score desc";
