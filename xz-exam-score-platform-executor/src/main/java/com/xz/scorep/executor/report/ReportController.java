@@ -77,7 +77,7 @@ public class ReportController {
     private Result checkProjectStatus(DAO managerDao, String projectId, String subjectId) {
         ExamProject project = projectService.findProject(projectId);
         if (ProjectStatus.Importing.name().equals(project.getStatus())) {
-            return Result.fail(1, "正在导入项目,请稍后再试");
+            return Result.fail(1, "正在统计项目,请稍后再试");
         }
 
         Row row = managerDao.queryFirst(QUERY_AGGREGATION_STATUS
