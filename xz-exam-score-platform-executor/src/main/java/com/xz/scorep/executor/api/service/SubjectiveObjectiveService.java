@@ -110,10 +110,9 @@ public class SubjectiveObjectiveService {
 
         List<Map<String, Object>> collect = list.stream()
                 .sorted((map1, map2) -> sorted(map1, map2))
-                .limit(5)
                 .collect(Collectors.toList());
 
-        return collect;
+        return collect.stream().limit(5).collect(Collectors.toList());
     }
 
     ///主观题 : 与班级单题得分差距较大的TOP5(差值的绝对值最大)  每一行
@@ -162,10 +161,9 @@ public class SubjectiveObjectiveService {
         //少于5直接返回,超过5就取前5
         List<Map<String, Object>> collect = studentFailList.stream()
                 .sorted((map1, map2) -> (int) map2.get("correct_count") - (int) map1.get("correct_count"))
-                .limit(5)
                 .collect(Collectors.toList());
 
-        return collect;
+        return collect.stream().limit(5).collect(Collectors.toList());
     }
 
     //客观题与班级答对人数差距较大的每一行

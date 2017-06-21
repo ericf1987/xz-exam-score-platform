@@ -98,7 +98,7 @@ public class TopStudentAggregator extends Aggregator {
 
         aggregateSchoolTopStudentRate(projectId, projectDao, rate);
         aggregateClassTopStudentRate(projectId, projectDao, rate);
-        LOG.info("开始统计项目ID {} 的学生尖子生比例......", projectId);
+        LOG.info("项目ID {} 的学生尖子生比例统计完成......", projectId);
     }
 
     private void aggregateClassTopStudentRate(String projectId, DAO projectDao, double rate) {
