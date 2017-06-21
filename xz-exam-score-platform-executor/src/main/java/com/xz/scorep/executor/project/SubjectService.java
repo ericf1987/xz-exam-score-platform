@@ -66,6 +66,7 @@ public class SubjectService {
         SUBJECT_NAMES.put("004005", "物理化学综合");
         SUBJECT_NAMES.put("007008", "政治历史综合");
         SUBJECT_NAMES.put("006009", "生物地理综合");
+        SUBJECT_NAMES.put("011013", "科学思品");
         SUBJECT_NAMES.put("020021", "专业科目12综合");
         SUBJECT_NAMES.put("022023", "改成艺术联考");
     }
