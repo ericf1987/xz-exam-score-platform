@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.project;
 
 import com.hyd.dao.DAO;
+import com.hyd.simplecache.SimpleCache;
 import com.xz.scorep.executor.bean.ExamQuestType;
 import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.db.DAOFactory;
@@ -28,5 +29,13 @@ public class QuestTypeService {
     public void saveQuestType(String projectId, List<ExamQuestType> examQuestTypes) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         projectDao.insert(examQuestTypes, "quest_type_list");
+    }
+
+    public double getQuestTypeFullScore(String projectId, String questTypeId){
+        return getQuestType(projectId, questTypeId).getFullScore();
+    }
+
+    public ExamQuestType getQuestType(String projectId, String questTypeId){
+        return daoFactory.getProjectDao(projectId).queryFirst(ExamQuestType.class, "select * from quest_type_list where id = ?", questTypeId);
     }
 }
