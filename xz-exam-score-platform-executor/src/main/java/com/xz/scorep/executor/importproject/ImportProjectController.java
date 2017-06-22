@@ -42,7 +42,8 @@ public class ImportProjectController {
             @RequestParam(required = false, defaultValue = "false", name = "reportConfig") boolean reportConfig,
             @RequestParam(required = false, defaultValue = "false", name = "students") boolean students,
             @RequestParam(required = false, defaultValue = "false", name = "quests") boolean quests,
-            @RequestParam(required = false, defaultValue = "false", name = "score") boolean score
+            @RequestParam(required = false, defaultValue = "false", name = "score") boolean score,
+            @RequestParam(required = false, defaultValue = "false", name = "advanced") boolean advanced
     ) {
 
         ExamProject project = projectService.findProject(projectId);
@@ -53,10 +54,11 @@ public class ImportProjectController {
             reportConfig = true;
             students = true;
             quests = true;
+            advanced = true;
         }
 
         importProjectService.importProject(ImportProjectParameters.importSelected(
-                projectId, recreateDatabase, projectInfo, reportConfig, students, quests, score
+                projectId, recreateDatabase, projectInfo, reportConfig, students, quests, score, advanced
         ));
         return Result.success("项目 " + projectId + " 考生数据导入成功。");
     }

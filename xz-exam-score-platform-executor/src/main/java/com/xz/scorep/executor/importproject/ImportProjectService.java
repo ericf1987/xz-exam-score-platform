@@ -7,14 +7,8 @@ import com.mongodb.MongoClient;
 import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.appauth.AppAuthClient;
 import com.xz.ajiaedu.common.json.JSONUtils;
-import com.xz.ajiaedu.common.lang.Context;
-import com.xz.ajiaedu.common.lang.DoubleValue;
-import com.xz.ajiaedu.common.lang.Result;
-import com.xz.ajiaedu.common.lang.StringUtil;
-import com.xz.scorep.executor.bean.ExamProject;
-import com.xz.scorep.executor.bean.ExamQuest;
-import com.xz.scorep.executor.bean.ExamSubject;
-import com.xz.scorep.executor.bean.ProjectStatus;
+import com.xz.ajiaedu.common.lang.*;
+import com.xz.scorep.executor.bean.*;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.mongo.MongoClientFactory;
 import com.xz.scorep.executor.project.*;
@@ -55,6 +49,9 @@ public class ImportProjectService {
 
     @Autowired
     private QuestService questService;
+
+    @Autowired
+    private QuestTypeService questTypeService;
 
     @Autowired
     private ReportConfigService reportConfigService;
@@ -117,6 +114,14 @@ public class ImportProjectService {
             importSubjects(context);
         }
 
+        // 导入进阶数据（试卷题型，知识点，能力层级，双向细目，试题能力区分）
+        if (parameters.isImportAdvanced()) {
+            LOG.info("导入项目 {} 的进阶数据...");
+            importQuestTypes(context);
+            importPointsAndLevels(context);
+            importQuestAbilityLevel(context);
+        }
+
         //获取mongo连接
         MongoClient mongoClient = mongoClientFactory.getProjectMongoClient(projectId);
         if (mongoClient == null) {
@@ -137,6 +142,53 @@ public class ImportProjectService {
 
         LOG.info("导入项目 {} 完成。", projectId);
         projectService.updateProjectStatus(projectId, ProjectStatus.Ready);
+    }
+
+    private void importQuestAbilityLevel(Context context) {
+
+    }
+
+    private void importPointsAndLevels(Context context) {
+
+    }
+
+    public void importQuestTypes(Context context) {
+        String projectId = context.getString(PROJECT_ID_KEY);
+
+        List<ExamQuest> questList = context.get("questList");
+
+        //用于记录题型对象
+        Map<String, ExamQuestType> questTypeMap = new HashMap<>();
+
+        //用于记录题型满分
+        DoubleCounterMap<String> questTypeFullScore = new DoubleCounterMap<>();
+
+        for (ExamQuest examQuest : questList) {
+            //1.获取题型ID，题型名称，对应科目
+            //2.获取题型满分, 题型的满分等于各个题型小题的满分总和
+            String questionTypeId = examQuest.getQuestionTypeId();
+            double fullScore = examQuest.getFullScore();
+            ExamQuestType questType = new ExamQuestType(
+                    questionTypeId, examQuest.getQuestionTypeName(),
+                    examQuest.getExamSubject(), examQuest.getQuestSubject(), 0
+            );
+
+            questTypeFullScore.incre(questionTypeId, fullScore);
+
+            if(!questTypeMap.containsKey(questionTypeId)){
+                questTypeMap.put(questionTypeId, questType);
+            }
+        }
+
+        List<ExamQuestType> examQuestTypes = new ArrayList<>(questTypeMap.values());
+
+        //将每个题型的满分进行设置
+        examQuestTypes.forEach(e -> e.setFullScore(questTypeFullScore.get(e.getId())));
+
+        questTypeService.saveQuestType(projectId, examQuestTypes);
+
+        LOG.info("已导入 " + examQuestTypes.size() + " 个题型。");
+
     }
 
     private void importStudent(Context context) {

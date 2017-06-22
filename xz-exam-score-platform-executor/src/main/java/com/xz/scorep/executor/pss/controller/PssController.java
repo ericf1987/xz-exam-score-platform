@@ -1,9 +1,11 @@
 package com.xz.scorep.executor.pss.controller;
 
 import com.hyd.dao.Row;
+import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.aggregate.AggregateType;
 import com.xz.scorep.executor.aggregate.AggregationService;
+import com.xz.scorep.executor.api.server.paperScreenShot.PaperImgServer;
 import com.xz.scorep.executor.pss.mamage.PssTaskManager;
 import com.xz.scorep.executor.pss.service.PssService;
 import org.apache.commons.lang.StringUtils;
@@ -27,6 +29,9 @@ public class PssController {
 
     @Autowired
     AggregationService aggregationService;
+
+    @Autowired
+    PaperImgServer paperImgServer;
 
     /**
      * 按照班级和科目生成
@@ -121,6 +126,23 @@ public class PssController {
 
         pssService.regenerateFail(projectId);
         return Result.success();
+    }
+
+    @PostMapping("/img/task/data")
+    @ResponseBody
+    public Result queryPssData(
+            @RequestParam("projectId") String projectId,
+            @RequestParam("schoolId") String schoolId,
+            @RequestParam("classId") String classId,
+            @RequestParam("subjectId") String subjectId,
+            @RequestParam("studentId") String studentId
+    ) {
+        Param param = new Param().setParameter("projectId", projectId)
+                .setParameter("schoolId", schoolId)
+                .setParameter("classId", classId)
+                .setParameter("subjectId", subjectId)
+                .setParameter("studentId", studentId);
+        return paperImgServer.execute(param);
     }
 
     public boolean canStartPssTask(String projectId, AggregateType aggregateType, String subjectId) {

@@ -17,6 +17,7 @@ public class ImportProjectParameters {
         parameters.setImportStudents(true);
         parameters.setImportQuests(true);
         parameters.setImportScore(true);
+        parameters.setImportAdvanced(true);
         return parameters;
     }
 
@@ -29,6 +30,7 @@ public class ImportProjectParameters {
         parameters.setImportStudents(true);
         parameters.setImportQuests(true);
         parameters.setImportScore(false);
+        parameters.setImportAdvanced(true);
         return parameters;
     }
 
@@ -41,6 +43,7 @@ public class ImportProjectParameters {
         parameters.setImportStudents(false);
         parameters.setImportQuests(false);
         parameters.setImportScore(true);
+        parameters.setImportAdvanced(false);
         return parameters;
     }
 
@@ -53,12 +56,13 @@ public class ImportProjectParameters {
         parameters.setImportStudents(false);
         parameters.setImportQuests(false);
         parameters.setImportScore(false);
+        parameters.setImportAdvanced(false);
         return parameters;
     }
 
     public static ImportProjectParameters importSelected(
             String projectId, boolean recreateDatabase,
-            boolean projectInfo, boolean reportConfig, boolean students, boolean quests, boolean score) {
+            boolean projectInfo, boolean reportConfig, boolean students, boolean quests, boolean score, boolean advanced) {
         ImportProjectParameters parameters = new ImportProjectParameters();
         parameters.setRecreateDatabase(recreateDatabase);
         parameters.setProjectId(projectId);
@@ -67,6 +71,7 @@ public class ImportProjectParameters {
         parameters.setImportStudents(students);
         parameters.setImportQuests(quests);
         parameters.setImportScore(score);
+        parameters.setImportAdvanced(advanced);
         return parameters;
     }
 
@@ -83,6 +88,8 @@ public class ImportProjectParameters {
     private boolean importQuests;           // 是否导入题目信息（科目、题目）
 
     private boolean importScore;            // 是否导入分数信息
+
+    private boolean importAdvanced;         // 是否导入进阶数据（试卷题型，知识点，能力层级，双向细目，试题能力区分）
 
     private ImportProjectParameters() {
 
@@ -142,5 +149,13 @@ public class ImportProjectParameters {
 
     public void setImportQuests(boolean importQuests) {
         this.importQuests = importQuests;
+    }
+
+    public boolean isImportAdvanced() {
+        return importAdvanced;
+    }
+
+    public void setImportAdvanced(boolean importAdvanced) {
+        this.importAdvanced = importAdvanced;
     }
 }

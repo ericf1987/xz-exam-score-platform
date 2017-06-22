@@ -226,6 +226,8 @@ public class ProjectService {
                 "  options text" +
                 ")");
 
+        dao.execute("CREATE TABLE quest_type_list(id VARCHAR(40) PRIMARY KEY, quest_type_name VARCHAR(40) NOT NULL, exam_subject VARCHAR(10) NOT NULL, quest_subject VARCHAR(10) NOT NULL, full_score DECIMAL(4,1))");
+
         dao.execute("CREATE TABLE quest_point (" +
                 "  quest_id varchar(40) NOT NULL," +
                 "  point_id varchar(20) NOT NULL," +
