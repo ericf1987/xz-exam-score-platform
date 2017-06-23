@@ -32,7 +32,7 @@ public class PaperImgServerTest extends BaseTest {
         param.setParameter("projectId", "430200-13e01c025ac24c6497d916551b3ae7a6");
         param.setParameter("classId", "317c7b47-587c-445b-83b8-c2887e51cec1");
         param.setParameter("schoolId", "200f3928-a8bd-48c4-a2f4-322e9ffe3700");
-        param.setParameter("studentId", "74a296ed-7dee-4f2d-8a8a-2ce358b39d0e");
+        param.setParameter("studentId", "80041382-fba4-4495-9031-21a6e3b98d3e");
         param.setParameter("isPositive", false);
         Result execute = paperImgServer.execute(param);
         System.out.println(JSON.toJSON(execute.getData()));

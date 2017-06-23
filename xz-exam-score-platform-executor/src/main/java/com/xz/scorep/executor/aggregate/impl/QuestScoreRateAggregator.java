@@ -72,7 +72,7 @@ public class QuestScoreRateAggregator extends Aggregator {
         quests.stream()
                 .filter(quest -> quest.isObjective())
                 .forEach(quest -> {
-                    String answer = quest.getScoreRule();
+                    String answer = quest.getAnswer();
                     String questId = quest.getId();
                     String questNo = quest.getQuestNo();
                     String subjectId = quest.getExamSubject();
