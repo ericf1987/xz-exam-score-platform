@@ -10,6 +10,8 @@ import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import com.xz.scorep.executor.utils.DoubleUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +42,8 @@ public class RankSegmentAggregator extends Aggregator {
     @Autowired
     SubjectService subjectService;
 
+    public static final Logger LOG = LoggerFactory.getLogger(RankSegmentAggregator.class);
+
     public static final String QUERY_RANK_BY_SUBJECT = "SELECT stu.{{range_id}} range_id, rank.`student_id`, rank.`subject_id`, rank.`rank`\n" +
             "FROM {{rank_table_name}} rank, student stu\n" +
             "where rank.`student_id` = stu.`id`\n" +
@@ -67,6 +71,12 @@ public class RankSegmentAggregator extends Aggregator {
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
+
+
+        LOG.info("开始执行 排名分段 统计 ：{}", this.getClass().getSimpleName());
+
+        long begin = System.currentTimeMillis();
+
         String projectId = aggregateParameter.getProjectId();
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
@@ -84,6 +94,9 @@ public class RankSegmentAggregator extends Aggregator {
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.DAYS);
 
+        long end = System.currentTimeMillis();
+
+        LOG.info("结束执行 排名分段 统计:{}， 耗时:{}", this.getClass().getSimpleName(), end - begin);
     }
 
     private void processData(DAO projectDao, String rangeName, double[] rankSegmentParam) {

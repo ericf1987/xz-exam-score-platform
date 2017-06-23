@@ -10,6 +10,8 @@ import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.SubjectService;
 import org.apache.commons.lang.BooleanUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,12 +34,19 @@ public class RankLevelMapSubjectAggregator extends Aggregator{
     @Autowired
     SubjectService subjectService;
 
+    public static final Logger LOG = LoggerFactory.getLogger(RankLevelMapSubjectAggregator.class);
+
     public static final String[] RANGES = new String[]{
             Range.PROVINCE, Range.SCHOOL, Range.CLASS
     };
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
+
+        LOG.info("开始执行 排名等第（科目） 统计 ：{}", this.getClass().getSimpleName());
+
+        long begin = System.currentTimeMillis();
+
         String projectId = aggregateParameter.getProjectId();
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
@@ -57,6 +66,10 @@ public class RankLevelMapSubjectAggregator extends Aggregator{
 
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.DAYS);
+
+        long end = System.currentTimeMillis();
+
+        LOG.info("结束执行 排名等第（科目） 统计:{}， 耗时:{}", this.getClass().getSimpleName(), end - begin);
     }
 
     private void processData(DAO projectDao, String rangeName, List<String> subjectIds) {

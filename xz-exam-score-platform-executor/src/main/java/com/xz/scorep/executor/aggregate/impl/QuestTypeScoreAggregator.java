@@ -2,6 +2,7 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
+import com.xz.ajiaedu.common.beans.dic.QuestType;
 import com.xz.ajiaedu.common.concurrent.Executors;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.aggregate.*;
@@ -12,6 +13,8 @@ import com.xz.scorep.executor.project.QuestTypeService;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.utils.DoubleUtils;
 import org.apache.commons.lang.BooleanUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +42,8 @@ public class QuestTypeScoreAggregator extends Aggregator {
     @Autowired
     QuestTypeService questTypeService;
 
+    public static final Logger LOG = LoggerFactory.getLogger(QuestTypeScoreAggregator.class);
+
     public static final String QUERY_QUEST_TYPE_BY_SUBJECT = "SELECT qtl.id quest_type_id, qtl.quest_type_name quest_type_name, GROUP_CONCAT(quest.id) quest_ids\n" +
             "FROM quest_type_list qtl, quest\n" +
             "WHERE qtl.id = quest.`question_type_id`\n" +
@@ -51,6 +56,11 @@ public class QuestTypeScoreAggregator extends Aggregator {
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
+
+        LOG.info("开始执行 试卷题型得分 统计 ：{}", this.getClass().getSimpleName());
+
+        long begin = System.currentTimeMillis();
+
         String projectId = aggregateParameter.getProjectId();
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
@@ -69,6 +79,10 @@ public class QuestTypeScoreAggregator extends Aggregator {
 
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.DAYS);
+
+        long end = System.currentTimeMillis();
+
+        LOG.info("结束执行 试卷题型得分 统计:{}， 耗时:{}", this.getClass().getSimpleName(), end - begin);
     }
 
     private void processData(String projectId, DAO projectDao, String subjectId) {
