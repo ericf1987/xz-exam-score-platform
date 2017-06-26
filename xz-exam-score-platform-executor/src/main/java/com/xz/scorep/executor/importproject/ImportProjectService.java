@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.importproject;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.hyd.dao.DAO;
@@ -73,6 +74,18 @@ public class ImportProjectService {
 
     @Autowired
     private DAOFactory daoFactory;
+
+    @Autowired
+    PointService pointService;
+
+    @Autowired
+    SubjectLevelService subjectLevelService;
+
+    @Autowired
+    PointLevelService pointLevelService;
+
+    @Autowired
+    AbilityLevelService abilityLevelService;
 
     public void importProject(ImportProjectParameters parameters) {
 
@@ -148,8 +161,102 @@ public class ImportProjectService {
 
     }
 
-    private void importPointsAndLevels(Context context) {
+    public void importPointsAndLevels(Context context) {
 
+        String projectId = context.getString(PROJECT_ID_KEY);
+
+        //查询题目
+        List<ExamQuest> questList = context.get("questList");
+
+        DoubleCounterMap<String> pointFullScore = new DoubleCounterMap<>();
+        DoubleCounterMap<SubjectLevel> subjectLevelFullScore = new DoubleCounterMap<>();
+        DoubleCounterMap<PointLevel> pointLevelFullScore = new DoubleCounterMap<>();
+
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        for (ExamQuest examQuest : questList) {
+            //获取题目得分
+            double fullScore = examQuest.getFullScore();
+            //答题卡科目
+            String examSubject = examQuest.getExamSubject();
+
+            String points = examQuest.getPoints();
+
+            //题目的知识点信息
+            Map<String, Object> pointMap = JSON.parseObject(points);
+
+            if (null == pointMap) {
+                continue;
+            }
+
+            // 每个题目对每个能力层级只计算一次分数
+            Set<String> levelSet = new HashSet<>();
+            Set<String> existPoints = new HashSet<>();
+
+            //分别罗列出该小题的知识点，知识点能力层级能力层级，科目能力层级，并计算出各自的满分
+            for (String pointId : pointMap.keySet()) {
+                //知识点满分累加
+                pointFullScore.incre(pointId, fullScore);
+
+                List<String> levels = (List<String>) pointMap.get(pointId);
+
+                //知识点能力层级累加
+                for (String level : levels) {
+                    pointLevelFullScore.incre(new PointLevel(pointId, level), fullScore);
+                    levelSet.add(level);
+                }
+
+                //科目能力层级累加
+                for (String level : levelSet) {
+                    subjectLevelFullScore.incre(new SubjectLevel(examSubject, level), fullScore);
+                }
+
+                if (!existPoints.contains(pointId)) {
+                    existPoints.add(pointId);
+                }
+
+                //保存单个知识点信息
+                Result result = appAuthClient.callApi("QueryKnowledgePointById", new Param().setParameter("pointId", pointId));
+                JSONObject point = result.get("point");
+                if (point != null) {
+                    pointService.savePoint(projectDao, pointId,
+                            point.getString("point_name"),
+                            point.getString("parent_point_id"),
+                            point.getString("subject"));
+                }
+            }
+
+            //保存能力层级
+            List<ExamSubject> examSubjects = subjectService.listSubjects(projectId);
+            for (ExamSubject subject : examSubjects) {
+                String subjectId = subject.getId();
+                Result result = appAuthClient.callApi("QueryAbilityLevels",
+                        new Param().setParameter("studyStage", abilityLevelService.findProjectStudyStage(projectId))
+                                .setParameter("subjectId", subjectId)
+                );
+                JSONArray levels = result.get("levels");
+                if (levels != null) {
+                    abilityLevelService.saveAbilityLevels(projectId, projectDao, levels, subjectId);
+                }
+            }
+
+            for (Map.Entry<String, Double> pointFullEntry : pointFullScore.entrySet()) {
+                String pointId = pointFullEntry.getKey();
+                double score = pointFullEntry.getValue();
+                pointService.updatePointFullScore(projectDao, pointId, score);
+            }
+
+            for (Map.Entry<PointLevel, Double> pointLevelEntry : pointLevelFullScore.entrySet()) {
+                PointLevel pointLevel = pointLevelEntry.getKey();
+                double score = pointLevelEntry.getValue();
+                pointLevelService.updatePointLevelFullScore(projectDao, pointLevel, score);
+            }
+
+            for (Map.Entry<SubjectLevel, Double> subjectLevelEntry : subjectLevelFullScore.entrySet()) {
+                SubjectLevel subjectLevel = subjectLevelEntry.getKey();
+                double score = subjectLevelEntry.getValue();
+                subjectLevelService.updateSubjectLevelFullScore(projectDao, subjectLevel, score);
+            }
+        }
     }
 
     public void importQuestTypes(Context context) {
@@ -175,7 +282,7 @@ public class ImportProjectService {
 
             questTypeFullScore.incre(questionTypeId, fullScore);
 
-            if(!questTypeMap.containsKey(questionTypeId)){
+            if (!questTypeMap.containsKey(questionTypeId)) {
                 questTypeMap.put(questionTypeId, questType);
             }
         }
@@ -391,6 +498,9 @@ public class ImportProjectService {
                 scoreRule = StringUtil.isEmpty(scoreRule) ? answer.toUpperCase() : scoreRule.toUpperCase();
                 examQuest.setScoreRule(scoreRule);
                 examQuest.setOptions(examQuest.getOptions().toUpperCase());
+
+                JSONObject p = (JSONObject) quest.get("points");
+                examQuest.setPoints(p.toString());
             }
 
             questList.add(examQuest);

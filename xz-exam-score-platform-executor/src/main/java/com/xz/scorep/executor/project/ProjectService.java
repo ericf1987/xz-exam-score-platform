@@ -223,7 +223,8 @@ public class ProjectService {
                 "  full_score decimal(4,1), " +
                 "  answer text, " +
                 "  score_rule varchar(100), " +
-                "  options text" +
+                "  options text, " +
+                "  points varchar(128) " +
                 ")");
 
         dao.execute("CREATE TABLE quest_type_list(id VARCHAR(40) PRIMARY KEY, quest_type_name VARCHAR(40) NOT NULL, exam_subject VARCHAR(10) NOT NULL, quest_subject VARCHAR(10) NOT NULL, full_score DECIMAL(4,1))");
@@ -241,6 +242,10 @@ public class ProjectService {
                 " subject_id VARCHAR(3) NOT NULL, " +
                 " student_id VARCHAR(40) NOT NULL " +
                 ")");
+        dao.execute("CREATE TABLE points(point_id VARCHAR(20), point_name VARCHAR(128), subject_id VARCHAR(10), parent_point_id VARCHAR(20), full_score DECIMAL(5,2))");
+        dao.execute("CREATE TABLE ability_level(level_id VARCHAR(4), level_name VARCHAR(10), subject_id VARCHAR(10), ability_type VARCHAR(2), study_stage VARCHAR(2), full_score DECIMAL(5,2))");
+        dao.execute("CREATE TABLE point_level(point varchar(20), level varchar(4), full_score decimal(5,2))");
+        dao.execute("CREATE TABLE subject_level(subject VARCHAR(20), level VARCHAR(4), full_score DECIMAL(5,2))");
     }
 
     //////////////////////////////////////////////////////////////

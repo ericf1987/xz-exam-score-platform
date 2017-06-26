@@ -35,6 +35,8 @@ public class ExamQuest {
 
     private String options;
 
+    private String points;
+
     public ExamQuest() {
     }
 
@@ -69,6 +71,9 @@ public class ExamQuest {
 
         JSONArray items = jsonObject.getJSONArray("items");
         this.options = items == null ? "" : items.toJSONString();
+
+        JSONObject points = (JSONObject) jsonObject.get("points");
+        this.points = points == null ? "" : points.toJSONString();
     }
 
     public boolean isMultiChoice() {
@@ -175,6 +180,14 @@ public class ExamQuest {
         this.options = options;
     }
 
+    public String getPoints() {
+        return points;
+    }
+
+    public void setPoints(String points) {
+        this.points = points;
+    }
+
     @Override
     public String toString() {
         return "ExamQuest{" +
@@ -191,6 +204,7 @@ public class ExamQuest {
                 ", answer='" + answer + '\'' +
                 ", scoreRule='" + scoreRule + '\'' +
                 ", options='" + options + '\'' +
+                ", points='" + points + '\'' +
                 '}';
     }
 

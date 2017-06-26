@@ -56,4 +56,28 @@ public class ImportProjectServiceTest extends BaseTest {
         context.put("projectId", projectId);
         importProjectService.importQuestTypes(context);
     }
+
+    @Test
+    public void testImportProject1() throws Exception {
+        String projectId = "430200-13e01c025ac24c6497d916551b3ae7a6";
+        List<ExamQuest> examQuests = questService.queryQuests(projectId);
+        Context context = new Context();
+        context.put("questList", examQuests);
+        importProjectService.importPointsAndLevels(context);
+    }
+
+    @Test
+    public void testImportPointsAndLevels() throws Exception {
+
+    }
+
+    @Test
+    public void testImportQuestTypes1() throws Exception {
+
+    }
+
+    @Test
+    public void testImportReportConfig1() throws Exception {
+
+    }
 }
