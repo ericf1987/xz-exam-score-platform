@@ -129,9 +129,12 @@ public class ImportProjectService {
 
         // 导入进阶数据（试卷题型，知识点，能力层级，双向细目，试题能力区分）
         if (parameters.isImportAdvanced()) {
-            LOG.info("导入项目 {} 的进阶数据...");
+            LOG.info("导入项目 {} 的进阶数据...", projectId);
+            LOG.info("题型导入...");
             importQuestTypes(context);
+            LOG.info("知识点和能力层级导入...");
             importPointsAndLevels(context);
+            LOG.info("试题能力层级导入...");
             importQuestAbilityLevel(context);
         }
 
@@ -171,8 +174,15 @@ public class ImportProjectService {
         DoubleCounterMap<String> pointFullScore = new DoubleCounterMap<>();
         DoubleCounterMap<SubjectLevel> subjectLevelFullScore = new DoubleCounterMap<>();
         DoubleCounterMap<PointLevel> pointLevelFullScore = new DoubleCounterMap<>();
+        Set<String> existPoints = new HashSet<>();
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
+
+        projectDao.execute("truncate table points");
+        projectDao.execute("truncate table ability_level");
+        projectDao.execute("truncate table point_level");
+        projectDao.execute("truncate table subject_level");
+
         for (ExamQuest examQuest : questList) {
             //获取题目得分
             double fullScore = examQuest.getFullScore();
@@ -190,8 +200,6 @@ public class ImportProjectService {
 
             // 每个题目对每个能力层级只计算一次分数
             Set<String> levelSet = new HashSet<>();
-            Set<String> existPoints = new HashSet<>();
-
             //分别罗列出该小题的知识点，知识点能力层级能力层级，科目能力层级，并计算出各自的满分
             for (String pointId : pointMap.keySet()) {
                 //知识点满分累加
@@ -212,51 +220,43 @@ public class ImportProjectService {
 
                 if (!existPoints.contains(pointId)) {
                     existPoints.add(pointId);
+                    //保存单个知识点信息
+                    Result result = appAuthClient.callApi("QueryKnowledgePointById", new Param().setParameter("pointId", pointId));
+                    JSONObject point = result.get("point");
+                    if (point != null) {
+                        pointService.savePoint(projectDao, pointId,
+                                point.getString("point_name"),
+                                point.getString("parent_point_id"),
+                                point.getString("subject"));
+                    }
                 }
-
-                //保存单个知识点信息
-                Result result = appAuthClient.callApi("QueryKnowledgePointById", new Param().setParameter("pointId", pointId));
-                JSONObject point = result.get("point");
-                if (point != null) {
-                    pointService.savePoint(projectDao, pointId,
-                            point.getString("point_name"),
-                            point.getString("parent_point_id"),
-                            point.getString("subject"));
-                }
-            }
-
-            //保存能力层级
-            List<ExamSubject> examSubjects = subjectService.listSubjects(projectId);
-            for (ExamSubject subject : examSubjects) {
-                String subjectId = subject.getId();
-                Result result = appAuthClient.callApi("QueryAbilityLevels",
-                        new Param().setParameter("studyStage", abilityLevelService.findProjectStudyStage(projectId))
-                                .setParameter("subjectId", subjectId)
-                );
-                JSONArray levels = result.get("levels");
-                if (levels != null) {
-                    abilityLevelService.saveAbilityLevels(projectId, projectDao, levels, subjectId);
-                }
-            }
-
-            for (Map.Entry<String, Double> pointFullEntry : pointFullScore.entrySet()) {
-                String pointId = pointFullEntry.getKey();
-                double score = pointFullEntry.getValue();
-                pointService.updatePointFullScore(projectDao, pointId, score);
-            }
-
-            for (Map.Entry<PointLevel, Double> pointLevelEntry : pointLevelFullScore.entrySet()) {
-                PointLevel pointLevel = pointLevelEntry.getKey();
-                double score = pointLevelEntry.getValue();
-                pointLevelService.updatePointLevelFullScore(projectDao, pointLevel, score);
-            }
-
-            for (Map.Entry<SubjectLevel, Double> subjectLevelEntry : subjectLevelFullScore.entrySet()) {
-                SubjectLevel subjectLevel = subjectLevelEntry.getKey();
-                double score = subjectLevelEntry.getValue();
-                subjectLevelService.updateSubjectLevelFullScore(projectDao, subjectLevel, score);
             }
         }
+
+        LOG.info("共导入 {} 个知识点...", existPoints.size());
+
+        //保存能力层级
+        List<ExamSubject> examSubjects = subjectService.listSubjects(projectId);
+        for (ExamSubject subject : examSubjects) {
+            LOG.info("导入科目 {} 的能力层级...", subject.getName());
+            String subjectId = subject.getId();
+            Result result = appAuthClient.callApi("QueryAbilityLevels",
+                    new Param().setParameter("studyStage", abilityLevelService.findProjectStudyStage(projectId))
+                            .setParameter("subjectId", subjectId)
+            );
+            JSONArray levels = result.get("levels");
+            if (levels != null) {
+                abilityLevelService.saveAbilityLevels(projectId, projectDao, levels, subjectId);
+                LOG.info("共导入 {} 个能力层级...", levels.size());
+            }else{
+                LOG.info("该科目 {} 无能力层级数据...", subject.getName());
+            }
+        }
+
+        pointService.batchUpdateFullScore(projectDao, pointFullScore);
+        pointLevelService.batchUpdateFullScore(projectDao, pointLevelFullScore);
+        subjectLevelService.batchUpdateFullScore(projectDao, subjectLevelFullScore);
+
     }
 
     public void importQuestTypes(Context context) {

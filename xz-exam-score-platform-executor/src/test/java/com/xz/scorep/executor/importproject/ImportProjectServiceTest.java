@@ -59,16 +59,17 @@ public class ImportProjectServiceTest extends BaseTest {
 
     @Test
     public void testImportProject1() throws Exception {
-        String projectId = "430200-13e01c025ac24c6497d916551b3ae7a6";
-        List<ExamQuest> examQuests = questService.queryQuests(projectId);
-        Context context = new Context();
-        context.put("questList", examQuests);
-        importProjectService.importPointsAndLevels(context);
+
     }
 
     @Test
     public void testImportPointsAndLevels() throws Exception {
-
+        String projectId = "430200-13e01c025ac24c6497d916551b3ae7a6";
+        List<ExamQuest> examQuests = questService.queryQuests(projectId);
+        Context context = new Context();
+        context.put("questList", examQuests);
+        context.put("projectId", projectId);
+        importProjectService.importPointsAndLevels(context);
     }
 
     @Test

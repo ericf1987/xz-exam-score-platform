@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * @author by fengye on 2017/6/26.
@@ -59,7 +58,8 @@ public class AbilityLevelService {
         ExamProject project = projectService.findProject(projectId);
 
         if(null != project){
-            return GRADE_STUDY_STAGE_MAP.get(project.getGrade());
+            int grade = project.getGrade();
+            return GRADE_STUDY_STAGE_MAP.get(String.valueOf(grade));
         }
         return GRADE_STUDY_STAGE_MAP.get("0");
     }
