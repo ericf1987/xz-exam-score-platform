@@ -18,8 +18,8 @@ public class PssControllerTest extends BaseTest {
     @Test
     public void startPssTask() throws Exception {
         HttpRequest request = new HttpRequest(URL);
-        request.setParameter("projectId","430200-13e01c025ac24c6497d916551b3ae7a6");
-        request.setParameter("subjectId","");
+        request.setParameter("projectId","430300-29c4d40d93bf41a5a82baffe7e714dd9");
+        request.setParameter("subjectId","001");
         String result = request.requestPost();
         System.out.println(result);
 

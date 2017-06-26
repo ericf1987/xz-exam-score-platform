@@ -52,7 +52,7 @@ public class SubjectiveObjectiveQuery {
             "is_right = \"true\"\n" +
             "and student_id in (select id from student where class_id =\"{{classId}}\")";
 
-    private static final String ZERO_SQL = "select * from `{{table}}` where  score = 0 and student_id = '{{studentId}}'";
+    private static final String ZERO_SQL = "select * from `{{table}}` where  student_id = '{{studentId}}'";
 
     @Autowired
     private CacheFactory cacheFactory;
@@ -241,12 +241,13 @@ public class SubjectiveObjectiveQuery {
     }
 
     //学生是否为0分
+    //移除0分,科目0分是会被剔除,此处应该查不到
     private boolean isZeroScore(String projectId, String subjectId, String studentId) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         Row row = projectDao.queryFirst(ZERO_SQL
                 .replace("{{table}}", "score_subject_" + subjectId)
                 .replace("{{studentId}}", studentId));
-        return row != null;
+        return row == null;
     }
 
     //学生是否作弊
