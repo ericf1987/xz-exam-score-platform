@@ -105,7 +105,12 @@ public class PaperImgServer implements Server {
 
         //  学生得分(总分,科目得分,科目主客观题得分 .....)
         Map<String, Object> studentScore = studentExamQuery.queryStudentScore(projectId, subjectId, studentId);
-        double subjectScore = Double.valueOf(studentScore.get("subject_score").toString());
+        double subjectScore = 0;
+        try {
+            subjectScore = Double.valueOf(studentScore.get("subject_score").toString());
+        } catch (Exception e) {
+            LOG.error("项目ID {},科目ID {},学生ID {}获取科目分数异常....", projectId, subjectId, studentId);
+        }
 
         //  学生超过班级平均分和超过学校平均分 .......
         Map<String, Object> overAverage = studentExamQuery.queryStudentOverAverage(projectId, subjectId, schoolId, classId, studentId);
