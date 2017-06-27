@@ -248,7 +248,7 @@ public class ImportProjectService {
             if (levels != null) {
                 abilityLevelService.saveAbilityLevels(projectId, projectDao, levels, subjectId);
                 LOG.info("共导入 {} 个能力层级...", levels.size());
-            }else{
+            } else {
                 LOG.info("该科目 {} 无能力层级数据...", subject.getName());
             }
         }
@@ -292,7 +292,11 @@ public class ImportProjectService {
         //将每个题型的满分进行设置
         examQuestTypes.forEach(e -> e.setFullScore(questTypeFullScore.get(e.getId())));
 
-        questTypeService.saveQuestType(projectId, examQuestTypes);
+        try {
+            questTypeService.saveQuestType(projectId, examQuestTypes);
+        } catch (Exception e) {
+            LOG.info("项目ID{}导入知识点失败...", projectId);
+        }
 
         LOG.info("已导入 " + examQuestTypes.size() + " 个题型。");
 
@@ -500,7 +504,11 @@ public class ImportProjectService {
                 examQuest.setOptions(examQuest.getOptions().toUpperCase());
 
                 JSONObject p = (JSONObject) quest.get("points");
-                examQuest.setPoints(p.toString());
+                //过滤掉没有知识点相关的项目.....
+
+                if (p != null) {
+                    examQuest.setPoints(p.toString());
+                }
             }
 
             questList.add(examQuest);

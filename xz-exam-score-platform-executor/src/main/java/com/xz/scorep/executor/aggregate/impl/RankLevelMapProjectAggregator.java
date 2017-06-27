@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author by fengye on 2017/6/20.
  */
-@AggregateTypes(AggregateType.Basic)
+@AggregateTypes(AggregateType.Advanced)
 @AggregateOrder(74)
 @Component
 public class RankLevelMapProjectAggregator extends Aggregator {
