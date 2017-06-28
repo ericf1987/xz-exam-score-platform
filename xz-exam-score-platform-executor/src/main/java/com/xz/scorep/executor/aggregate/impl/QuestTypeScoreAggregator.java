@@ -2,7 +2,6 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
-import com.xz.ajiaedu.common.beans.dic.QuestType;
 import com.xz.ajiaedu.common.concurrent.Executors;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.aggregate.*;
