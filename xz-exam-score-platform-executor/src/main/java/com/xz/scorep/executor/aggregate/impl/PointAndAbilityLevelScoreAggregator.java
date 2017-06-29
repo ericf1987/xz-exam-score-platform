@@ -45,7 +45,7 @@ public class PointAndAbilityLevelScoreAggregator extends Aggregator {
 
     public static final String QUERY_SCORE_BY_QUEST = "select student_id, '{{quest_id}}' quest_id, score from score_{{quest_id}} ";
 
-    public static final Logger LOG = LoggerFactory.getLogger(QuestTypeScoreAggregator.class);
+    public static final Logger LOG = LoggerFactory.getLogger(PointAndAbilityLevelScoreAggregator.class);
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {

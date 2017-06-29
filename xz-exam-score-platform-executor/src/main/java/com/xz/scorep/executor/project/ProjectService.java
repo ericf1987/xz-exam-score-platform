@@ -207,6 +207,16 @@ public class ProjectService {
 
         dao.execute("create table score_subject_level(student_id varchar(40), subject varchar(10), level varchar(2), total_score decimal(6,2))");
         dao.execute("CREATE INDEX idx_score_subject_level ON score_subject_level(student_id, subject, level)");
+
+        dao.execute("CREATE TABLE score_point_range(range_id VARCHAR(40),range_type VARCHAR(20), point_id VARCHAR(10), total_score DECIMAL(10,2))");
+        dao.execute("CREATE INDEX idx_score_point_range ON score_point_range(range_id,range_type, point_id)");
+
+        dao.execute("CREATE TABLE score_point_level_range(range_id VARCHAR(40),range_type VARCHAR(20), point VARCHAR(10), level VARCHAR(2), total_score DECIMAL(10,2))");
+        dao.execute("CREATE INDEX idx_score_point_level_range ON score_point_level_range(range_id,range_type, point, level)");
+
+        dao.execute("CREATE TABLE score_subject_level_range(range_id VARCHAR(40),range_type VARCHAR(20), subject VARCHAR(10), level VARCHAR(2), total_score DECIMAL(10,2))");
+        dao.execute("CREATE INDEX idx_score_subject_level_range ON score_subject_level_range(range_id,range_type, subject, level)");
+
     }
 
     // 创建基础数据表
