@@ -3,6 +3,7 @@ package com.xz.scorep.executor.tools;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.hyd.dao.DAO;
 import com.hyd.dao.DataSources;
+import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.io.FileUtils;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 由于学生试卷错位，导致一些试卷背面与正面不是同一个学生的，现在需要将分数对应的学生纠正。
@@ -25,7 +27,7 @@ public class ReplaceStudentScore_2017_06_30 {
 
     public static final List<String> QUEST_IDS = Arrays.asList("100010237-20", "100010237-21", "100010237-22");
 
-    public static final String FILES_FOLDER = "C:\\Users\\yidin\\Desktop\\2222";
+    public static final String FILES_FOLDER = "E:/corrections";
 
     static {
         System.setProperty("socksProxyHost", "127.0.0.1");
@@ -40,9 +42,30 @@ public class ReplaceStudentScore_2017_06_30 {
         Map<String, String> correctionMap = readCorrectionMap();
         List<Correction> correctionSequence = buildCorrectionSequence(correctionMap);
 
-        for (Correction correction : correctionSequence) {
-            processCorrection(dao, correction, examNoMap);
-        }
+        QUEST_IDS.forEach(questId -> {
+            String tableName = "score_" + questId;
+            List<Row> correctedRows = new ArrayList<>();
+
+            Map<String, Row> rowMap = dao.query("select * from `" + tableName + "`")
+                    .stream().collect(Collectors.toMap(row -> row.getString("student_id"), row-> row));
+
+            for (Correction correction : correctionSequence) {
+                LOG.info("Correcting " + correction);
+                String fakeStudentId = examNoMap.get(correction.getFakeStudent());
+                String realStudentId = examNoMap.get(correction.getRealStudent());
+
+                if (rowMap.containsKey(fakeStudentId)) {
+                    dao.execute("delete from `" + tableName + "` where student_id=?", fakeStudentId);
+                    Row row = rowMap.get(fakeStudentId);
+                    row.put("studentId", realStudentId);
+                    correctedRows.add(row);
+                }
+            }
+
+            LOG.info("Inserting corrected rows to " + tableName);
+            dao.insert(correctedRows, tableName);
+        });
+
     }
 
     private static Map<String, String> readExamNoMap(DAO dao) {
@@ -52,22 +75,6 @@ public class ReplaceStudentScore_2017_06_30 {
                 result.put(row.getString("school_exam_no"), row.getString("id")));
 
         return result;
-    }
-
-    private static void processCorrection(
-            DAO dao, Correction correction, Map<String, String> examNoMap) {
-
-        LOG.info("correction: " + correction);
-
-/*
-        QUEST_IDS.forEach(questId -> {
-            String tableName = "score_" + questId;
-            String sql = "update `" + tableName + "` set student_id=? where student_id=?";
-            String fakeStudentId = examNoMap.get(correction.getFakeStudent());
-            String realStudentId = examNoMap.get(correction.getRealStudent());
-            dao.execute(sql, realStudentId, fakeStudentId);
-        });
-*/
     }
 
     private static Map<String, String> readCorrectionMap() {
@@ -99,27 +106,9 @@ public class ReplaceStudentScore_2017_06_30 {
 
     //////////////////////////////////////////////////////////////
 
-    private static List<Correction> buildCorrectionSequence(
-            Map<String, String> correctionMap) {
-
+    private static List<Correction> buildCorrectionSequence(Map<String, String> correctionMap) {
         List<Correction> correctionSequence = new ArrayList<>();
-
-        while (!correctionMap.isEmpty()) {
-            String pickKey = correctionMap.keySet().stream()
-                    .filter(key -> !correctionMap.containsKey(correctionMap.get(key)))
-                    .findFirst().orElse(null);
-
-            if (pickKey != null) {
-                correctionSequence.add(new Correction(pickKey, correctionMap.get(pickKey)));
-                correctionMap.remove(pickKey);
-            } else {
-                break;
-            }
-        }
-
-        correctionMap.forEach((fakeExamNo, realExamNo) ->
-                LOG.info("UNCORRECTABLE: " + fakeExamNo + " " + realExamNo));
-
+        correctionMap.forEach((fake, real) -> correctionSequence.add(new Correction(fake, real)));
         return correctionSequence;
     }
 
