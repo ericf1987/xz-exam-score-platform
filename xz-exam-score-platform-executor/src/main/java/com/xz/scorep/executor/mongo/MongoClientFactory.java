@@ -3,6 +3,7 @@ package com.xz.scorep.executor.mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.config.MongoConfig;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -28,12 +29,16 @@ public class MongoClientFactory {
 
     private MongoClient aggrMongoClient;
 
+    public void setMongoConfig(MongoConfig mongoConfig) {
+        this.mongoConfig = mongoConfig;
+    }
+
     public void setAggrMongoClient(MongoClient aggrMongoClient) {
         this.aggrMongoClient = aggrMongoClient;
     }
 
     @PostConstruct
-    private void initMongoClients() {
+    public void initMongoClients() {
         //初始化网阅Mongo
         initScannerMongoClients();
         //初始化统计Mongo
@@ -64,6 +69,10 @@ public class MongoClientFactory {
      */
     private void initAggrMongoClient() {
         String dbString = mongoConfig.getAggrDbs();
+        if (StringUtil.isEmpty(dbString)) {
+            return;
+        }
+
         List<ServerAddress> serverAddresses = readAggrMongoServerAddress(dbString);
         MongoClientOptions options = MongoClientOptions.builder().build();//默认连接池大小为100
         setAggrMongoClient(new MongoClient(serverAddresses, options));
