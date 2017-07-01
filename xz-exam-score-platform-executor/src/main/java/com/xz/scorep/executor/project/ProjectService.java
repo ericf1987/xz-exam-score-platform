@@ -217,6 +217,8 @@ public class ProjectService {
         dao.execute("CREATE TABLE score_subject_level_range(range_id VARCHAR(40),range_type VARCHAR(20), subject VARCHAR(10), level VARCHAR(2), total_score DECIMAL(10,2))");
         dao.execute("CREATE INDEX idx_score_subject_level_range ON score_subject_level_range(range_id,range_type, subject, level)");
 
+        //题型得分
+        dao.execute("CREATE TABLE quest_type_score(quest_type_id VARCHAR(40) NOT NULL, quest_type_name VARCHAR(40) NOT NULL, student_id VARCHAR(40) NOT NULL, exam_subject VARCHAR(10) NOT NULL, quest_subject VARCHAR(10) NOT NULL, score DECIMAL(5,1) NOT NULL, rate DECIMAL(6,4) NOT NULL, cnt INT(5) NOT NULL)");
     }
 
     // 创建基础数据表
@@ -248,7 +250,6 @@ public class ProjectService {
                 ")");
 
         dao.execute("CREATE TABLE quest_type_list(id VARCHAR(40) PRIMARY KEY, quest_type_name VARCHAR(40) NOT NULL, exam_subject VARCHAR(10) NOT NULL, quest_subject VARCHAR(10) NOT NULL, full_score DECIMAL(4,1))");
-        dao.execute("CREATE TABLE quest_type_score(quest_type_id VARCHAR(40) NOT NULL, quest_type_name VARCHAR(40) NOT NULL, student_id VARCHAR(40) NOT NULL, exam_subject VARCHAR(10) NOT NULL, quest_subject VARCHAR(10) NOT NULL, score DECIMAL(5,1) NOT NULL, rate DECIMAL(6,4) NOT NULL, cnt INT(5) NOT NULL)");
 
         dao.execute("CREATE TABLE quest_point (" +
                 "  quest_id varchar(40) NOT NULL," +

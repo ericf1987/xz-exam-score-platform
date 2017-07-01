@@ -5,6 +5,7 @@ import com.xz.ajiaedu.common.lang.NaturalOrderComparator;
 import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.utils.DoubleUtils;
+import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -108,11 +109,13 @@ public class SubjectiveObjectiveService {
             return null;
         }
 
-        List<Map<String, Object>> collect = list.stream()
-                .sorted((map1, map2) -> sorted(map1, map2))
-                .collect(Collectors.toList());
+        Collections.sort(list, (Map<String, Object> m1, Map<String, Object> m2) -> {
+            Double s1 = MapUtils.getDouble(m1, "dValue");
+            Double s2 = MapUtils.getDouble(m2, "dValue");
+            return s2.compareTo(s1);
+        });
 
-        return collect.stream().limit(5).collect(Collectors.toList());
+        return list.stream().limit(5).collect(Collectors.toList());
     }
 
     ///主观题 : 与班级单题得分差距较大的TOP5(差值的绝对值最大)  每一行
@@ -123,27 +126,18 @@ public class SubjectiveObjectiveService {
             Map<String, Object> map = new HashMap<>();
             Row averageRow = query.queryClassAverageScore(projectId, questId, classId);
 
+            double score = studentRow.getDouble("score", 0);
+            double average_score = averageRow.getDouble("average_score", 0);
+
             map.put("quest_no", quest.getQuestNo());
             map.put("full_score", quest.getFullScore());
-            map.put("score", studentRow.getDouble("score", 0));
-            map.put("average_score", averageRow.getDouble("average_score", 0));
+            map.put("score", score);
+            map.put("average_score", average_score);
+            map.put("dValue", DoubleUtils.round(Math.abs(average_score - score)));
 
             list.add(map);
         }
     }
-
-    private int sorted(Map<String, Object> map1, Map<String, Object> map2) {
-        double score1 = (double) map1.get("score");
-        double averageScore1 = (double) map1.get("average_score");
-        double sub1 = Math.abs((averageScore1 - score1));
-
-        double score2 = (double) map2.get("score");
-        double averageScore2 = (double) map2.get("average_score");
-        double sub2 = Math.abs((averageScore2 - score2));
-
-        return (sub2 > sub1) ? 1 : 0;
-    }
-
 
     //客观题 : 与班级单题得分人数最多,且自己没得满分的题目TOP5 (人数为得满分人数)
     public List<Map<String, Object>> queryObjectiveTop5(String projectId, String subjectId, String classId, String studentId) {

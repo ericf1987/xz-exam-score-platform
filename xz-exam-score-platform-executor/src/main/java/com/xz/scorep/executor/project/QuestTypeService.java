@@ -28,6 +28,7 @@ public class QuestTypeService {
 
     public void saveQuestType(String projectId, List<ExamQuestType> examQuestTypes) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
+        projectDao.execute("truncate table quest_type_list");
         projectDao.insert(examQuestTypes, "quest_type_list");
     }
 
