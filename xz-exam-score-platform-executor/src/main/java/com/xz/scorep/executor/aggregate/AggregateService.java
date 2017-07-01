@@ -146,6 +146,12 @@ public class AggregateService {
             aggregators.removeIf(condition.negate());
             aggregators.sort(Comparator.comparingInt(Aggregator::getAggregateOrder));
 
+            LOG.info("== 统计项顺序 ==");
+            aggregators.forEach(aggregator -> {
+                LOG.info(String.format("%5d %s", aggregator.getAggregateOrder(), aggregator.getAggrName()));
+            });
+            LOG.info("=================");
+
             for (Aggregator aggregator : aggregators) {
                 aggregator.aggregate(parameter);
             }

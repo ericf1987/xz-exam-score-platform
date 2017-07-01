@@ -136,6 +136,10 @@ public class AllPassOrFailAggregator extends Aggregator {
                                Map<String, Integer> schoolStudentCount,
                                Map<String, Integer> classStudentCount) {
 
+        if (provinceStudentCount == 0) {
+            throw new IllegalArgumentException("Student count is 0");
+        }
+
         AtomicInteger provinceAllPassCount = new AtomicInteger();
         AtomicInteger provinceAllFailCount = new AtomicInteger();
 
@@ -165,13 +169,23 @@ public class AllPassOrFailAggregator extends Aggregator {
         schoolStudentCount.forEach((schoolId, totalCount) -> {
             int allPassCount = getCount(schoolAllPassCount, schoolId);
             int allFailCount = getCount(schoolAllFailCount, schoolId);
-            resultRows.add(createMap(Range.SCHOOL, schoolId, totalCount, allPassCount, allFailCount));
+
+            if (totalCount == 0) {
+                LOG.warn("Student count is 0 [school=" + schoolId + "]");
+            } else {
+                resultRows.add(createMap(Range.SCHOOL, schoolId, totalCount, allPassCount, allFailCount));
+            }
         });
 
         classStudentCount.forEach((classId, totalCount) -> {
             int allPassCount = getCount(classAllPassCount, classId);
             int allFailCount = getCount(classAllFailCount, classId);
-            resultRows.add(createMap(Range.CLASS, classId, totalCount, allPassCount, allFailCount));
+
+            if (totalCount == 0) {
+                LOG.warn("Student count is 0 [class=" + classId + "]");
+            } else {
+                resultRows.add(createMap(Range.CLASS, classId, totalCount, allPassCount, allFailCount));
+            }
         });
 
         projectDao.insert(resultRows, "all_pass_or_fail");

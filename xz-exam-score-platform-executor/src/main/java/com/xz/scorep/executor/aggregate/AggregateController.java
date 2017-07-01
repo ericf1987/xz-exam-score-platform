@@ -51,7 +51,7 @@ public class AggregateController {
             @RequestParam(required = false, name = "importScore", defaultValue = "false") boolean importScore,
             @RequestParam(required = false, name = "subjects", defaultValue = "") String subjects
     ) {
-        LOG.info("projectId {},aggrType {},async {},importProject {},importScore {},subjects {}",
+        LOG.info("projectId={},aggrType={},async={},importProject={},importScore={},subjects={}",
                 projectId, aggrType, async, importProject, importScore, subjects);
 
         if (StringUtil.isNotBlank(aggrName)) {
