@@ -101,14 +101,10 @@ public class MongoClientFactory {
      */
     public MongoClient getProjectMongoClient(String projectId) {
 
-        MongoClient mongoClient = this.scannerMongoClients.stream()
+        return this.scannerMongoClients.stream()
                 .filter(client -> projectExists(client, projectId))
                 .findFirst()
                 .orElse(null);
-
-        LOG.info("项目 {} 所属网阅数据库：{}", projectId, mongoClient.getAddress());
-
-        return mongoClient;
     }
 
     public MongoClient getAggrMongoClient() {

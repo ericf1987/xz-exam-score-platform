@@ -52,6 +52,8 @@ public class ReplaceStudentScore_Mongo_2017_06_30 {
         MongoClient mongoClient = mongoClientFactory.getProjectMongoClient(PROJECT_ID);
         if (mongoClient == null) {
             throw new IllegalStateException("找不到网阅数据库");
+        } else {
+            LOG.info("项目 {} 所属网阅数据库：{}", PROJECT_ID, mongoClient.getAddress());
         }
 
         Map<String, String> examNoMap = readExamNoMap(mongoClient);           // examNo -> studentId
