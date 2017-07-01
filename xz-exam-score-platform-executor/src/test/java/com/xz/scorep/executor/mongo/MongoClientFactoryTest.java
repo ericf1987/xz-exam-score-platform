@@ -42,4 +42,10 @@ public class MongoClientFactoryTest extends BaseTest {
         Document first = project_config.find().first();
         System.out.println(first);
     }
+
+    @Test
+    public void testGetProjectMongoClient() {
+        String projectId = "430100-85ebb706b7fd4554a8085bd462aba646";
+        mongoClientFactory.getProjectMongoClient(projectId);
+    }
 }
