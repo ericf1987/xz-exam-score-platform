@@ -29,7 +29,7 @@ public class QuestScoreRateAggregator extends Aggregator {
             "quest_id,quest_no,subject_id,range_id,range_type,answer,score_rate) \n" +
             "select '{{questId}}' quest_id,'{{questNo}}' quest_no,'{{subjectId}}' subject_id," +
             "a.class_id range_id, 'Class' range_type,'{{answer}}' answer," +
-            "a.count/b.total score_rate from (\n" +
+            "(b.avg_score / {{fullScore}}) score_rate from (\n" +
             "select COUNT(1) `count` ,s.class_id from \n" +
             "`score_{{questId}}` score,student s\n" +
             "where s.id = score.student_id \n" +
@@ -37,7 +37,7 @@ public class QuestScoreRateAggregator extends Aggregator {
             "GROUP BY s.class_id \n" +
             ") a,\n" +
             "(\n" +
-            "select COUNT(1) total,s.class_id  from \n" +
+            "select avg(score.score) avg_score,s.class_id  from \n" +
             "`score_{{questId}}` score,student s\n" +
             "where s.id = score.student_id \n" +
             "and student_id not in \n" +
@@ -76,10 +76,12 @@ public class QuestScoreRateAggregator extends Aggregator {
                     String questId = quest.getId();
                     String questNo = quest.getQuestNo();
                     String subjectId = quest.getExamSubject();
+                    String fullScore = String.valueOf(quest.getFullScore());
                     String sql = INSERT_CLASS_DATA
                             .replace("{{questId}}", questId)
                             .replace("{{answer}}", answer)
                             .replace("{{subjectId}}", subjectId)
+                            .replace("{{fullScore}}", fullScore)
                             .replace("{{questNo}}", questNo);
                     projectDao.execute(sql);
                 });

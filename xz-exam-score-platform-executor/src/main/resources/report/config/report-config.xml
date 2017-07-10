@@ -6,6 +6,7 @@
         <dir name="全科报表">
             <report name="联考学校分数分布统计" class=".total.TotalDistributionReport"/>
             <report name="联考学校平均分统计分析" class=".total.TotalAverageReport"/>
+            <report name="联考分数排名、得分明细表(全科)" class=".total.TotalScoreRankReport"/>
 
             <iterate type="range:school">
                 <dir name="{{school}}">
