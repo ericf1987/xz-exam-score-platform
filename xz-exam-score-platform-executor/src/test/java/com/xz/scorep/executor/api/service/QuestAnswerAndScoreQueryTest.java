@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +59,11 @@ public class QuestAnswerAndScoreQueryTest extends BaseTest {
         System.out.println("学校主观题结构：" + l4.toString());
         System.out.println("合并结构：" + r2.toString());
 
+    }
 
+    @Test
+    public void test() throws Exception {
+        Map<String, Object> map = questAnswerAndScoreQuery.queryQuestAnswerAndScore(PROJECT_ID, SUBJECT_ID, Range.CLASS, CLASS_ID);
+        System.out.println(map.toString());
     }
 }

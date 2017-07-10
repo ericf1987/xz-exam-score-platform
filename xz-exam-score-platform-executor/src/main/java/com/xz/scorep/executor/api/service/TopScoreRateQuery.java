@@ -12,11 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.xz.scorep.executor.utils.SqlUtils.*;
+import static com.xz.scorep.executor.utils.SqlUtils.renderGroupType;
+import static com.xz.scorep.executor.utils.SqlUtils.replaceRangeId;
 
 /**
  * 得分率较高/较低的题目，用于快报
@@ -42,6 +44,15 @@ public class TopScoreRateQuery {
             "WHERE stu.id = scores.student_id\n" +
             "GROUP BY questId, questNo, fullScore, range_id";
 
+    public List<Row> getTop(List<Row> combinedRows, int count, boolean asc) {
+
+        return combinedRows.stream().sorted((Row r1, Row r2) -> {
+            Double d1 = r1.getDouble("rate", 0);
+            Double d2 = r2.getDouble("rate", 0);
+            return asc ? d1.compareTo(d2) : d2.compareTo(d1);
+        }).limit(count).collect(Collectors.toList());
+    }
+
     public List<Row> combineByRange(List<Row> classData, List<Row> schoolData) {
         //获取班级得分率前五的题目ID
         classData.stream().forEach(c -> {
@@ -64,7 +75,7 @@ public class TopScoreRateQuery {
      * @param rangeId    维度ID
      * @param asc        排序方式
      * @param groupTypes 分组类型
-     * @return
+     * @return 返回结果
      */
     public List<Row> getScoreRate(String projectId, String subjectId, String rangeName, String rangeId,
                                   List<ExamQuest> examQuests, boolean asc, String... groupTypes) {
@@ -90,9 +101,11 @@ public class TopScoreRateQuery {
      * @param rangeName  维度名称
      * @param examQuests 试题列表
      * @param groupTypes 分组查询参数
-     * @return
+     * @return 返回结果
      */
     public List<Row> getQuestScoresGroup(String projectId, String subjectId, String rangeName, List<ExamQuest> examQuests, String... groupTypes) {
+
+        List<String> questNos = examQuests.stream().map(q -> q.getQuestNo()).collect(Collectors.toList());
 
         String sql = renderGroupType(
                 replaceRangeId(rangeName, SCORE_DETAIL.replace("{{union_table}}", unionScore(examQuests))), groupTypes
@@ -100,7 +113,7 @@ public class TopScoreRateQuery {
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
-        String cacheKey = "score_quests:" + projectId + ":" + subjectId + ":" + rangeName + ":" + groupTypes;
+        String cacheKey = "score_quests:" + projectId + ":" + subjectId + ":" + rangeName + ":" + Arrays.toString(groupTypes) + ":" + questNos.toString();
 
         return cacheFactory.getProjectCache(projectId).get(cacheKey, () -> new ArrayList<>(projectDao.query(sql)));
     }

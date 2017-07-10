@@ -2,7 +2,9 @@ package com.xz.scorep.executor.pss.mamage;
 
 import com.xz.ajiaedu.common.concurrent.Executors;
 import com.xz.scorep.executor.aggritems.StudentQuery;
-import com.xz.scorep.executor.bean.*;
+import com.xz.scorep.executor.bean.ProjectClass;
+import com.xz.scorep.executor.bean.ProjectSchool;
+import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.project.SubjectService;
@@ -27,6 +29,9 @@ import java.util.stream.Collectors;
 @Component
 public class PssTaskManager {
     static final Logger LOG = LoggerFactory.getLogger(PssTaskManager.class);
+
+    @Autowired
+    CacheFactory cacheFactory;
 
     @Autowired
     StudentQuery studentQuery;
@@ -56,7 +61,12 @@ public class PssTaskManager {
     public void startPssTask(final String projectId, String subjectId, Map<String, Object> configFromCMS, boolean async) {
 
         //记录任务状态
-        pssMonitor.initTaskProgress(projectId, ProjectTask.Task.PSS_TASK.name(), ProjectTask.TaskStatus.ACTIVE.name());
+        //pssMonitor.initTaskProgress(projectId, ProjectTask.Task.PSS_TASK.name(), ProjectTask.TaskStatus.ACTIVE.name());
+
+        //清理项目缓存
+        LOG.info("开始清理项目缓存：{}", projectId);
+        cacheFactory.removeProjectCache(projectId);
+        LOG.info("清理完成：{}", projectId);
 
         //学校ID列表
         List<String> schoolIds = schoolService.listSchool(projectId).stream().map(ProjectSchool::getId)

@@ -82,6 +82,14 @@ public class CacheFactory {
         }
     }
 
+    public synchronized void removeProjectCache(String projectId){
+        SimpleCacheWrapper cacheWrapper = projectCache.get(projectId);
+        if(cacheWrapper != null) {
+            cacheWrapper.close();
+            projectCache.remove(projectId);
+        }
+    }
+
     private SimpleCacheWrapper createCache(String cacheName) {
         EhCacheConfiguration conf = new EhCacheConfiguration();
         conf.setName(cacheName);

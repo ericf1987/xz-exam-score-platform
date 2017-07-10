@@ -41,9 +41,12 @@ public class TopScoreRateQueryTest extends BaseTest {
         List<ExamQuest> examQuests = questService.queryQuests(PROJECT_ID, SUBJECT_ID);
         List<Row> l1 = topScoreRateQuery.getScoreRate(PROJECT_ID, SUBJECT_ID, Range.CLASS, CLASS_ID, examQuests, false, GroupType.AVG);
         List<Row> l2 = topScoreRateQuery.getScoreRate(PROJECT_ID, SUBJECT_ID, Range.SCHOOL, SCHOOL_ID, examQuests, false, GroupType.AVG);
-        System.out.println(l1.toString());
-        System.out.println(l2.toString());
-        System.out.println(topScoreRateQuery.combineByRange(l1, l2));
+
+        List<Row> rows = topScoreRateQuery.combineByRange(l1, l2);
+        System.out.println(rows);
+
+        List<Row> top = topScoreRateQuery.getTop(rows, 5, false);
+        System.out.println(top.toString());
     }
 
     @Test
