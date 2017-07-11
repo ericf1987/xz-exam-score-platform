@@ -84,6 +84,7 @@ public class BackupAggregateDataService {
         rootDao.execute("create table `" + dataBaseName + "`.rank_subjective like `" + projectId + "`.rank_subjective");
         rootDao.execute("create table `" + dataBaseName + "`.rank_objective like `" + projectId + "`.rank_objective");
 
+        rootDao.execute("create table `" + dataBaseName + "`.average_score like `" + projectId + "`.average_score");
         rootDao.execute("create table `" + dataBaseName + "`.score_project like `" + projectId + "`.score_project");
         rootDao.execute("create table `" + dataBaseName + "`.objective_score_rate like `" + projectId + "`.objective_score_rate");
         rootDao.execute("create table `" + dataBaseName + "`.quest_average_max_score like `" + projectId + "`.quest_average_max_score");
@@ -136,6 +137,7 @@ public class BackupAggregateDataService {
         rootDao.execute("insert into `" + dataBaseName + "`.rank_subjective select * from `" + projectId + "`.rank_subjective");
         rootDao.execute("insert into `" + dataBaseName + "`.rank_objective  select * from `" + projectId + "`.rank_objective");
 
+        rootDao.execute("insert into `" + dataBaseName + "`.average_score select * from `" + projectId + "`.average_score");
         rootDao.execute("insert into `" + dataBaseName + "`.score_project select * from `" + projectId + "`.score_project");
         rootDao.execute("insert into `" + dataBaseName + "`.objective_score_rate select * from `" + projectId + "`.objective_score_rate");
         rootDao.execute("insert into `" + dataBaseName + "`.quest_average_max_score select * from `" + projectId + "`.quest_average_max_score");
