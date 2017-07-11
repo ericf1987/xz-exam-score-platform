@@ -29,14 +29,12 @@ public class TotalScoreRankReport extends ReportGenerator {
         List<SheetTask> tasks = new ArrayList<>();
         SheetTask task = new SheetTask("总成绩排名", TotalScoreRankSheet0.class);
         task.setRange(range);
-        task.setTarget(target);
         tasks.add(task);
         //每个科目
         List<SheetTask> subjectSheetTasks = subjectService.listSubjects(projectId)
                 .stream()
                 .map(subject -> {
                     SheetTask sheetTask = new SheetTask(subject.getName(), TotalScoreRankSheet1.class);
-                    sheetTask.setRange(range);
                     sheetTask.setTarget(Target.subject(subject.getId(), subject.getName()));
                     return sheetTask;
                 })
