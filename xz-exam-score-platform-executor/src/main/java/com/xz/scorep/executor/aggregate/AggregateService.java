@@ -3,6 +3,7 @@ package com.xz.scorep.executor.aggregate;
 import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.importproject.ImportProjectParameters;
 import com.xz.scorep.executor.importproject.ImportProjectService;
+import com.xz.scorep.executor.project.BackupAggregateDataService;
 import com.xz.scorep.executor.project.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,9 @@ public class AggregateService {
 
     @Autowired
     private ProjectService projectService;
+
+    @Autowired
+    private BackupAggregateDataService backupService;
 
     private Map<String, Aggregator> aggregatorMap = new HashMap<>();
 
@@ -155,6 +159,16 @@ public class AggregateService {
             for (Aggregator aggregator : aggregators) {
                 aggregator.aggregate(parameter);
             }
+
+            //此处不抛异常则表明统计完成
+            // TODO: 2017-07-11 此处应该备份数据,但是完整统计此处应该跳过
+            List<String> subjects = parameter.getSubjects();
+            if (!subjects.isEmpty()) {
+                for (String subjectId : subjects) {
+                    backupService.copyOriginDataToBackupDataBase(projectId, subjectId);
+                }
+            }
+
         } finally {
             // 如果成功开始统计，则在结束后恢复项目状态
             projectService.updateProjectStatus(projectId, ProjectStatus.Aggregating, ProjectStatus.Ready);
