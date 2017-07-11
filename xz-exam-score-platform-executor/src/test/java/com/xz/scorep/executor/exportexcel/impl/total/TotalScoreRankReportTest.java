@@ -19,8 +19,8 @@ public class TotalScoreRankReportTest extends BaseTest {
     @Test
     public void generate() throws Exception {
         String savePath = "./target/联考排名得分明细表.xlsx";
-        Range range = Range.province("430100-dd3013ab961946fb8a3668e5ccc475b6");
-        rankReport.generate("430100-dd3013ab961946fb8a3668e5ccc475b6",range,null,savePath);
+//        Range range = Range.province("430100-dd3013ab961946fb8a3668e5ccc475b6");
+        rankReport.generate("430100-dd3013ab961946fb8a3668e5ccc475b6",Range.PROVINCE_RANGE,null,savePath);
     }
 
 }
