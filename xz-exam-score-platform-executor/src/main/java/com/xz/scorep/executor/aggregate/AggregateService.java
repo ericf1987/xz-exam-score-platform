@@ -161,11 +161,12 @@ public class AggregateService {
             }
 
             //此处不抛异常则表明统计完成
-            // TODO: 2017-07-11 此处应该备份数据,但是完整统计此处应该跳过
             List<String> subjects = parameter.getSubjects();
             if (!subjects.isEmpty()) {
                 for (String subjectId : subjects) {
-                    backupService.copyOriginDataToBackupDataBase(projectId, subjectId);
+                    if (!"".equals(subjectId)) {
+                        backupService.copyOriginDataToBackupDataBase(projectId, subjectId);
+                    }
                 }
             }
 

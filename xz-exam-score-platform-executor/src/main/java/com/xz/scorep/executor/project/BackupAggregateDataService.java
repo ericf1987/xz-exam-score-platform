@@ -4,6 +4,8 @@ import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.db.DAOFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,15 +20,19 @@ import java.util.List;
 @Service
 public class BackupAggregateDataService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(BackupAggregateDataService.class);
+
     @Autowired
     private DAOFactory daoFactory;
 
 
     public void copyOriginDataToBackupDataBase(String projectId, String subjectId) {
+        LOG.info("项目ID {} ,科目ID {} 准备开始备份.....", projectId, subjectId);
         //创建备份库
         createBackDataBase(projectId, subjectId);
         //复制数据
         copyAggregateData(projectId, subjectId);
+        LOG.info("项目ID {} ,科目ID {} 备份结束.....", projectId, subjectId);
     }
 
     //创建备份库
