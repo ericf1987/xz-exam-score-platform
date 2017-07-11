@@ -2,16 +2,16 @@ package com.xz.scorep.executor.scorecheck;
 
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.Result;
-import com.xz.ajiaedu.common.lang.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 监控平台低分检查
@@ -28,30 +28,13 @@ public class LowerScoreCheckController {
     private LowerScoreService scoreService;
 
     @ResponseBody
-    @GetMapping("check/{projectId}/{subjectId}/{score}")
-    public Result lowerScoreCheck(@PathVariable("projectId") String projectId,
-                                  @PathVariable("subjectId") String subjectId,
-                                  @PathVariable("score") double score) {
-        return check(projectId, subjectId, score);
+    @PostMapping("/check")
+    public Result lowerScoreCheck(@RequestParam(name = "projectId") String projectId,
+                                  @RequestParam(name = "subjectIds") String subjectIds,
+                                  @RequestParam(name = "checkType", required = false, defaultValue = "subject") String checkType,
+                                  @RequestParam(name = "score") double score) {
+        Map<String, List<Row>> rows = scoreService.querySubjectLowerScoreStudent(projectId, subjectIds, checkType, score);
+        return Result.success().set("students", rows);
     }
 
-
-    @ResponseBody
-    @GetMapping("check/{projectId}/{score}")
-    public Result lowerScoreCheck(@PathVariable("projectId") String projectId,
-                                  @PathVariable("score") double score) {
-        return check(projectId, null, score);
-    }
-
-    private Result check(String projectId, String subjectId, double score) {
-
-        if (StringUtil.isEmpty(subjectId)) {
-            List<Row> rows = scoreService.queryProjectLowerScoreStudent(projectId, score);
-            return Result.success().set("students", rows);
-        } else {
-            List<Row> rows = scoreService.querySubjectLowerScoreStudent(projectId, subjectId, score);
-            return Result.success().set("students", rows);
-        }
-
-    }
 }
