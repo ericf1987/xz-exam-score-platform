@@ -102,7 +102,6 @@ public class StudentQuery {
                 .replace("{{subject}}", subjectId)
                 .replace("{{range}}", rangeCondition);
 
-        System.out.println(query);
         List<Row> rows = daoFactory.getProjectDao(projectId).query(query);
         return Row2MapHelper.row2Map(rows);
     }
@@ -146,7 +145,7 @@ public class StudentQuery {
         if (range.match(Range.SCHOOL) || range.match(Range.CLASS)) {
             return template.replace("{{type}}", type).replace("{{id}}", id);
         } else if (range.match(Range.PROVINCE)) {
-            return template.replace("{{type}}", range.getType().toLowerCase());
+            return template.replace("{{type}}", range.getType().toLowerCase()).replace("{{id}}",id);
         } else {
             return "";
         }

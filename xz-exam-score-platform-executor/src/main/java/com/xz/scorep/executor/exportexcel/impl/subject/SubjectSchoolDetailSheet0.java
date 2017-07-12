@@ -62,7 +62,7 @@ public class SubjectSchoolDetailSheet0 extends SheetGenerator {
 
         //////////////////////////////////////////////////////////////
 
-        sheetContext.rowSortBy("rank_school_" + subjectId);
+        sheetContext.rowSortBy("rank_province_" + subjectId);
         sheetContext.saveData();
         sheetContext.freeze(2, 3);
     }
