@@ -42,7 +42,7 @@ public class QuestService {
                 ExamQuest.class, "select * from quest where id=?", questId);
     }
 
-    public ExamQuest findQuest(String projectId, String subjectId, String questNo){
+    public ExamQuest findQuest(String projectId, String subjectId, String questNo) {
         return daoFactory.getProjectDao(projectId).queryFirst(
                 ExamQuest.class, "select * from quest where exam_subject = ? and quest_no = ?", subjectId, questNo
         );
@@ -87,5 +87,15 @@ public class QuestService {
     private ArrayList<ExamQuest> fixQuestList(List<ExamQuest> list) {
         list.sort(NaturalOrderComparator.getComparator(ExamQuest::getQuestNo));
         return new ArrayList<>(list);
+    }
+
+    public List<ExamQuest> queryQuestsFromBak(String projectId, String subjectId) {
+        String dataBaseName = projectId + "_" + subjectId + "_bak";
+        SimpleCache cache = cacheFactory.getProjectCache(dataBaseName);
+        String cacheKey = "quests:";
+
+        return cache.get(cacheKey, () ->
+                fixQuestList(daoFactory.getProjectDao(dataBaseName).query(ExamQuest.class, "select * from quest")));
+
     }
 }

@@ -46,7 +46,8 @@ public class BackupAggregateDataService {
         DAO rootDao = daoFactory.getRootDao();
 
         String dataBaseName = projectId + "_" + subjectId + "_bak";
-        String username = StringUtil.substring(projectId, 0, 32);
+        //mysql  用户名最长32,此处防止用户冲突!
+        String username = StringUtil.substring(dataBaseName, 15);
 
         rootDao.execute("drop database if exists `" + dataBaseName + "`");
         rootDao.execute("drop user if exists `" + username + "`");

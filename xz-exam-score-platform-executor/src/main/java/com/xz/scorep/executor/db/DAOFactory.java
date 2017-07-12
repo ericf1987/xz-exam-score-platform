@@ -102,7 +102,7 @@ public class DAOFactory {
     }
 
     private synchronized DataSource getProjectDataSource(String projectId) {
-        String username = StringUtil.substring(projectId, 0, 32);
+        String username = StringUtil.substring(projectId, 15);
         DruidDataSource dataSource = new DruidDataSource();
         dataSource.setDriverClassName(dbConfig.getDriver());
         dataSource.setUrl(dbConfig.getUrl(projectId));

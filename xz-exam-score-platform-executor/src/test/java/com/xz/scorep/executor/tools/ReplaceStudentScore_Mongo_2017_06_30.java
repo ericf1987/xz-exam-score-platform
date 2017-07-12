@@ -190,7 +190,7 @@ public class ReplaceStudentScore_Mongo_2017_06_30 {
     }
 
     private static DataSources initDataSources() {
-        String username = StringUtil.substring(PROJECT_ID, 0, 32);
+        String username = StringUtil.substring(PROJECT_ID, 15);
 
         DruidDataSource dataSource = new DruidDataSource();
         dataSource.setDriverClassName("com.mysql.jdbc.Driver");

@@ -162,7 +162,8 @@ public class AggregateService {
 
             //此处不抛异常则表明统计完成
             List<String> subjects = parameter.getSubjects();
-            if (!subjects.isEmpty()) {
+            LOG.info("项目ID {} ,subjects {}, 统计类型 {}",projectId,subjects,parameter.getAggregateType().name());
+            if (!subjects.isEmpty() && parameter.getAggregateType() == AggregateType.Quick) {
                 for (String subjectId : subjects) {
                     if (!"".equals(subjectId)) {
                         backupService.copyOriginDataToBackupDataBase(projectId, subjectId);
@@ -172,7 +173,9 @@ public class AggregateService {
 
         } finally {
             // 如果成功开始统计，则在结束后恢复项目状态
+            LOG.info("项目ID {} 在更新状态.....",projectId);
             projectService.updateProjectStatus(projectId, ProjectStatus.Aggregating, ProjectStatus.Ready);
+            LOG.info("项目ID {} 更新状态完成.....",projectId);
         }
     }
 
