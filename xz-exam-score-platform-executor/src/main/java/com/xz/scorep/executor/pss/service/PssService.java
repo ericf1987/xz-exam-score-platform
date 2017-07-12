@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author by fengye on 2017/5/24.
@@ -99,13 +101,20 @@ public class PssService {
     }
 
     public void runTaskByClassAndSubject(String projectId, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
-        List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(classId));
 
-        List<PssForStudent> PssForStudents = packPssForStudents(projectId, schoolId, classId, subjectId, studentList);
+        List<String> classIds = StringUtils.isEmpty(classId) ? Collections.singletonList(classId) :
+                classService.listClasses(projectId, schoolId).stream().map(c -> c.getId()).collect(Collectors.toList());
 
-        processResultData(PssForStudents);
+        for (String cid : classIds) {
+            List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(cid));
 
-        LOG.info("--------数据生成成功：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", projectId, schoolId, classId, subjectId, studentList.size());
+            List<PssForStudent> PssForStudents = packPssForStudents(projectId, schoolId, cid, subjectId, studentList);
+
+            processResultData(PssForStudents);
+
+            LOG.info("--------数据生成成功：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", projectId, schoolId, classId, subjectId, studentList.size());
+        }
+
     }
 
     //返回单个pss任务对应的学生列表
