@@ -59,6 +59,9 @@ public class PssService {
     @Autowired
     StudentService studentService;
 
+    @Autowired
+    SubjectService subjectService;
+
     @Value("${pdf.img.url}")
     private String imgUrl;
 
@@ -102,17 +105,22 @@ public class PssService {
 
     public void runTaskByClassAndSubject(String projectId, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
 
-        List<String> classIds = StringUtils.isEmpty(classId) ? Collections.singletonList(classId) :
+        List<String> classIds = !StringUtils.isEmpty(classId) ? Collections.singletonList(classId) :
                 classService.listClasses(projectId, schoolId).stream().map(c -> c.getId()).collect(Collectors.toList());
 
+        List<String> subjectIds = !StringUtils.isEmpty(subjectId) ? Collections.singletonList(subjectId) :
+                subjectService.listSubjects(projectId).stream().map(s -> s.getId()).collect(Collectors.toList());
+
         for (String cid : classIds) {
-            List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(cid));
+            for(String sid : subjectIds){
+                List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(cid));
 
-            List<PssForStudent> PssForStudents = packPssForStudents(projectId, schoolId, cid, subjectId, studentList);
+                List<PssForStudent> PssForStudents = packPssForStudents(projectId, schoolId, cid, sid, studentList);
 
-            processResultData(PssForStudents);
+                processResultData(PssForStudents);
 
-            LOG.info("--------数据生成成功：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", projectId, schoolId, classId, subjectId, studentList.size());
+                LOG.info("--------数据生成成功：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", projectId, schoolId, cid, sid, studentList.size());
+            }
         }
 
     }
