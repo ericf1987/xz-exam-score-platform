@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * @author luckylo
@@ -31,13 +30,14 @@ public class LowerScoreService {
     @Autowired
     private DAOFactory daoFactory;
 
-    public Map<String, List<Row>> querySubjectLowerScoreStudent(String projectId, String subjectIds, String checkType, double score) {
+    public Map<String, List<Row>> querySubjectLowerScoreStudent(
+            String projectId, List<String> subjectIds, String checkType, double score) {
+
         Map<String, List<Row>> result = new HashMap<>();
-        Stream.of(subjectIds.split(","))
-                .forEach(subjectId -> {
-                    List<Row> rows = queryLowerScoreStudent(projectId, checkType, subjectId, score);
-                    result.put(subjectId, rows);
-                });
+        subjectIds.forEach(subjectId -> {
+            List<Row> rows = queryLowerScoreStudent(projectId, checkType, subjectId, score);
+            result.put(subjectId, rows);
+        });
 
         return result;
     }
