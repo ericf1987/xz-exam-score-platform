@@ -12,6 +12,7 @@ import com.xz.scorep.executor.pss.bean.PssForStudent;
 import com.xz.scorep.executor.pss.utils.PaintUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,7 +105,7 @@ public class PssService {
 
     public void runTaskByClassAndSubject(String projectId, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
         String projectBakId = projectId + "_" + subjectId + "_bak";
-        List<String> studentList = studentQuery.getStudentList(projectBakId, Range.clazz(classId));
+//        List<String> studentList = studentQuery.getStudentList(projectBakId, Range.clazz(classId));
 
         List<String> classIds = !StringUtils.isEmpty(classId) ? Collections.singletonList(classId) :
                 classService.listClasses(projectId, schoolId).stream().map(c -> c.getId()).collect(Collectors.toList());
@@ -113,11 +114,11 @@ public class PssService {
                 subjectService.listSubjects(projectId).stream().map(s -> s.getId()).collect(Collectors.toList());
 
         for (String cid : classIds) {
-            for(String sid : subjectIds){
-                List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(cid));
+            for (String sid : subjectIds) {
+                List<String> studentList = studentQuery.getStudentList(projectBakId, Range.clazz(cid));
 
-                List<PssForStudent> PssForStudents = packPssForStudents(projectId, schoolId, cid, sid, studentList);
-        List<PssForStudent> PssForStudents = packPssForStudents(projectBakId, schoolId, classId, subjectId, studentList);
+                List<PssForStudent> PssForStudents = packPssForStudents(projectBakId, schoolId, cid, sid, studentList);
+//        List<PssForStudent> PssForStudents = packPssForStudents(projectBakId, schoolId, classId, subjectId, studentList);
 
                 processResultData(PssForStudents);
 

@@ -3,6 +3,7 @@ package com.xz.scorep.executor.scorecheck;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
+import com.xz.scorep.executor.aggregate.AggregationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,11 @@ public class LowerScoreCheckController {
     @Autowired
     private LowerScoreService scoreService;
 
+
+    @Autowired
+    private AggregationService aggregationService;
+
+
     @ResponseBody
     @PostMapping("/check")
     public Result lowerScoreCheck(
@@ -41,7 +47,18 @@ public class LowerScoreCheckController {
         List<String> subjectIdList = new ArrayList<>(Arrays.asList(subjectIds.split(",")));
         subjectIdList.removeIf(StringUtil::isBlank);
 
-        Map<String, List<Row>> rows = scoreService.querySubjectLowerScoreStudent(projectId, subjectIdList, checkType, score);
+        Result result = aggregationService.checkProjectStatus(projectId, null);
+        if (!result.isSuccess()) {
+            return result;
+        }
+
+        Map<String, List<Row>> rows = null;
+        try {
+
+            rows = scoreService.querySubjectLowerScoreStudent(projectId, subjectIdList, checkType, score);
+        } catch (Exception e) {
+            return Result.fail(1, "正在导入项目所需数据,请稍等");
+        }
         return Result.success().set("students", rows);
     }
 
