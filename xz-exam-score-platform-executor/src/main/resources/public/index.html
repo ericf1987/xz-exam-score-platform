@@ -146,5 +146,27 @@
     </form>
     <br/><br/>
 </fieldset>
+
+<fieldset>
+    <legend>PDF报告-生成成绩快报</legend>
+    <form action="/expressReport/task/start" method="post">
+        <div><label>项目ID: </label><input type="text" name="projectId"></div>
+        <div><label>科目ID: </label><input type="text" name="subjectId"></div>
+        <input type="submit" value="提交"/>
+    </form>
+    <br/><br/>
+</fieldset>
+
+<fieldset>
+    <legend>PDF报告-压力测试</legend>
+    <form action="/expressReport/pressure/test" method="post">
+        <div><label>PDF文件名: </label><input type="text" name="pdfName"></div>
+        <div><label>相对路径: </label><input type="text" name="relativePath"></div>
+        <div><label>打印页面URL: </label><input type="text" name="createUrl"></div>
+        <div><label>线程数: </label><input type="text" name="threadCount"></div>
+        <input type="submit" value="提交"/>
+    </form>
+    <br/><br/>
+</fieldset>
 </body>
 </html>

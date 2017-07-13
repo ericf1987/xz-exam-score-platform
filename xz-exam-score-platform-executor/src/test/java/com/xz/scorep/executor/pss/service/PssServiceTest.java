@@ -2,6 +2,7 @@ package com.xz.scorep.executor.pss.service;
 
 import com.xz.ajiaedu.common.http.HttpRequest;
 import com.xz.ajiaedu.common.lang.StringUtil;
+import com.xz.ajiaedu.common.system.SystemUtils;
 import com.xz.scorep.executor.BaseTest;
 import com.xz.scorep.executor.api.utils.HttpUtils;
 import com.xz.scorep.executor.bean.ExamSubject;
@@ -9,7 +10,9 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -77,5 +80,85 @@ public class PssServiceTest extends BaseTest {
     @Test
     public void Test4() throws Exception{
         pssService.regenerateFail(PROJECT_ID);
+    }
+
+    @Test
+    public void pressureTest() throws Exception{
+
+        List<PdfTask> tasks = new ArrayList<>();
+
+        long begin = System.currentTimeMillis();
+
+        for (int i = 0; i < 100; i++) {
+            String fileName = i + ".pdf";
+            String dir = StringUtil.joinPathsWith("/", "pressureTest");
+            String url = "https://git-scm.com/docs";
+            PdfTask pdfTask = new PdfTask(fileName, dir, url, false);
+            pdfTask.start();
+            tasks.add(pdfTask);
+        }
+
+        long end = System.currentTimeMillis();
+
+        System.out.println(end - begin);
+    }
+
+    class PdfTask extends Thread{
+
+        private String fileName;
+
+        private String dir;
+
+        private String url;
+
+        private boolean isVertical;
+
+        public String getFileName() {
+            return fileName;
+        }
+
+        public void setFileName(String fileName) {
+            this.fileName = fileName;
+        }
+
+        public String getDir() {
+            return dir;
+        }
+
+        public void setDir(String dir) {
+            this.dir = dir;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public boolean isVertical() {
+            return isVertical;
+        }
+
+        public void setVertical(boolean vertical) {
+            isVertical = vertical;
+        }
+
+        public PdfTask(){
+
+        }
+
+        public PdfTask(String fileName, String dir, String url, boolean isVertical){
+            this.fileName = fileName;
+            this.dir = dir;
+            this.url = url;
+            this.isVertical = isVertical;
+        }
+
+        @Override
+        public void run() {
+            pssService.sendToPDFByPost(this.dir, this.fileName, this.url);
+        }
     }
 }
