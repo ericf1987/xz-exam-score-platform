@@ -1,5 +1,6 @@
 package com.xz.scorep.executor.exportexcel.impl.total;
 
+import com.hyd.dao.DAO;
 import com.xz.scorep.executor.aggritems.StudentQuery;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportexcel.ReportCacheInitializer;
@@ -37,12 +38,19 @@ public abstract class TotalScoreRankSheet extends SheetGenerator {
         sheetContext.tableSetKey("student_id");
         SheetContextHelper.fillStudentBasicInfo(sheetContext, studentQuery);
         AtomicInteger count = new AtomicInteger(5);
+        DAO dao = daoFactory.getProjectDao(projectId);
+
     }
 
 
     //联考单科成绩得分明细
     protected void generateEachSubjectSheet(SheetContext sheetContext) {
         SubjectSchoolDetailSheet0.generateSheet0(sheetContext, studentQuery, questService, reportCache);
+    }
+
+    private void totalScoreRank(DAO dao, SheetContext sheetContext, AtomicInteger colIndex) {
+        String projectId = sheetContext.getProjectId();
+
     }
 
 }
