@@ -138,7 +138,8 @@ public class PssService {
         for (PssForStudent pssForStudent : pssForStudents) {
 
             String projectBakId = pssForStudent.getProjectId();
-            String projectId = projectBakId.substring(0, projectBakId.indexOf("_"));
+            int endIndex = projectBakId.indexOf("_") == -1 ? projectBakId.length() : projectBakId.indexOf("_");
+            String projectId = projectBakId.substring(0, endIndex);
             String schoolId = pssForStudent.getSchoolId();
             String classId = pssForStudent.getClassId();
             String subjectId = pssForStudent.getSubjectId();

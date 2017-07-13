@@ -1,6 +1,7 @@
 package com.xz.scorep.executor.pss.mamage;
 
 import com.xz.ajiaedu.common.concurrent.Executors;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.aggritems.StudentQuery;
 import com.xz.scorep.executor.bean.ProjectClass;
 import com.xz.scorep.executor.bean.ProjectSchool;
@@ -64,7 +65,8 @@ public class PssTaskManager {
         //pssMonitor.initTaskProgress(projectId, ProjectTask.Task.PSS_TASK.name(), ProjectTask.TaskStatus.ACTIVE.name());
 
         //清理项目缓存
-        String projectBakId = projectId + "_" + subjectId + "_bak";
+        String projectBakId = StringUtil.isEmpty(subjectId) ? projectId : projectId + "_" + subjectId + "_bak";
+
         LOG.info("开始清理项目缓存：{}", projectBakId);
         cacheFactory.removePaperCache(projectBakId);
         LOG.info("清理完成：{}", projectBakId);
