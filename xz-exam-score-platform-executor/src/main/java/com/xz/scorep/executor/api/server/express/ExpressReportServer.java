@@ -8,10 +8,11 @@ import com.xz.scorep.executor.api.annotation.Parameter;
 import com.xz.scorep.executor.api.annotation.Type;
 import com.xz.scorep.executor.api.server.Server;
 import com.xz.scorep.executor.api.service.*;
-import com.xz.scorep.executor.bean.ExamQuest;
-import com.xz.scorep.executor.bean.Range;
-import com.xz.scorep.executor.cache.CacheFactory;
+import com.xz.scorep.executor.bean.*;
+import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.QuestService;
+import com.xz.scorep.executor.project.SchoolService;
+import com.xz.scorep.executor.project.SubjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -61,6 +62,15 @@ public class ExpressReportServer implements Server {
     @Autowired
     QuestToBeAttentionQuery questToBeAttentionQuery;
 
+    @Autowired
+    SchoolService schoolService;
+
+    @Autowired
+    ClassService classService;
+
+    @Autowired
+    SubjectService subjectService;
+
     public static final int TOP_COUNT = 5;
 
     @Override
@@ -71,6 +81,15 @@ public class ExpressReportServer implements Server {
         String schoolId = param.getString("schoolId");
         String classId = param.getString("classId");
 
+        //学校，班级名称
+        ProjectSchool school = schoolService.findSchool(projectId, schoolId);
+        ProjectClass clazz = classService.findClass(projectId, classId);
+        ExamSubject subject = subjectService.findSubject(projectId, subjectId);
+        Map<String, String> schoolAndClass = new HashMap<>();
+        schoolAndClass.put("schoolName", school.getName());
+        schoolAndClass.put("className", clazz.getName());
+        schoolAndClass.put("subjectName", subject.getName());
+
         List<ExamQuest> examQuests = questService.queryQuests(projectId, subjectId);
         List<ExamQuest> objectiveQuests = examQuests.stream().filter(ExamQuest::isObjective).collect(Collectors.toList());
         List<ExamQuest> subjectiveQuests = examQuests.stream().filter(q -> !q.isObjective()).collect(Collectors.toList());
@@ -80,9 +99,9 @@ public class ExpressReportServer implements Server {
         Map<String, Object> schoolBaseInfo = examBaseInfoQuery.queryBaseInfoMap(projectId, subjectId, Range.SCHOOL, schoolId);
         Map<String, Object> classBaseInfo = examBaseInfoQuery.queryBaseInfoMap(projectId, subjectId, Range.CLASS, classId);
 
+
         baseInfoMap.put("schoolBaseInfo", schoolBaseInfo);
         baseInfoMap.put("classBaseInfo", classBaseInfo);
-        System.out.println("---------考试基本情况---------");
         //2.班级TOP5
         //前五名
         List<Map<String, Object>> top = topStudentRankAndScoreQuery.queryTopStudent(projectId, subjectId, Range.CLASS, classId, true, TOP_COUNT);
@@ -92,10 +111,8 @@ public class ExpressReportServer implements Server {
         Map<String, Object> top5Map = new HashMap<>();
         top5Map.put("top", top);
         top5Map.put("bottom", bottom);
-        System.out.println("---------班级TOP5---------");
         //3.分段人数统计
         LinkedHashMap<Integer, Integer> countByScoreSegment = scoreSegmentQuery.getCountByScoreSegment(projectId, subjectId, Range.CLASS, classId);
-        System.out.println("---------分段人数统计---------");
 
         //4.主客观题情况
         //客观题情况
@@ -111,7 +128,6 @@ public class ExpressReportServer implements Server {
         sAndOStatusMap.put("schoolObjectiveMap", school_objectiveMap);
         sAndOStatusMap.put("classSubjectiveMap", class_subjectiveMap);
         sAndOStatusMap.put("schoolSubjectiveMap", school_subjectiveMap);
-        System.out.println("---------主客观题情况---------");
 
         //5.得分较高的题目
         List<Row> school_scoreRate = topScoreRateQuery.getScoreRate(projectId, subjectId, Range.CLASS, classId, examQuests, true, GroupType.AVG);
@@ -129,7 +145,6 @@ public class ExpressReportServer implements Server {
         scoreRateMap.put("top5", score_rate_top);
         scoreRateMap.put("bottom5", score_rate_bottom);
         System.out.println(scoreRateMap.toString());
-        System.out.println("---------得分较高的题目---------");
 
         //6.客观题，主观题详情
         List<Row> class_objective_detail = questAnswerAndScoreQuery.queryObjectiveResult(projectId, subjectId, Range.CLASS, classId, objectiveQuests);
@@ -143,7 +158,6 @@ public class ExpressReportServer implements Server {
         Map<String, Object> quest_detail = new HashMap<>();
         quest_detail.put("objectiveDetail", objective_detail);
         quest_detail.put("subjectiveDetail", subjective_detail);
-        System.out.println("---------客观题，主观题详情---------");
 
         //7.值得关注的小题
         List<Row> class_tb_attention = questToBeAttentionQuery.queryToBeAttentionQuest(projectId, subjectId, Range.CLASS, classId, examQuests);
@@ -153,9 +167,9 @@ public class ExpressReportServer implements Server {
 
         Map<String, Object> toBeAttention = new HashMap<>();
         toBeAttention.put("attentionQuests", attentionQuestList);
-        System.out.println("---------值得关注的小题---------");
 
-        return Result.success().set("baseInfoMap", baseInfoMap)
+        return Result.success().set("schoolAndClass", schoolAndClass)
+                .set("baseInfoMap", baseInfoMap)
                 .set("top5Map", top5Map)
                 .set("countByScoreSegment", countByScoreSegment)
                 .set("sAndOStatusMap", sAndOStatusMap)

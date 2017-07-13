@@ -26,7 +26,7 @@ public class TopStudentRankAndScoreQuery {
     @Autowired
     CacheFactory cacheFactory;
 
-    public static final String QUERY_TOP_STUDENT_RANK_AND_SCORE = "SELECT stu.id student_id, rank.rank rank, p_rank.rank p_rank, score.score \n" +
+    public static final String QUERY_TOP_STUDENT_RANK_AND_SCORE = "SELECT stu.id student_id, stu.name student_name, rank.rank rank, p_rank.rank p_rank, score.score \n" +
             "FROM {{rank_table}} rank, student stu, {{parent_rank_table}} p_rank, score_subject_{{subject_id}} score\n" +
             "WHERE rank.subject_id = {{subject_id}} \n" +
             "AND p_rank.subject_id = {{subject_id}} \n" +
@@ -39,7 +39,11 @@ public class TopStudentRankAndScoreQuery {
     public List<Map<String, Object>> queryTopStudent(String projectId, String subjectId, String rangeName, String rangeId, boolean isTop, int count) {
         List<Map<String, Object>> rankAndScore = queryTopStudentRankAndScore(projectId, subjectId, rangeName, rangeId);
 
-        return isTop ? rankAndScore.subList(0, count) : rankAndScore.subList(rankAndScore.size() - count, rankAndScore.size());
+        if(count <= rankAndScore.size()){
+            return isTop ? rankAndScore.subList(0, count) : rankAndScore.subList(rankAndScore.size() - count, rankAndScore.size());
+        }
+
+        return rankAndScore.subList(0, rankAndScore.size());
     }
 
     private List<Map<String, Object>> queryTopStudentRankAndScore(String projectId, String subjectId, String rangeName, String rangeId) {

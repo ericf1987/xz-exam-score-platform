@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author by fengye on 2017/5/24.
@@ -56,6 +57,9 @@ public class PssService {
 
     @Autowired
     StudentService studentService;
+
+    @Autowired
+    SubjectService subjectService;
 
     @Value("${pdf.img.url}")
     private String imgUrl;
@@ -102,11 +106,25 @@ public class PssService {
         String projectBakId = projectId + "_" + subjectId + "_bak";
         List<String> studentList = studentQuery.getStudentList(projectBakId, Range.clazz(classId));
 
+        List<String> classIds = !StringUtils.isEmpty(classId) ? Collections.singletonList(classId) :
+                classService.listClasses(projectId, schoolId).stream().map(c -> c.getId()).collect(Collectors.toList());
+
+        List<String> subjectIds = !StringUtils.isEmpty(subjectId) ? Collections.singletonList(subjectId) :
+                subjectService.listSubjects(projectId).stream().map(s -> s.getId()).collect(Collectors.toList());
+
+        for (String cid : classIds) {
+            for(String sid : subjectIds){
+                List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(cid));
+
+                List<PssForStudent> PssForStudents = packPssForStudents(projectId, schoolId, cid, sid, studentList);
         List<PssForStudent> PssForStudents = packPssForStudents(projectBakId, schoolId, classId, subjectId, studentList);
 
-        processResultData(PssForStudents);
+                processResultData(PssForStudents);
 
-        LOG.info("--------数据生成成功：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", projectId, schoolId, classId, subjectId, studentList.size());
+                LOG.info("--------数据生成成功：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", projectId, schoolId, cid, sid, studentList.size());
+            }
+        }
+
     }
 
     //返回单个pss任务对应的学生列表

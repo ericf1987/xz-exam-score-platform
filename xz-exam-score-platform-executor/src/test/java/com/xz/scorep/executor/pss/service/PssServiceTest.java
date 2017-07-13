@@ -20,9 +20,9 @@ public class PssServiceTest extends BaseTest {
     @Autowired
     PssService pssService;
 
-    public static final String PROJECT_ID = "430700-a5a39f1f86b3408d9ced3cf82eb8a1c9";
+    public static final String PROJECT_ID = "430000-1527d8e87b5a48ed9ba7f9211c449035";
 
-    public static final String SCHOOL_ID = "3ce843ad-87ab-45c1-a650-c142fa438159";
+    public static final String SCHOOL_ID = "e367d9cc-acdb-4221-84a5-1de83384b7c8";
 
     public static final String CLASS_ID = "d82f9ca1-6020-4557-ad5f-335821f1b9bc";
 
@@ -43,7 +43,7 @@ public class PssServiceTest extends BaseTest {
         ExamSubject examSubject = new ExamSubject();
         examSubject.setId(SUBJECT_ID);
 
-        pssService.runTaskByClassAndSubject(PROJECT_ID, SCHOOL_ID, CLASS_ID, SUBJECT_ID, null);
+        pssService.runTaskByClassAndSubject(PROJECT_ID, SCHOOL_ID, null, SUBJECT_ID, null);
     }
 
     @Test

@@ -49,7 +49,7 @@ public class SAndOQuestQuery {
         map.put("avgScore", avgScore);
         map.put("maxScore", maxScore);
 
-        if(Range.SCHOOL.equals(rangeName)){
+        if(Range.CLASS.equals(rangeName)){
             map.put("studentName", getQueryMaxScoreStudent(GroupType.MAX, projectId, subjectId, rangeName, rangeId, isObjective));
         }
 

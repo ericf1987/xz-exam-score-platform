@@ -16,4 +16,19 @@ public class TotalScoreRankSheet0 extends TotalScoreRankSheet {
     protected void generateSheet(SheetContext sheetContext) throws Exception {
         generateTotalScoreRankSheet(sheetContext);
     }
+
+    @Override
+    protected String getSubjectId(SheetContext sheetContext) {
+        return "000";
+    }
+
+    @Override
+    protected String getSchoolId(SheetContext sheetContext) {
+        return "总分";
+    }
+
+    @Override
+    protected String getSubjectName(SheetContext sheetContext) {
+        return sheetContext.getProperties().getString("schoolId");
+    }
 }
