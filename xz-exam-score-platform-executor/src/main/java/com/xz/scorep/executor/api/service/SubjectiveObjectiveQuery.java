@@ -9,6 +9,8 @@ import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.SubjectService;
 import com.xz.scorep.executor.reportconfig.ReportConfig;
 import com.xz.scorep.executor.reportconfig.ReportConfigService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +28,7 @@ import java.util.Optional;
 @Component
 public class SubjectiveObjectiveQuery {
 
+    private static final Logger LOG = LoggerFactory.getLogger(SubjectiveObjectiveQuery.class);
 
     private static final String QUERY_RANK_AND_SCORE = "select * from \n" +
             "(\n" +
@@ -251,7 +254,8 @@ public class SubjectiveObjectiveQuery {
     //学生是否为0分
     //移除0分,科目0分是会被剔除,此处应该查不到
     private boolean isZeroScore(String projectId, String subjectId, String studentId) {
-        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String projectBakId = projectId + "_" + subjectId + "_bak";
+        DAO projectDao = daoFactory.getProjectDao(projectBakId);
         Row row = projectDao.queryFirst(ZERO_SQL
                 .replace("{{table}}", "score_subject_" + subjectId)
                 .replace("{{studentId}}", studentId));
@@ -260,8 +264,9 @@ public class SubjectiveObjectiveQuery {
 
     //学生是否作弊
     private boolean isCheat(String projectId, String subjectId, String studentId) {
-        DAO projectDao = daoFactory.getProjectDao(projectId);
-        SimpleCache cache = cacheFactory.getPaperCache(projectId);
+        String projectBakId = projectId + "_" + subjectId + "_bak";
+        DAO projectDao = daoFactory.getProjectDao(projectBakId);
+        SimpleCache cache = cacheFactory.getPaperCache(projectBakId);
         String cacheKey = "cheat :";
         ArrayList<Row> cheatRows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from cheat")));
 
@@ -276,9 +281,10 @@ public class SubjectiveObjectiveQuery {
 
     //学生是否是缺考
     private boolean isAbsent(String projectId, String subjectId, String studentId) {
-        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String projectBakId = projectId + "_" + subjectId + "_bak";
+        DAO projectDao = daoFactory.getProjectDao(projectBakId);
 
-        SimpleCache cache = cacheFactory.getPaperCache(projectId);
+        SimpleCache cache = cacheFactory.getPaperCache(projectBakId);
         String absentKey = "absent :";
         String lostKey = "lost :";
 
@@ -307,7 +313,7 @@ public class SubjectiveObjectiveQuery {
     }
 
     public boolean isVirtualSubject(String projectId, String subjectId) {
-        ExamSubject subject = subjectService.findSubject(projectId, subjectId);
+        ExamSubject subject = subjectService.findSubject(projectId, subjectId, true);
 
         return Boolean.valueOf(subject.getVirtualSubject());
     }

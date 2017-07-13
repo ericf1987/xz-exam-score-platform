@@ -66,15 +66,15 @@ public class PssService {
     public static final String BASE64_HEADER = "data:image/png;base64,";
 
     //封装多个任务
-    public void dispatchOneClassTask(String projectId, String schoolId, String classId, List<String> examSubjects, Map<String, Object> configFromCMS) {
+    public void dispatchOneClassTask(String projectBakId, String schoolId, String classId, List<String> examSubjects, Map<String, Object> configFromCMS) {
         List<PssTaskBean> pssTaskBeans = new ArrayList<>();
         for (String examSubject : examSubjects) {
             try {
-                PssTaskBean pssTaskBean = packPssTask(projectId, schoolId, classId, examSubject, configFromCMS);
+                PssTaskBean pssTaskBean = packPssTask(projectBakId, schoolId, classId, examSubject, configFromCMS);
                 pssTaskBean.start();
                 pssTaskBeans.add(pssTaskBean);
             } catch (Exception e) {
-                LOG.info("----分发任务失败：项目{}，学校{}，班级{}，科目{}", projectId, schoolId, classId, examSubject);
+                LOG.info("----分发任务失败：项目{}，学校{}，班级{}，科目{}", projectBakId, schoolId, classId, examSubject);
             }
         }
 
@@ -92,16 +92,17 @@ public class PssService {
     }
 
     //封装单个任务，每个任务执行一个学生列表
-    private PssTaskBean packPssTask(String projectId, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
-        List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(classId));
-        List<PssForStudent> pssForStudents = packPssForStudents(projectId, schoolId, classId, subjectId, studentList);
+    private PssTaskBean packPssTask(String projectBakId, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
+        List<String> studentList = studentQuery.getStudentList(projectBakId, Range.clazz(classId));
+        List<PssForStudent> pssForStudents = packPssForStudents(projectBakId, schoolId, classId, subjectId, studentList);
         return new PssTaskBean(pssForStudents);
     }
 
     public void runTaskByClassAndSubject(String projectId, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
-        List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(classId));
+        String projectBakId = projectId + "_" + subjectId + "_bak";
+        List<String> studentList = studentQuery.getStudentList(projectBakId, Range.clazz(classId));
 
-        List<PssForStudent> PssForStudents = packPssForStudents(projectId, schoolId, classId, subjectId, studentList);
+        List<PssForStudent> PssForStudents = packPssForStudents(projectBakId, schoolId, classId, subjectId, studentList);
 
         processResultData(PssForStudents);
 
@@ -109,11 +110,11 @@ public class PssService {
     }
 
     //返回单个pss任务对应的学生列表
-    private List<PssForStudent> packPssForStudents(String projectId, String schoolId, String classId, String subjectId, List<String> studentList) {
+    private List<PssForStudent> packPssForStudents(String projectBakId, String schoolId, String classId, String subjectId, List<String> studentList) {
         List<PssForStudent> PssForStudents = new ArrayList<>();
         for (String studentId : studentList) {
             PssForStudent pssForStudent = new PssForStudent(
-                    projectId, schoolId, classId, subjectId, studentId
+                    projectBakId, schoolId, classId, subjectId, studentId
             );
             PssForStudents.add(pssForStudent);
         }
@@ -122,7 +123,8 @@ public class PssService {
 
     //执行单个学生的pss报告打印
     public void runTaskByOneStudent(String projectId, String schoolId, String classId, String subjectId, String studentId, Map<String, Object> configFromCMS) {
-        PssForStudent pssForStudent = new PssForStudent(projectId, schoolId, classId, subjectId, studentId);
+        String projectBakId = projectId + "_" + subjectId + "_bak";
+        PssForStudent pssForStudent = new PssForStudent(projectBakId, schoolId, classId, subjectId, studentId);
         processResultData(Collections.singletonList(pssForStudent));
     }
 
@@ -135,23 +137,24 @@ public class PssService {
 
         for (PssForStudent pssForStudent : pssForStudents) {
 
-            String projectId = pssForStudent.getProjectId();
+            String projectBakId = pssForStudent.getProjectId();
+            String projectId = projectBakId.substring(0, projectBakId.indexOf("_"));
             String schoolId = pssForStudent.getSchoolId();
             String classId = pssForStudent.getClassId();
             String subjectId = pssForStudent.getSubjectId();
             String studentId = pssForStudent.getStudentId();
 
-            schoolService.findSchool(projectId, schoolId).getName();
+            schoolService.findSchool(projectBakId, schoolId).getName();
 
-            /*String savePath = StringUtil.joinPathsWith("/", projectId, schoolId,
+            /*String savePath = StringUtil.joinPathsWith("/", projectBakId, schoolId,
                     classId, subjectId);*/
 
-            Row student = studentService.findStudent(projectId, studentId);
+            Row student = studentService.findStudent(projectBakId, studentId);
 
             String savePath = StringUtil.joinPathsWith("/",
-                    projectService.findProject(projectId).getName() + "(" + projectId + ")",
-                    schoolService.findSchool(projectId, schoolId).getName(),
-                    classService.findClass(projectId, classId).getName(),
+                    projectService.findProject(projectId).getName() + "(" + projectBakId + ")",
+                    schoolService.findSchool(projectBakId, schoolId).getName(),
+                    classService.findClass(projectBakId, classId).getName(),
                     SubjectService.getSubjectName(subjectId)
             );
 

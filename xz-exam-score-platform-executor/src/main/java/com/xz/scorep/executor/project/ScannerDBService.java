@@ -68,7 +68,8 @@ public class ScannerDBService {
     }
 
     private List<Document> fixFullScore0(String projectId, String subjectId, List<Document> questList) {
-        List<ExamQuest> examQuests = questService.queryQuests(projectId);
+        String projectBakId = projectId + "_" + subjectId + "_bak";
+        List<ExamQuest> examQuests = questService.queryQuests(projectBakId);
         for (Document questDoc : questList) {
             double fullScore = examQuests.stream().filter(q -> q.getExamSubject().equals(subjectId) && q.getQuestNo().equals(questDoc.getString("questionNo")))
                     .mapToDouble(q -> q.getFullScore()).sum();

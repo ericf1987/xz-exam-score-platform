@@ -64,41 +64,42 @@ public class PssTaskManager {
         //pssMonitor.initTaskProgress(projectId, ProjectTask.Task.PSS_TASK.name(), ProjectTask.TaskStatus.ACTIVE.name());
 
         //清理项目缓存
-        LOG.info("开始清理项目缓存：{}", projectId);
-        cacheFactory.removeProjectCache(projectId);
-        LOG.info("清理完成：{}", projectId);
+        String projectBakId = projectId + "_" + subjectId + "_bak";
+        LOG.info("开始清理项目缓存：{}", projectBakId);
+        cacheFactory.removePaperCache(projectBakId);
+        LOG.info("清理完成：{}", projectBakId);
 
         //学校ID列表
-        List<String> schoolIds = schoolService.listSchool(projectId).stream().map(ProjectSchool::getId)
+        List<String> schoolIds = schoolService.listSchool(projectBakId).stream().map(ProjectSchool::getId)
                 .collect(Collectors.toList());
         //所有参考科目
         List<String> examSubjects = !StringUtils.isEmpty(subjectId) ? Collections.singletonList(subjectId) :
-                subjectService.listSubjects(projectId).stream().map(s -> s.getId()).collect(Collectors.toList());
+                subjectService.listSubjects(projectBakId).stream().map(s -> s.getId()).collect(Collectors.toList());
 
         List<Map<String, Object>> list = new ArrayList<>();
         schoolIds.forEach(schoolId -> {
             Map<String, Object> map = new HashMap<>();
-            map.put(schoolId, classService.listClasses(projectId, schoolId).stream().map(ProjectClass::getId).collect(Collectors.toList()));
+            map.put(schoolId, classService.listClasses(projectBakId, schoolId).stream().map(ProjectClass::getId).collect(Collectors.toList()));
             list.add(map);
         });
 
         LOG.info("====项目{}======, 生成学生成绩报告任务开始执行======", projectId);
 
         //清理以往生成失败的记录
-        pssService.clearFailRecord(projectId);
+        pssService.clearFailRecord(projectBakId);
 
         list.forEach(l -> {
             for (String schoolId : l.keySet()) {
-                LOG.info("====项目{}, 学校{}, 生成开始", projectId, schoolId);
+                LOG.info("====项目{}, 学校{}, 生成开始", projectBakId, schoolId);
                 List<String> classIds = (List<String>) l.get(schoolId);
                 CountDownLatch countDownLatch = new CountDownLatch(classIds.size());
 
                 for (String classId : classIds) {
                     Runnable runnable = () -> {
                         try {
-                            pssService.dispatchOneClassTask(projectId, schoolId, classId, examSubjects, configFromCMS);
+                            pssService.dispatchOneClassTask(projectBakId, schoolId, classId, examSubjects, configFromCMS);
                         } catch (Exception e) {
-                            LOG.info("班级生成失败, 项目{}， 学校{}， 班级{}", projectId, schoolId, classId);
+                            LOG.info("班级生成失败, 项目{}， 学校{}， 班级{}", projectBakId, schoolId, classId);
                         } finally {
                             countDownLatch.countDown();
                         }

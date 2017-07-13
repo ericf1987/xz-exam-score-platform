@@ -70,6 +70,7 @@ public class BackupAggregateDataService {
         rootDao.execute("create table `" + dataBaseName + "`.school like `" + projectId + "`.school");
 
         rootDao.execute("create table `" + dataBaseName + "`.subject like `" + projectId + "`.subject");
+        rootDao.execute("create table `" + dataBaseName + "`.pss_task_fail like `" + projectId + "`.pss_task_fail");
 
         rootDao.execute("create table `" + dataBaseName + "`.score_subject_" + subjectId + " like `" + projectId + "`.score_subject_" + subjectId);
         rootDao.execute("create table `" + dataBaseName + "`.score_objective_" + subjectId + " like `" + projectId + "`.score_objective_" + subjectId);

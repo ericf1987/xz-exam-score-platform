@@ -71,7 +71,8 @@ public class PaperImgServer implements Server {
         String subjectId = param.getString("subjectId");
         String studentId = param.getString("studentId");
 
-        //判断某个科目是否是拆分后的科目
+        //判断某个科目是否是拆分后的科目(并且从备份库中取相关数据....)
+//        String projectBakId = projectId + "_" + subjectId + "_bak";
         boolean excludeSubject = query.isVirtualSubject(projectId, subjectId);
         if (excludeSubject) {
             LOG.info("项目ID {} ,科目ID {} 为拆分后科目,不进行答题留痕打印...", projectId, subjectId);
@@ -147,8 +148,9 @@ public class PaperImgServer implements Server {
     public void checkAndRecord(String projectId, String schoolId, String classId, String subjectId, String studentId, Map<String, String> studentImgURL) {
         String paper_positive = studentImgURL.get("paper_positive");
         String paper_reverse = studentImgURL.get("paper_reverse");
+        String projectBakId = projectId + "_" + subjectId + "_bak";
         if (StringUtils.isBlank(paper_positive) || StringUtils.isBlank(paper_reverse)) {
-            DAO projectDao = daoFactory.getProjectDao(projectId);
+            DAO projectDao = daoFactory.getProjectDao(projectBakId);
 /*            PssForStudent student = new PssForStudent(projectId, schoolId, classId, subjectId, studentId);
             projectDao.insert(student, "pss_task_fail");*/
             projectDao.runTransaction(() -> {
