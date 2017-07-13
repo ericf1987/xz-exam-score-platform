@@ -70,8 +70,8 @@ public class SubjectiveObjectiveQuery {
     private DAOFactory daoFactory;
 
     //查询学生答案
-    public Row queryStudentRow(String projectId, String subjectId, String studentId, String questId) {
-        ArrayList<Row> rows = getQuestCache(projectId, subjectId, questId);
+    public Row queryStudentRow(String database, String subjectId, String studentId, String questId) {
+        ArrayList<Row> rows = getQuestCache(database, subjectId, questId);
 
         return rows.stream()
                 .filter(row -> studentId.equals(row.getString("student_id")))
@@ -80,23 +80,21 @@ public class SubjectiveObjectiveQuery {
 
 
     //获得题目缓存..
-    private ArrayList<Row> getQuestCache(String projectId, String subjectId, String questId) {
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
-        SimpleCache cache = cacheFactory.getPaperCache(dataBaseName);
+    private ArrayList<Row> getQuestCache(String database, String subjectId, String questId) {
+        SimpleCache cache = cacheFactory.getPaperCache(database);
         String cacheKey = "quest:" + questId;
         String table = "score_" + questId;
-        DAO projectDao = daoFactory.getProjectDao(dataBaseName);
+        DAO projectDao = daoFactory.getProjectDao(database);
 
         return cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from `" + table + "`")));
     }
 
 
     //查询客观题得分详情,每一道题的正确答案和班级得分率....
-    public Optional<Row> queryObjectiveDetail(String projectId, String subjectId, String questId, String classId) {
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
-        SimpleCache cache = cacheFactory.getPaperCache(dataBaseName);
+    public Optional<Row> queryObjectiveDetail(String database, String subjectId, String questId, String classId) {
+        SimpleCache cache = cacheFactory.getPaperCache(database);
         String cacheKey = "objective:";
-        DAO projectDao = daoFactory.getProjectDao(dataBaseName);
+        DAO projectDao = daoFactory.getProjectDao(database);
 
         ArrayList<Row> rows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from objective_score_rate")));
         return rows.stream()
@@ -106,11 +104,10 @@ public class SubjectiveObjectiveQuery {
 
 
     //查询主观题得分详情...每一道题的最高分平均分
-    public Optional<Row> querySubjectiveDetail(String projectId, String subjectId, String questId, String classId) {
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
-        SimpleCache cache = cacheFactory.getPaperCache(dataBaseName);
+    public Optional<Row> querySubjectiveDetail(String database, String subjectId, String questId, String classId) {
+        SimpleCache cache = cacheFactory.getPaperCache(database);
         String cacheKey = "subjective:";
-        DAO projectDao = daoFactory.getProjectDao(dataBaseName);
+        DAO projectDao = daoFactory.getProjectDao(database);
 
         ArrayList<Row> rows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from quest_average_max_score")));
         return rows.stream()
@@ -123,8 +120,7 @@ public class SubjectiveObjectiveQuery {
 
 
     //查询学生主观题得分信息(我的得分,得分排名,班级平均分,班级最高分...信息)
-    public Map<String, Object> querySubjectiveScoreRank(String projectId, String subjectId, String classId, String studentId) {
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
+    public Map<String, Object> querySubjectiveScoreRank(String database, String subjectId, String classId, String studentId) {
         String table = "score_subjective_" + subjectId;
         String replace = QUERY_RANK_AND_SCORE
                 .replace("{{scoreTable}}", table)
@@ -132,14 +128,13 @@ public class SubjectiveObjectiveQuery {
                 .replace("{{subjectId}}", subjectId)
                 .replace("{{studentId}}", studentId)
                 .replace("{{classId}}", classId);
-        DAO projectDao = daoFactory.getProjectDao(dataBaseName);
+        DAO projectDao = daoFactory.getProjectDao(database);
         return projectDao.queryFirst(replace);
     }
 
 
     //查询学生客观题得分信息(我的得分,得分排名,班级平均分,班级最高分...信息)
-    public Map<String, Object> queryObjectiveScoreRank(String projectId, String subjectId, String classId, String studentId) {
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
+    public Map<String, Object> queryObjectiveScoreRank(String database, String subjectId, String classId, String studentId) {
         String table = "score_objective_" + subjectId;
         String replace = QUERY_RANK_AND_SCORE
                 .replace("{{scoreTable}}", table)
@@ -147,25 +142,24 @@ public class SubjectiveObjectiveQuery {
                 .replace("{{subjectId}}", subjectId)
                 .replace("{{studentId}}", studentId)
                 .replace("{{classId}}", classId);
-        DAO projectDao = daoFactory.getProjectDao(dataBaseName);
+        DAO projectDao = daoFactory.getProjectDao(database);
         return projectDao.queryFirst(replace);
     }
 
 
     //查询每个科目的主观题,客观题分值
-    public Map<String, Double> querySubjectiveObjectiveFullScore(String projectId, String subjectId) {
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
+    public Map<String, Double> querySubjectiveObjectiveFullScore(String database, String subjectId) {
         Map<String, Double> result = new HashMap<>();
-        DAO projectDao = daoFactory.getProjectDao(dataBaseName);
+        DAO projectDao = daoFactory.getProjectDao(database);
 
-        SimpleCache cache = cacheFactory.getPaperCache(dataBaseName);
+        SimpleCache cache = cacheFactory.getPaperCache(database);
         String cacheKey = "fullScore" + subjectId;
 
         Row row = cache.get(cacheKey, () ->
                 projectDao.queryFirst(QUERY_FULL_SCORE.replace("{{subjectId}}", subjectId)));
         double objective = row.getDouble("full_score", 0);
 
-        double subjectScore = subjectService.getSubjectScore(dataBaseName, subjectId);
+        double subjectScore = subjectService.getSubjectScore(database, subjectId);
 
         result.put("objective", objective);
         BigDecimal value = new BigDecimal(String.valueOf(subjectScore))
@@ -176,8 +170,8 @@ public class SubjectiveObjectiveQuery {
 
 
     //获得学生做错了的客观题.......(当学生作对了,则返回 null)
-    public Row queryStudentFalseObjectiveQuest(String projectId, String subjectId, String questId, String studentId) {
-        ArrayList<Row> rows = getQuestCache(projectId, subjectId, questId);
+    public Row queryStudentFalseObjectiveQuest(String database, String subjectId, String questId, String studentId) {
+        ArrayList<Row> rows = getQuestCache(database, subjectId, questId);
 
         return rows.stream()
                 .filter(row -> "false".equals(row.getString("is_right"))
@@ -186,18 +180,17 @@ public class SubjectiveObjectiveQuery {
     }
 
     //查学生单题与班级平均分差距较大的TOP5
-    public Row queryStudentSubjectiveQuest(String projectId, String subjectId, String questId, String studentId) {
-        ArrayList<Row> rows = getQuestCache(projectId, subjectId, questId);
+    public Row queryStudentSubjectiveQuest(String database, String subjectId, String questId, String studentId) {
+        ArrayList<Row> rows = getQuestCache(database, subjectId, questId);
         return rows.stream()
                 .filter(row -> studentId.equals(row.getString("student_id")))
                 .findFirst().orElse(null);
     }
 
     //查班级单题的平均分得分
-    public Row queryClassAverageScore(String projectId, String subjectId, String questId, String classId) {
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
-        SimpleCache cache = cacheFactory.getPaperCache(dataBaseName);
-        DAO projectDao = daoFactory.getProjectDao(dataBaseName);
+    public Row queryClassAverageScore(String database, String subjectId, String questId, String classId) {
+        SimpleCache cache = cacheFactory.getPaperCache(database);
+        DAO projectDao = daoFactory.getProjectDao(database);
         String cacheKey = "average_score";
 
         ArrayList<Row> rows = cache.get(cacheKey,
@@ -213,9 +206,8 @@ public class SubjectiveObjectiveQuery {
     }
 
     //查询客观题学生答对人数(班级)
-    public int queryStudentCorrectCount(String projectId, String subjectId, String questId, String classId) {
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
-        DAO projectDao = daoFactory.getProjectDao(dataBaseName);
+    public int queryStudentCorrectCount(String database, String subjectId, String questId, String classId) {
+        DAO projectDao = daoFactory.getProjectDao(database);
         String table = "score_" + questId;
         return projectDao.queryFirst(QUERY_CORRECT_STUDENT_COUNT
                 .replace("{{table}}", table)
@@ -224,25 +216,26 @@ public class SubjectiveObjectiveQuery {
     }
 
     //判断学生是否需要排除
-    public boolean studentIsExclude(String projectId, String subjectId, String studentId) {
+    public boolean studentIsExclude(String databaseName, String subjectId, String studentId) {
+        String projectId = databaseName.indexOf("_") == -1 ? databaseName : databaseName.substring(0, databaseName.indexOf("_"));
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
 
         if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
-            boolean absent = isAbsent(projectId, subjectId, studentId);
+            boolean absent = isAbsent(databaseName, subjectId, studentId);
             if (absent) {
                 return true;
             }
         }
 
         if (Boolean.valueOf(reportConfig.getRemoveCheatStudent())) {
-            boolean cheat = isCheat(projectId, subjectId, studentId);
+            boolean cheat = isCheat(databaseName, subjectId, studentId);
             if (cheat) {
                 return true;
             }
         }
 
         if (Boolean.valueOf(reportConfig.getRemoveZeroScores())) {
-            boolean zero = isZeroScore(projectId, subjectId, studentId);
+            boolean zero = isZeroScore(databaseName, subjectId, studentId);
             if (zero) {
                 return true;
             }
@@ -253,9 +246,8 @@ public class SubjectiveObjectiveQuery {
 
     //学生是否为0分
     //移除0分,科目0分是会被剔除,此处应该查不到
-    private boolean isZeroScore(String projectId, String subjectId, String studentId) {
-        String projectBakId = projectId + "_" + subjectId + "_bak";
-        DAO projectDao = daoFactory.getProjectDao(projectBakId);
+    private boolean isZeroScore(String databaseName, String subjectId, String studentId) {
+        DAO projectDao = daoFactory.getProjectDao(databaseName);
         Row row = projectDao.queryFirst(ZERO_SQL
                 .replace("{{table}}", "score_subject_" + subjectId)
                 .replace("{{studentId}}", studentId));
@@ -263,10 +255,9 @@ public class SubjectiveObjectiveQuery {
     }
 
     //学生是否作弊
-    private boolean isCheat(String projectId, String subjectId, String studentId) {
-        String projectBakId = projectId + "_" + subjectId + "_bak";
-        DAO projectDao = daoFactory.getProjectDao(projectBakId);
-        SimpleCache cache = cacheFactory.getPaperCache(projectBakId);
+    private boolean isCheat(String databaseName, String subjectId, String studentId) {
+        DAO projectDao = daoFactory.getProjectDao(databaseName);
+        SimpleCache cache = cacheFactory.getPaperCache(databaseName);
         String cacheKey = "cheat :";
         ArrayList<Row> cheatRows = cache.get(cacheKey, () -> new ArrayList<>(projectDao.query("select * from cheat")));
 
@@ -280,11 +271,10 @@ public class SubjectiveObjectiveQuery {
     }
 
     //学生是否是缺考
-    private boolean isAbsent(String projectId, String subjectId, String studentId) {
-        String projectBakId = projectId + "_" + subjectId + "_bak";
-        DAO projectDao = daoFactory.getProjectDao(projectBakId);
+    private boolean isAbsent(String databaseName, String subjectId, String studentId) {
+        DAO projectDao = daoFactory.getProjectDao(databaseName);
 
-        SimpleCache cache = cacheFactory.getPaperCache(projectBakId);
+        SimpleCache cache = cacheFactory.getPaperCache(databaseName);
         String absentKey = "absent :";
         String lostKey = "lost :";
 
@@ -312,8 +302,8 @@ public class SubjectiveObjectiveQuery {
         return false;
     }
 
-    public boolean isVirtualSubject(String projectId, String subjectId) {
-        ExamSubject subject = subjectService.findSubject(projectId, subjectId, true);
+    public boolean isVirtualSubject(String databaseName, String subjectId) {
+        ExamSubject subject = subjectService.findSubject(databaseName, subjectId, false);
 
         return Boolean.valueOf(subject.getVirtualSubject());
     }

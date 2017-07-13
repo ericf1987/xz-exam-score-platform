@@ -89,13 +89,12 @@ public class QuestService {
         return new ArrayList<>(list);
     }
 
-    public List<ExamQuest> queryQuestsFromBak(String projectId, String subjectId) {
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
-        SimpleCache cache = cacheFactory.getProjectCache(dataBaseName);
+    public List<ExamQuest> queryQuestsFromBak(String database, String subjectId) {
+        SimpleCache cache = cacheFactory.getProjectCache(database);
         String cacheKey = "quests:";
 
         return cache.get(cacheKey, () ->
-                fixQuestList(daoFactory.getProjectDao(dataBaseName).query(ExamQuest.class, "select * from quest")));
+                fixQuestList(daoFactory.getProjectDao(database).query(ExamQuest.class, "select * from quest")));
 
     }
 }

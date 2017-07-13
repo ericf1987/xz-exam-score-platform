@@ -68,28 +68,25 @@ public class StudentExamQuery {
     @Autowired
     private DAOFactory daoFactory;
 
-    public Map<String, Object> queryStudentScore(String projectId, String subjectId, String studentId) {
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
-        DAO projectDao = daoFactory.getProjectDao(dataBaseName);
+    public Map<String, Object> queryStudentScore(String database, String subjectId, String studentId) {
+        DAO projectDao = daoFactory.getProjectDao(database);
         String sql = QUERY_STUDENT_SCORE
                 .replace("{{subjectId}}", subjectId)
                 .replace("{{studentId}}", studentId);
         return projectDao.queryFirst(sql);
     }
 
-    public Map<String, Object> queryStudentRank(String projectId, String subjectId, String studentId) {
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
-        DAO projectDao = daoFactory.getProjectDao(dataBaseName);
+    public Map<String, Object> queryStudentRank(String database, String subjectId, String studentId) {
+        DAO projectDao = daoFactory.getProjectDao(database);
         String sql = QUERY_STUDENT_RANK
                 .replace("{{subjectId}}", subjectId)
                 .replace("{{studentId}}", studentId);
         return projectDao.queryFirst(sql);
     }
 
-    public Map<String, Object> queryStudentOverAverage(String projectId, String subjectId, String schoolId, String classId, String studentId) {
+    public Map<String, Object> queryStudentOverAverage(String database, String subjectId, String schoolId, String classId, String studentId) {
         Map<String, Object> result = new HashMap<>();
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
-        DAO projectDao = daoFactory.getProjectDao(dataBaseName);
+        DAO projectDao = daoFactory.getProjectDao(database);
 
         String schoolAverage = QUERY_AVERAGE_SCORE
                 .replace("{{rangeType}}", "School")
@@ -117,9 +114,8 @@ public class StudentExamQuery {
     }
 
     //查询学生基本信息(从备份库中查询学生信息)
-    public Row queryStudentInfo(String projectId, String studentId, String subjectId) {
-        String dataBase = projectId + "_" + subjectId + "_bak";
-        DAO projectDao = daoFactory.getProjectDao(dataBase);
+    public Row queryStudentInfo(String database, String studentId, String subjectId) {
+        DAO projectDao = daoFactory.getProjectDao(database);
         String replace = QUERY_STUDENT_INFO.replace("{{studentId}}", studentId);
         return projectDao.queryFirst(replace);
     }
