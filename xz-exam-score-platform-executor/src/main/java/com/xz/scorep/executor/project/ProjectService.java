@@ -36,7 +36,7 @@ public class ProjectService {
     // 创建项目数据库
     private void createProjectDatabase(String projectId) {
 
-        String username = StringUtil.substring(projectId, 0, 32);
+        String username = StringUtil.substring(projectId, 15);
 
         DAO dao = daoFactory.getRootDao();
         dao.execute("create database `" + projectId + "` DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci");
@@ -47,7 +47,7 @@ public class ProjectService {
 
     // 删除项目数据库
     private void dropProjectDatabase(String projectId) {
-        String username = StringUtil.substring(projectId, 0, 32);
+        String username = StringUtil.substring(projectId, 15);
         DAO dao = daoFactory.getRootDao();
         dao.execute("drop database if exists `" + projectId + "`");
         dao.execute("drop user if exists `" + username + "`");

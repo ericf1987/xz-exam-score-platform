@@ -154,13 +154,27 @@ public class SubjectService {
     }
 
     public ExamSubject findSubject(String projectId, String subjectId) {
-        SimpleCache cache = cacheFactory.getProjectCache(projectId);
+        return findSubject(projectId, subjectId, false);
+    }
+
+    public ExamSubject findSubject(String projectId, String subjectId, boolean backupDataBase) {
         String cacheKey = "subject:" + subjectId;
+        SimpleCache cache;
+        DAO dao;
+        if (backupDataBase) {
+            String dataBaseName = projectId + "_" + subjectId + "_bak";
+            cache = cacheFactory.getProjectCache(dataBaseName);
+            dao = daoFactory.getProjectDao(dataBaseName);
+        } else {
+            cache = cacheFactory.getProjectCache(projectId);
+            dao = daoFactory.getProjectDao(projectId);
+        }
 
         return cache.get(cacheKey, () ->
-                daoFactory.getProjectDao(projectId).queryFirst(
+                dao.queryFirst(
                         ExamSubject.class, "select * from subject where id=?", subjectId));
     }
+
 
     public double getSubjectScore(String projectId, String subjectId) {
         if (subjectId.equals("000")) {
@@ -210,5 +224,6 @@ public class SubjectService {
                 ExamSubject.class, sql.replace("{{subject}}", subjectId));
         return query.stream().filter(subject -> subject.getId().length() > 3).findFirst().get();
     }
+
 
 }

@@ -71,7 +71,8 @@ public class PaperImgServer implements Server {
         String subjectId = param.getString("subjectId");
         String studentId = param.getString("studentId");
 
-        //判断某个科目是否是拆分后的科目
+        //判断某个科目是否是拆分后的科目(并且从备份库中取相关数据....)
+//        String projectBakId = projectId + "_" + subjectId + "_bak";
         boolean excludeSubject = query.isVirtualSubject(projectId, subjectId);
         if (excludeSubject) {
             LOG.info("项目ID {} ,科目ID {} 为拆分后科目,不进行答题留痕打印...", projectId, subjectId);
@@ -91,11 +92,11 @@ public class PaperImgServer implements Server {
         checkAndRecord(projectId, schoolId, classId, subjectId, studentId, studentImgURL);
 
         String projectName = projectService.findProject(projectId).getName();
-        Row studentRow = studentExamQuery.queryStudentInfo(projectId, studentId);
+        Row studentRow = studentExamQuery.queryStudentInfo(projectId, studentId, subjectId);
         studentRow.put("project_name", projectName);
 
-        //查询当前科目
-        ExamSubject subject = subjectService.findSubject(projectId, subjectId);
+        //查询当前科目,从备份库中查询数据!
+        ExamSubject subject = subjectService.findSubject(projectId, subjectId, true);
 
         //  学生主客观题得分详情(每一道题目得分,平均分,最高分或者班级得分率....)
         List<Map<String, Object>> objectiveList =
@@ -147,8 +148,9 @@ public class PaperImgServer implements Server {
     public void checkAndRecord(String projectId, String schoolId, String classId, String subjectId, String studentId, Map<String, String> studentImgURL) {
         String paper_positive = studentImgURL.get("paper_positive");
         String paper_reverse = studentImgURL.get("paper_reverse");
+        String projectBakId = projectId + "_" + subjectId + "_bak";
         if (StringUtils.isBlank(paper_positive) || StringUtils.isBlank(paper_reverse)) {
-            DAO projectDao = daoFactory.getProjectDao(projectId);
+            DAO projectDao = daoFactory.getProjectDao(projectBakId);
 /*            PssForStudent student = new PssForStudent(projectId, schoolId, classId, subjectId, studentId);
             projectDao.insert(student, "pss_task_fail");*/
             projectDao.runTransaction(() -> {

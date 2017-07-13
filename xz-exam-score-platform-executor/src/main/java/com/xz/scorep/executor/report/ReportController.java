@@ -1,14 +1,9 @@
 package com.xz.scorep.executor.report;
 
-import com.hyd.dao.DAO;
-import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
-import com.xz.scorep.executor.aggregate.AggregateStatus;
-import com.xz.scorep.executor.bean.ExamProject;
-import com.xz.scorep.executor.bean.ProjectStatus;
+import com.xz.scorep.executor.aggregate.AggregationService;
 import com.xz.scorep.executor.db.DAOFactory;
-import com.xz.scorep.executor.project.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,16 +17,11 @@ public class ReportController {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReportController.class);
 
-    public static final String QUERY_AGGREGATION_STATUS = "select * from aggregation where aggr_type = 'Quick' and subject_id = '{{subjectId}}' and project_id = '{{projectId}}' order by start_time desc";
-
     @Autowired
     private ReportManager reportManager;
 
     @Autowired
-    private DAOFactory daoFactory;
-
-    @Autowired
-    private ProjectService projectService;
+    private AggregationService aggregationService;
 
     @Autowired
     private ReportArchiveService reportArchiveService;
@@ -57,9 +47,8 @@ public class ReportController {
             return Result.fail(404, "没有找到报表 " + reportName);
         }
 
-        DAO managerDao = daoFactory.getManagerDao();
         subjectId = "000".equals(subjectId) ? "" : subjectId;
-        Result result = checkProjectStatus(managerDao, projectId, subjectId);
+        Result result = aggregationService.checkProjectStatus(projectId, subjectId);
         if (!result.isSuccess()) {
             return result;
         }
@@ -72,25 +61,6 @@ public class ReportController {
             LOG.error("", e);
             return Result.fail(e.getMessage());
         }
-    }
-
-    private Result checkProjectStatus(DAO managerDao, String projectId, String subjectId) {
-        ExamProject project = projectService.findProject(projectId);
-        if (ProjectStatus.Importing.name().equals(project.getStatus())) {
-            return Result.fail(1, "正在统计项目,请稍后再试");
-        }
-
-        Row row = managerDao.queryFirst(QUERY_AGGREGATION_STATUS
-                .replace("{{projectId}}", projectId)
-                .replace("{{subjectId}}", subjectId));
-        LOG.info("项目ID {} ,科目ID {} ，row {}", projectId, subjectId, row);
-        if (row == null) {
-            return Result.fail(1, "尚未找到项目,请确保项目已统计");
-        }
-        if (!AggregateStatus.Finished.name().equals(row.getString("status"))) {
-            return Result.fail(1, "项目正在统计,请稍后再试");
-        }
-        return Result.success();
     }
 
 

@@ -43,10 +43,22 @@
 </fieldset>
 
 <fieldset>
-    <legend>执行项目统计</legend>
+    <legend>执行项目全科统计</legend>
     <form action="aggr/start" method="post">
         <input type="hidden" name="async" value="true"/>
         <div><label>项目ID: </label><input type="text" name="projectId"></div>
+        <div><label>执行一类统计(Check,Quick,Basic,Advanced,Complete): </label><input type="text" name="aggrType"></div>
+        <div><label>执行单个统计(统计类名): </label><input type="text" name="aggrName"></div>
+        <input type="submit" value="执行统计"/>
+    </form>
+</fieldset>
+
+<fieldset>
+    <legend>执行项目单科统计</legend>
+    <form action="aggr/start" method="post">
+        <input type="hidden" name="async" value="true"/>
+        <div><label>项目ID: </label><input type="text" name="projectId"></div>
+        <div><label>科目ID: </label><input type="text" name="subjects"></div>
         <div><label>执行一类统计(Check,Quick,Basic,Advanced,Complete): </label><input type="text" name="aggrType"></div>
         <div><label>执行单个统计(统计类名): </label><input type="text" name="aggrName"></div>
         <input type="submit" value="执行统计"/>

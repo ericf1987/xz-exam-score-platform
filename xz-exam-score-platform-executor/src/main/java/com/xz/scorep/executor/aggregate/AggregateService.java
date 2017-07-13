@@ -3,6 +3,7 @@ package com.xz.scorep.executor.aggregate;
 import com.xz.scorep.executor.bean.ProjectStatus;
 import com.xz.scorep.executor.importproject.ImportProjectParameters;
 import com.xz.scorep.executor.importproject.ImportProjectService;
+import com.xz.scorep.executor.project.BackupAggregateDataService;
 import com.xz.scorep.executor.project.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,9 @@ public class AggregateService {
 
     @Autowired
     private ProjectService projectService;
+
+    @Autowired
+    private BackupAggregateDataService backupService;
 
     private Map<String, Aggregator> aggregatorMap = new HashMap<>();
 
@@ -155,9 +159,23 @@ public class AggregateService {
             for (Aggregator aggregator : aggregators) {
                 aggregator.aggregate(parameter);
             }
+
+            //此处不抛异常则表明统计完成
+            List<String> subjects = parameter.getSubjects();
+            LOG.info("项目ID {} ,subjects {}, 统计类型 {}",projectId,subjects,parameter.getAggregateType().name());
+            if (!subjects.isEmpty() && parameter.getAggregateType() == AggregateType.Quick) {
+                for (String subjectId : subjects) {
+                    if (!"".equals(subjectId)) {
+                        backupService.copyOriginDataToBackupDataBase(projectId, subjectId);
+                    }
+                }
+            }
+
         } finally {
             // 如果成功开始统计，则在结束后恢复项目状态
+            LOG.info("项目ID {} 在更新状态.....",projectId);
             projectService.updateProjectStatus(projectId, ProjectStatus.Aggregating, ProjectStatus.Ready);
+            LOG.info("项目ID {} 更新状态完成.....",projectId);
         }
     }
 
