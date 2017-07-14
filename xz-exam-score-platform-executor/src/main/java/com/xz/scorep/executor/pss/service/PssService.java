@@ -129,7 +129,7 @@ public class PssService {
     }
 
     //返回单个pss任务对应的学生列表
-    private List<PssForStudent> packPssForStudents(String projectBakId, String schoolId, String classId, String subjectId, List<String> studentList) {
+    public List<PssForStudent> packPssForStudents(String projectBakId, String schoolId, String classId, String subjectId, List<String> studentList) {
         List<PssForStudent> PssForStudents = new ArrayList<>();
         for (String studentId : studentList) {
             PssForStudent pssForStudent = new PssForStudent(

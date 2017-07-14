@@ -91,12 +91,13 @@ public class PressureTestService {
         List<Thread> tasks = new ArrayList<>();
 
         classIds.forEach(c -> subjectIds.forEach(s -> {
-            List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(classId));
+            List<String> studentList = studentQuery.getStudentList(projectId, Range.clazz(c));
             List<PssForStudent> PssForStudents = pssService.packPssForStudents(projectId, schoolId, c, s, studentList);
 
             Thread t = new Thread(() -> {
                 pssService.processResultData(PssForStudents);
             });
+            t.start();
             LOG.info("线程：{}， 开始生成 ：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", t.getName() , projectId, schoolId, c, s, studentList.size());
             tasks.add(t);
         }));
