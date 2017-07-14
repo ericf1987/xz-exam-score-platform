@@ -6,9 +6,13 @@ import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.aggregate.AggregateType;
 import com.xz.scorep.executor.aggregate.AggregationService;
 import com.xz.scorep.executor.api.server.paperScreenShot.PaperImgServer;
+import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.pss.mamage.PssTaskManager;
 import com.xz.scorep.executor.pss.service.PssService;
+import com.xz.scorep.executor.utils.DataBaseUtils;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,8 +25,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class PssController {
+
     @Autowired
     PssService pssService;
+
+    @Autowired
+    DAOFactory daoFactory;
 
     @Autowired
     PssTaskManager pssTaskManager;
@@ -32,6 +40,8 @@ public class PssController {
 
     @Autowired
     PaperImgServer paperImgServer;
+
+    private static final Logger LOG = LoggerFactory.getLogger(PssController.class);
 
     /**
      * 按照班级和科目生成
@@ -54,8 +64,8 @@ public class PssController {
         if (!canStartPssTask(projectId, AggregateType.Quick, subjectId)) {
             return Result.fail("项目还未统计完成，请稍后执行。。。");
         }
-
-        pssService.runTaskByClassAndSubject(projectId, schoolId, classId, subjectId, null);
+        String database = DataBaseUtils.getDataBaseName(projectId, subjectId, daoFactory);
+        pssService.runTaskByClassAndSubject(database, schoolId, classId, subjectId, null);
         return Result.success();
     }
 
@@ -75,8 +85,8 @@ public class PssController {
         if (!canStartPssTask(projectId, AggregateType.Quick, subjectId)) {
             return Result.fail("项目还未统计完成，请稍后执行。。。");
         }
-
-        pssTaskManager.startPssTask(projectId, subjectId, null, true);
+        String dataBase= DataBaseUtils.getDataBaseName(projectId, subjectId, daoFactory);
+        pssTaskManager.startPssTask(dataBase, subjectId, null, true);
         return Result.success();
     }
 
@@ -103,8 +113,8 @@ public class PssController {
         if (null == aggregationService.getAggregateStatus(projectId, AggregateType.Quick)) {
             return Result.fail("项目还未统计完成，请稍后执行。。。");
         }
-
-        pssService.runTaskByOneStudent(projectId, schoolId, classId, subjectId, studentId, null);
+        String dataBase= DataBaseUtils.getDataBaseName(projectId, subjectId, daoFactory);
+        pssService.runTaskByOneStudent(dataBase, schoolId, classId, subjectId, studentId, null);
         return Result.success();
     }
 
@@ -153,4 +163,6 @@ public class PssController {
         Row r2 = aggregationService.getAggregateStatus(projectId, aggregateType);
         return null != r1 || null != r2;
     }
+
+
 }

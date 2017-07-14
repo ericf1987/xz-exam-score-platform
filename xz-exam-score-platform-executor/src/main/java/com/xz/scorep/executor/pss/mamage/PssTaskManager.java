@@ -59,49 +59,47 @@ public class PssTaskManager {
         this.threadPoolExecutor = Executors.newBlockingThreadPoolExecutor(10, 10, 100);
     }
 
-    public void startPssTask(final String projectId, String subjectId, Map<String, Object> configFromCMS, boolean async) {
+    public void startPssTask(final String dataBase, String subjectId, Map<String, Object> configFromCMS, boolean async) {
 
         //记录任务状态
         //pssMonitor.initTaskProgress(projectId, ProjectTask.Task.PSS_TASK.name(), ProjectTask.TaskStatus.ACTIVE.name());
 
         //清理项目缓存
-        String projectBakId = StringUtil.isEmpty(subjectId) ? projectId : projectId + "_" + subjectId + "_bak";
-
-        LOG.info("开始清理项目缓存：{}", projectBakId);
-        cacheFactory.removePaperCache(projectBakId);
-        LOG.info("清理完成：{}", projectBakId);
+        LOG.info("开始清理项目缓存：{}", dataBase);
+        cacheFactory.removePaperCache(dataBase);
+        LOG.info("清理完成：{}", dataBase);
 
         //学校ID列表
-        List<String> schoolIds = schoolService.listSchool(projectBakId).stream().map(ProjectSchool::getId)
+        List<String> schoolIds = schoolService.listSchool(dataBase).stream().map(ProjectSchool::getId)
                 .collect(Collectors.toList());
         //所有参考科目
         List<String> examSubjects = !StringUtils.isEmpty(subjectId) ? Collections.singletonList(subjectId) :
-                subjectService.listSubjects(projectBakId).stream().map(s -> s.getId()).collect(Collectors.toList());
+                subjectService.listSubjects(dataBase).stream().map(s -> s.getId()).collect(Collectors.toList());
 
         List<Map<String, Object>> list = new ArrayList<>();
         schoolIds.forEach(schoolId -> {
             Map<String, Object> map = new HashMap<>();
-            map.put(schoolId, classService.listClasses(projectBakId, schoolId).stream().map(ProjectClass::getId).collect(Collectors.toList()));
+            map.put(schoolId, classService.listClasses(dataBase, schoolId).stream().map(ProjectClass::getId).collect(Collectors.toList()));
             list.add(map);
         });
 
-        LOG.info("====项目{}======, 生成学生成绩报告任务开始执行======", projectId);
+        LOG.info("====项目{}======, 生成学生成绩报告任务开始执行======", dataBase);
 
         //清理以往生成失败的记录
-        pssService.clearFailRecord(projectBakId);
+        pssService.clearFailRecord(dataBase);
 
         list.forEach(l -> {
             for (String schoolId : l.keySet()) {
-                LOG.info("====项目{}, 学校{}, 生成开始", projectBakId, schoolId);
+                LOG.info("====项目{}, 学校{}, 生成开始", dataBase, schoolId);
                 List<String> classIds = (List<String>) l.get(schoolId);
                 CountDownLatch countDownLatch = new CountDownLatch(classIds.size());
 
                 for (String classId : classIds) {
                     Runnable runnable = () -> {
                         try {
-                            pssService.dispatchOneClassTask(projectBakId, schoolId, classId, examSubjects, configFromCMS);
+                            pssService.dispatchOneClassTask(dataBase, schoolId, classId, examSubjects, configFromCMS);
                         } catch (Exception e) {
-                            LOG.info("班级生成失败, 项目{}， 学校{}， 班级{}", projectBakId, schoolId, classId);
+                            LOG.info("班级生成失败, 项目{}， 学校{}， 班级{}", dataBase, schoolId, classId);
                         } finally {
                             countDownLatch.countDown();
                         }
@@ -121,15 +119,15 @@ public class PssTaskManager {
 
                 try {
                     countDownLatch.await(1, TimeUnit.HOURS);
-                    LOG.info("====项目{}, 学校{}, 试卷截图生成完毕", projectId, schoolId);
+                    LOG.info("====项目{}, 学校{}, 试卷截图生成完毕", dataBase, schoolId);
                 } catch (InterruptedException e) {
-                    LOG.info("====项目{}, 学校{}, 试卷截图生成超时！", projectId, schoolId);
+                    LOG.info("====项目{}, 学校{}, 试卷截图生成超时！", dataBase, schoolId);
                 }
 
             }
         });
 
-        LOG.info("====项目{}======, 试卷截图任务执行完毕！======", projectId);
+        LOG.info("====项目{}======, 试卷截图任务执行完毕！======", dataBase);
 
     }
 }

@@ -27,31 +27,31 @@ public class SubjectiveObjectiveService {
     private QuestService questService;
 
     //主观题得分详情
-    public List<Map<String, Object>> querySubjectiveScoreDetail(String projectId, String subjectId, String classId, String studentId) {
+    public List<Map<String, Object>> querySubjectiveScoreDetail(String database, String subjectId, String classId, String studentId) {
         Comparator<ExamQuest> questNoComparator = (q1, q2) -> new NaturalOrderComparator().compare(q1.getQuestNo(), q2.getQuestNo());
-        List<ExamQuest> quests = questService.queryQuestsFromBak(projectId, subjectId);
+        List<ExamQuest> quests = questService.queryQuestsFromBak(database, subjectId);
 
         List<Map<String, Object>> result = new ArrayList<>();
 
         List<ExamQuest> subjectiveQuests = quests.stream()
                 .filter(q -> !q.isObjective()).sorted(questNoComparator).collect(Collectors.toList());
 
-        subjectiveQuests.forEach(quest -> fillStudentScore(projectId, subjectId, classId, studentId, quest, result));
+        subjectiveQuests.forEach(quest -> fillStudentScore(database, subjectId, classId, studentId, quest, result));
         return result;
     }
 
-    private void fillStudentScore(String projectId, String subjectId, String classId, String studentId, ExamQuest quest, List<Map<String, Object>> result) {
+    private void fillStudentScore(String database, String subjectId, String classId, String studentId, ExamQuest quest, List<Map<String, Object>> result) {
         Map<String, Object> map = new HashMap<>();
         String questId = quest.getId();
         String questNo = quest.getQuestNo();
         map.put("questNo", questNo);
 
-        Row studentRow = query.queryStudentRow(projectId, subjectId, studentId, questId);
+        Row studentRow = query.queryStudentRow(database, subjectId, studentId, questId);
 
         if (quest.isObjective()) {//客观题
             String studentAnswer = studentRow.getString("objective_answer");
             map.put("studentAnswer", studentAnswer);
-            Optional<Row> detailRow = query.queryObjectiveDetail(projectId, subjectId, questId, classId);
+            Optional<Row> detailRow = query.queryObjectiveDetail(database, subjectId, questId, classId);
             if (!detailRow.isPresent()) {
                 return;
             }
@@ -64,7 +64,7 @@ public class SubjectiveObjectiveService {
         } else {//主观题
             double score = studentRow.getDouble("score", 0);
             map.put("score", score);
-            Optional<Row> detailRow = query.querySubjectiveDetail(projectId, subjectId, questId, classId);
+            Optional<Row> detailRow = query.querySubjectiveDetail(database, subjectId, questId, classId);
             if (!detailRow.isPresent()) {
                 return;
             }
@@ -81,29 +81,28 @@ public class SubjectiveObjectiveService {
 
 
     //客观题得分详情
-    public List<Map<String, Object>> queryObjectiveScoreDetail(String projectId, String subjectId, String classId, String studentId) {
+    public List<Map<String, Object>> queryObjectiveScoreDetail(String database, String subjectId, String classId, String studentId) {
         Comparator<ExamQuest> questNoComparator = (q1, q2) -> new NaturalOrderComparator().compare(q1.getQuestNo(), q2.getQuestNo());
-        List<ExamQuest> quests = questService.queryQuestsFromBak(projectId, subjectId);
+        List<ExamQuest> quests = questService.queryQuestsFromBak(database, subjectId);
 
         List<Map<String, Object>> result = new ArrayList<>();
 
         List<ExamQuest> objectiveQuests = quests.stream()
                 .filter(ExamQuest::isObjective).sorted(questNoComparator).collect(Collectors.toList());
 
-        objectiveQuests.forEach(quest -> fillStudentScore(projectId, subjectId, classId, studentId, quest, result));
+        objectiveQuests.forEach(quest -> fillStudentScore(database, subjectId, classId, studentId, quest, result));
         return result;
     }
 
 
     //主观题 : 与班级单题得分差距较大的TOP5(差值的绝对值最大)
-    public List<Map<String, Object>> querySubjectiveTop5(String projectId, String subjectId, String studentId, String classId) {
+    public List<Map<String, Object>> querySubjectiveTop5(String database, String subjectId, String studentId, String classId) {
         List<Map<String, Object>> list = new ArrayList<>();
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
 
-        questService.queryQuests(dataBaseName)
+        questService.queryQuests(database)
                 .stream()
                 .filter(quest -> !quest.isObjective() && subjectId.equals(quest.getExamSubject()))
-                .forEach(quest -> queryStudentSubjectiveEachRow(projectId, subjectId, studentId, classId, list, quest));
+                .forEach(quest -> queryStudentSubjectiveEachRow(database, subjectId, studentId, classId, list, quest));
 
         if (list.isEmpty()) {
             return null;
@@ -119,12 +118,12 @@ public class SubjectiveObjectiveService {
     }
 
     ///主观题 : 与班级单题得分差距较大的TOP5(差值的绝对值最大)  每一行
-    private void queryStudentSubjectiveEachRow(String projectId, String subjectId, String studentId, String classId, List<Map<String, Object>> list, ExamQuest quest) {
+    private void queryStudentSubjectiveEachRow(String database, String subjectId, String studentId, String classId, List<Map<String, Object>> list, ExamQuest quest) {
         String questId = quest.getId();
-        Row studentRow = query.queryStudentSubjectiveQuest(projectId, subjectId, questId, studentId);
+        Row studentRow = query.queryStudentSubjectiveQuest(database, subjectId, questId, studentId);
         if (studentRow != null) {
             Map<String, Object> map = new HashMap<>();
-            Row averageRow = query.queryClassAverageScore(projectId,subjectId, questId, classId);
+            Row averageRow = query.queryClassAverageScore(database,subjectId, questId, classId);
 
             double score = studentRow.getDouble("score", 0);
             double average_score = averageRow.getDouble("average_score", 0);
@@ -140,13 +139,12 @@ public class SubjectiveObjectiveService {
     }
 
     //客观题 : 与班级单题得分人数最多,且自己没得满分的题目TOP5 (人数为得满分人数)
-    public List<Map<String, Object>> queryObjectiveTop5(String projectId, String subjectId, String classId, String studentId) {
+    public List<Map<String, Object>> queryObjectiveTop5(String database, String subjectId, String classId, String studentId) {
         List<Map<String, Object>> studentFailList = new ArrayList<>();
-        String dataBaseName = projectId + "_" + subjectId + "_bak";
-        questService.queryQuests(dataBaseName)
+        questService.queryQuests(database)
                 .stream()
                 .filter(quest -> subjectId.equals(quest.getExamSubject()) && quest.isObjective())
-                .forEach(quest -> queryObjectiveTop5EachRow(projectId, subjectId, classId, studentId, studentFailList, quest));
+                .forEach(quest -> queryObjectiveTop5EachRow(database, subjectId, classId, studentId, studentFailList, quest));
 
         if (studentFailList.isEmpty()) {
             return null;
@@ -161,13 +159,13 @@ public class SubjectiveObjectiveService {
     }
 
     //客观题与班级答对人数差距较大的每一行
-    private void queryObjectiveTop5EachRow(String projectId, String subjectId, String classId, String studentId, List<Map<String, Object>> studentFailList, ExamQuest quest) {
+    private void queryObjectiveTop5EachRow(String database, String subjectId, String classId, String studentId, List<Map<String, Object>> studentFailList, ExamQuest quest) {
         String questId = quest.getId();
-        Row row = query.queryStudentFalseObjectiveQuest(projectId, subjectId, questId, studentId);
+        Row row = query.queryStudentFalseObjectiveQuest(database, subjectId, questId, studentId);
         if (null != row) {
             //查该题在班级中答对的人数
             Map<String, Object> map = new HashMap<>();
-            int correctCount = query.queryStudentCorrectCount(projectId, subjectId, questId, classId);
+            int correctCount = query.queryStudentCorrectCount(database, subjectId, questId, classId);
 
             map.put("correct_count", correctCount);
             map.put("quest_no", quest.getQuestNo());
@@ -181,18 +179,18 @@ public class SubjectiveObjectiveService {
 
 
     //主观题(总分,我的得分,得分排名,班级平均分,班级最高分)
-    public Map<String, Object> subjectiveDetail(String projectId, String subjectId, String classId, String studentId) {
-        Map<String, Double> fullScore = query.querySubjectiveObjectiveFullScore(projectId, subjectId);
-        Map<String, Object> subjective = query.querySubjectiveScoreRank(projectId, subjectId, classId, studentId);
+    public Map<String, Object> subjectiveDetail(String database, String subjectId, String classId, String studentId) {
+        Map<String, Double> fullScore = query.querySubjectiveObjectiveFullScore(database, subjectId);
+        Map<String, Object> subjective = query.querySubjectiveScoreRank(database, subjectId, classId, studentId);
         subjective.put("fullScore", fullScore.get("subjective"));
         return subjective;
     }
 
 
     //客观题(总分,我的得分,得分排名,班级平均分,班级最高分)
-    public Map<String, Object> objectiveDetail(String projectId, String subjectId, String classId, String studentId) {
-        Map<String, Double> fullScore = query.querySubjectiveObjectiveFullScore(projectId, subjectId);
-        Map<String, Object> subjective = query.queryObjectiveScoreRank(projectId, subjectId, classId, studentId);
+    public Map<String, Object> objectiveDetail(String database, String subjectId, String classId, String studentId) {
+        Map<String, Double> fullScore = query.querySubjectiveObjectiveFullScore(database, subjectId);
+        Map<String, Object> subjective = query.queryObjectiveScoreRank(database, subjectId, classId, studentId);
         subjective.put("fullScore", fullScore.get("objective"));
         return subjective;
     }
