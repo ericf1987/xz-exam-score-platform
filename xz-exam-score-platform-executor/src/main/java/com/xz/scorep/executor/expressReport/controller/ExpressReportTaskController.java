@@ -46,15 +46,27 @@ public class ExpressReportTaskController {
         return Result.success();
     }
 
-    @PostMapping("/expressReport/pressure/test")
+    @PostMapping("/expressReport/pressure/test1")
     @ResponseBody
-    public Result startPressureTest(
+    public Result startPressureTest1(
             @RequestParam("pdfName") String pdfName,
             @RequestParam("relativePath") String relativePath,
             @RequestParam("createUrl") String createUrl,
             @RequestParam("threadCount") String threadCount
     ){
-        pressureTestService.startPressureTest(pdfName, relativePath, createUrl, threadCount);
+        pressureTestService.startPressureTest1(pdfName, relativePath, createUrl, threadCount);
+        return Result.success();
+    }
+
+    @PostMapping("/expressReport/pressure/test2")
+    @ResponseBody
+    public Result startPressureTest2(
+            @RequestParam("projectId") String projectId,
+            @RequestParam("schoolId") String schoolId,
+            @RequestParam("classId") String classId,
+            @RequestParam("subjectId") String subjectId
+    ){
+        pressureTestService.startPressureTest2(projectId, schoolId, classId, subjectId);
         return Result.success();
     }
 }

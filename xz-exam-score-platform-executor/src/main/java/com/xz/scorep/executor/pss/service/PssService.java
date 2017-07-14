@@ -71,15 +71,15 @@ public class PssService {
     public static final String BASE64_HEADER = "data:image/png;base64,";
 
     //封装多个任务
-    public void dispatchOneClassTask(String dataBase, String schoolId, String classId, List<String> examSubjects, Map<String, Object> configFromCMS) {
+    public void dispatchOneClassTask(String projectBakId, String schoolId, String classId, List<String> examSubjects, Map<String, Object> configFromCMS) {
         List<PssTaskBean> pssTaskBeans = new ArrayList<>();
         for (String examSubject : examSubjects) {
             try {
-                PssTaskBean pssTaskBean = packPssTask(dataBase, schoolId, classId, examSubject, configFromCMS);
+                PssTaskBean pssTaskBean = packPssTask(projectBakId, schoolId, classId, examSubject, configFromCMS);
                 pssTaskBean.start();
                 pssTaskBeans.add(pssTaskBean);
             } catch (Exception e) {
-                LOG.info("----分发任务失败：项目{}，学校{}，班级{}，科目{}", dataBase, schoolId, classId, examSubject);
+                LOG.info("----分发任务失败：项目{}，学校{}，班级{}，科目{}", projectBakId, schoolId, classId, examSubject);
             }
         }
 
@@ -97,42 +97,43 @@ public class PssService {
     }
 
     //封装单个任务，每个任务执行一个学生列表
-    private PssTaskBean packPssTask(String dataBase, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
-        List<String> studentList = studentQuery.getStudentList(dataBase, Range.clazz(classId));
-        List<PssForStudent> pssForStudents = packPssForStudents(dataBase, schoolId, classId, subjectId, studentList);
+    private PssTaskBean packPssTask(String projectBakId, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
+        List<String> studentList = studentQuery.getStudentList(projectBakId, Range.clazz(classId));
+        List<PssForStudent> pssForStudents = packPssForStudents(projectBakId, schoolId, classId, subjectId, studentList);
         return new PssTaskBean(pssForStudents);
     }
 
-    public void runTaskByClassAndSubject(String database, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
+    public void runTaskByClassAndSubject(String projectId, String schoolId, String classId, String subjectId, Map<String, Object> configFromCMS) {
+        String projectBakId = projectId + "_" + subjectId + "_bak";
 //        List<String> studentList = studentQuery.getStudentList(projectBakId, Range.clazz(classId));
 
         List<String> classIds = !StringUtils.isEmpty(classId) ? Collections.singletonList(classId) :
-                classService.listClasses(database, schoolId).stream().map(c -> c.getId()).collect(Collectors.toList());
+                classService.listClasses(projectId, schoolId).stream().map(c -> c.getId()).collect(Collectors.toList());
 
         List<String> subjectIds = !StringUtils.isEmpty(subjectId) ? Collections.singletonList(subjectId) :
-                subjectService.listSubjects(database).stream().map(s -> s.getId()).collect(Collectors.toList());
+                subjectService.listSubjects(projectId).stream().map(s -> s.getId()).collect(Collectors.toList());
 
         for (String cid : classIds) {
             for (String sid : subjectIds) {
-                List<String> studentList = studentQuery.getStudentList(database, Range.clazz(cid));
+                List<String> studentList = studentQuery.getStudentList(projectBakId, Range.clazz(cid));
 
-                List<PssForStudent> PssForStudents = packPssForStudents(database, schoolId, cid, sid, studentList);
+                List<PssForStudent> PssForStudents = packPssForStudents(projectBakId, schoolId, cid, sid, studentList);
 //        List<PssForStudent> PssForStudents = packPssForStudents(projectBakId, schoolId, classId, subjectId, studentList);
 
                 processResultData(PssForStudents);
 
-                LOG.info("--------数据生成成功：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", database, schoolId, cid, sid, studentList.size());
+                LOG.info("--------数据生成成功：项目{}， 学校{}， 班级{}， 科目{}, 学生总数{}", projectId, schoolId, cid, sid, studentList.size());
             }
         }
 
     }
 
     //返回单个pss任务对应的学生列表
-    private List<PssForStudent> packPssForStudents(String dataBase, String schoolId, String classId, String subjectId, List<String> studentList) {
+    private List<PssForStudent> packPssForStudents(String projectBakId, String schoolId, String classId, String subjectId, List<String> studentList) {
         List<PssForStudent> PssForStudents = new ArrayList<>();
         for (String studentId : studentList) {
             PssForStudent pssForStudent = new PssForStudent(
-                    dataBase, schoolId, classId, subjectId, studentId
+                    projectBakId, schoolId, classId, subjectId, studentId
             );
             PssForStudents.add(pssForStudent);
         }
@@ -140,8 +141,9 @@ public class PssService {
     }
 
     //执行单个学生的pss报告打印
-    public void runTaskByOneStudent(String dataBase, String schoolId, String classId, String subjectId, String studentId, Map<String, Object> configFromCMS) {
-        PssForStudent pssForStudent = new PssForStudent(dataBase, schoolId, classId, subjectId, studentId);
+    public void runTaskByOneStudent(String projectId, String schoolId, String classId, String subjectId, String studentId, Map<String, Object> configFromCMS) {
+        String projectBakId = projectId + "_" + subjectId + "_bak";
+        PssForStudent pssForStudent = new PssForStudent(projectBakId, schoolId, classId, subjectId, studentId);
         processResultData(Collections.singletonList(pssForStudent));
     }
 
@@ -267,15 +269,15 @@ public class PssService {
     /**
      * 返回学生正反面答题卡图片
      *
-     * @param databaseName      项目ID
+     * @param projectId      项目ID
      * @param subjectId      科目ID
      * @param studentId      学生ID
      * @param subjectRuleMap 参数显示规则
      * @return 返回结果
      */
-    public Map<String, String> getStudentImgURL(String databaseName, String subjectId,
+    public Map<String, String> getStudentImgURL(String projectId, String subjectId,
                                                 String studentId, Map<String, Object> subjectRuleMap) {
-        Map<String, Object> studentCardSlices = scannerDBService.getOneStudentCardSlice(databaseName, studentId, subjectId);
+        Map<String, Object> studentCardSlices = scannerDBService.getOneStudentCardSlice(projectId, studentId, subjectId);
         Map<String, String> map = new HashMap<>();
         map.put("paper_positive", doConvert(MapUtils.getString(studentCardSlices, "paper_positive"), PaintUtils.PNG));
         map.put("paper_reverse", doConvert(MapUtils.getString(studentCardSlices, "paper_reverse"), PaintUtils.PNG));
