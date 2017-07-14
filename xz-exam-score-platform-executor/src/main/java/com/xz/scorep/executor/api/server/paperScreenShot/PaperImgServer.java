@@ -4,6 +4,7 @@ import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.lang.Result;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.aggritems.StudentExamQuery;
 import com.xz.scorep.executor.api.annotation.Function;
 import com.xz.scorep.executor.api.annotation.Parameter;
@@ -75,6 +76,9 @@ public class PaperImgServer implements Server {
         //获取可以正常连接的数据库...
         String database = DataBaseUtils.getDataBaseName(projectId, subjectId, daoFactory);
         LOG.info("本次查询得到的数据库为 {} ... ", database);
+        if (StringUtil.isEmpty(database)) {
+            return Result.fail(1, "终止生成pdf");
+        }
         //判断某个科目是否是拆分后的科目(并且从备份库中取相关数据....)
         boolean excludeSubject = query.isVirtualSubject(database, subjectId);
         if (excludeSubject) {

@@ -3,6 +3,7 @@ package com.xz.scorep.executor.pss.controller;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.lang.Result;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.aggregate.AggregateType;
 import com.xz.scorep.executor.aggregate.AggregationService;
 import com.xz.scorep.executor.api.server.paperScreenShot.PaperImgServer;
@@ -65,6 +66,9 @@ public class PssController {
             return Result.fail("项目还未统计完成，请稍后执行。。。");
         }
         String database = DataBaseUtils.getDataBaseName(projectId, subjectId, daoFactory);
+        if (StringUtil.isEmpty(database)) {
+            return Result.fail(1, "终止生成pdf");
+        }
         pssService.runTaskByClassAndSubject(database, schoolId, classId, subjectId, null);
         return Result.success();
     }
@@ -85,7 +89,10 @@ public class PssController {
         if (!canStartPssTask(projectId, AggregateType.Quick, subjectId)) {
             return Result.fail("项目还未统计完成，请稍后执行。。。");
         }
-        String dataBase= DataBaseUtils.getDataBaseName(projectId, subjectId, daoFactory);
+        String dataBase = DataBaseUtils.getDataBaseName(projectId, subjectId, daoFactory);
+        if (StringUtil.isEmpty(dataBase)) {
+            return Result.fail(1, "终止生成pdf");
+        }
         pssTaskManager.startPssTask(dataBase, subjectId, null, true);
         return Result.success();
     }
@@ -113,7 +120,10 @@ public class PssController {
         if (null == aggregationService.getAggregateStatus(projectId, AggregateType.Quick)) {
             return Result.fail("项目还未统计完成，请稍后执行。。。");
         }
-        String dataBase= DataBaseUtils.getDataBaseName(projectId, subjectId, daoFactory);
+        String dataBase = DataBaseUtils.getDataBaseName(projectId, subjectId, daoFactory);
+        if (StringUtil.isEmpty(dataBase)) {
+            return Result.fail(1, "终止生成pdf");
+        }
         pssService.runTaskByOneStudent(dataBase, schoolId, classId, subjectId, studentId, null);
         return Result.success();
     }

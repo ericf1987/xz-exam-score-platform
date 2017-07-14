@@ -257,7 +257,7 @@ public class ProjectService {
                 "  point_name varchar(100) NOT NULL)");
 
         dao.execute("CREATE TABLE pss_task_fail ( " +
-                " project_id VARCHAR(40) NOT NULL, " +
+                " project_id VARCHAR(60) NOT NULL, " +
                 " school_id VARCHAR(40) NOT NULL, " +
                 " class_id VARCHAR(40) NOT NULL, " +
                 " subject_id VARCHAR(3) NOT NULL, " +
