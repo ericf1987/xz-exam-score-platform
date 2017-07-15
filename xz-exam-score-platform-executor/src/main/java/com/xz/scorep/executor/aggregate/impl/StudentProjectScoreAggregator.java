@@ -58,15 +58,16 @@ public class StudentProjectScoreAggregator extends Aggregator {
                 });
 
         //全科卷面0分,全科作弊,全科缺考才会进入
-        updateProjectScore(subjects, projectDao);
+        updateProjectScore(projectId, projectDao);
 
     }
 
-    private void updateProjectScore(List<ExamSubject> subjects, DAO projectDao) {
-        int subjectCount = (int) subjects.stream()
+    private void updateProjectScore(String projectId, DAO projectDao) {
+        long count = subjectService.listSubjects(projectId)
+                .stream()
                 .filter(subject -> subject.getVirtualSubject().equals("false"))
                 .count();
-        String replace = UPDATE_PROJECT_SCORE.replace("{{count}}", String.valueOf(subjectCount));
+        String replace = UPDATE_PROJECT_SCORE.replace("{{count}}", String.valueOf(count));
         projectDao.execute(replace);
     }
 
