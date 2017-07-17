@@ -2,6 +2,7 @@ package com.xz.scorep.executor.api.server.paperScreenShot;
 
 import com.alibaba.fastjson.JSON;
 import com.xz.ajiaedu.common.ajia.Param;
+import com.xz.ajiaedu.common.config.JsonFileConfiguration;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.BaseTest;
 import org.junit.Test;
@@ -44,5 +45,13 @@ public class PaperImgServerTest extends BaseTest {
         map.put("paper_positive", "");
         map.put("paper_reverse", "");
         paperImgServer.checkAndRecord(PROJECT_ID, SCHOOL_ID, CLASS_ID, SUBJECT_ID, STUDENT_ID, map);
+    }
+
+    @Test
+    public void test2() throws Exception {
+        JsonFileConfiguration configuration = new JsonFileConfiguration("F://testJson.json");
+
+        configuration.set("name", "fengye");
+        configuration.set("sex", "male");
     }
 }
