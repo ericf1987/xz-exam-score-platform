@@ -7,6 +7,8 @@ import com.xz.scorep.executor.bean.*;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportaggrdata.bean.Average;
 import com.xz.scorep.executor.project.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +42,8 @@ public class AverageScoreQuery {
     @Autowired
     ClassService classService;
 
+    private static final Logger LOG = LoggerFactory.getLogger(AverageScoreQuery.class);
+
     public static final String SUBJECT_PROJECT_DATA = "select * from `{{table}}` score,student\n" +
             "where student.id  = score.student_id";
     public static final String POINT_DATA = "select * from `score_point` score,student\n" +
@@ -59,18 +63,20 @@ public class AverageScoreQuery {
 
     public List<Average> queryData(String projectId) {
         //project,subject,subjectCombination,subjectObjective,point,pointLevel,subjectLevel,quest
-
-//        List<Row> projectRows = processProjectData(projectId);//project
-//        List<Row> subjectRows = processSubjectData(projectId);//subject and subjectCombination
-//        List<Row> objectiveRows = processObjectiveData(projectId);// subjective  and objective
-//        List<Row> pointRows = processPointData(projectId);//point
-//        List<Row> pointLevelRows = processPointLevelData(projectId);// pointLevel
-//        List<Row> subjectLevelRows = processSubjectLevelData(projectId);// subjectLevel  TODO implements
+        LOG.info("开始导出平均分数据.....");
+        List<Row> projectRows = processProjectData(projectId);//project
+        List<Row> subjectRows = processSubjectData(projectId);//subject and subjectCombination
+        List<Row> objectiveRows = processObjectiveData(projectId);// subjective  and objective
+        List<Row> pointRows = processPointData(projectId);//point
+        List<Row> pointLevelRows = processPointLevelData(projectId);// pointLevel
+        List<Row> subjectLevelRows = processSubjectLevelData(projectId);// subjectLevel  TODO implements
         List<Row> questRows = processQuestData(projectId);// quest
 
-//        List<Row> result = addAll(projectRows, subjectRows, objectiveRows, pointRows,pointLevelRows);
-        List<Row> result = addAll(questRows);
-        return result.stream().map(row -> pakObj(row, projectId)).collect(Collectors.toList());
+        List<Row> result = addAll(projectRows, subjectRows, objectiveRows, pointRows,pointLevelRows,subjectLevelRows,questRows);
+//        List<Row> result = addAll(questRows);
+        List<Average> collect = result.stream().map(row -> pakObj(row, projectId)).collect(Collectors.toList());
+        LOG.info("平均分数据导出完毕......");
+        return collect;
     }
 
     private List<Row> processQuestData(String projectId) {

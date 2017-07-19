@@ -4,9 +4,10 @@ import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.hyd.simplecache.utils.MD5;
 import com.xz.scorep.executor.bean.Range;
-import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportaggrdata.bean.AllPassOrFail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 /**
  * 统计数据查询-全科及格/不及格率
+ *
  * @author by fengye on 2017/7/17.
  */
 @Component
@@ -23,12 +25,11 @@ public class AllPassOrFailQuery {
     @Autowired
     DAOFactory daoFactory;
 
-    @Autowired
-    CacheFactory cacheFactory;
+    private static final Logger LOG = LoggerFactory.getLogger(AllPassOrFailQuery.class);
 
     public static final String QUERY_DATA = "select * from all_pass_or_fail";
 
-    public List<Row> queryData(String projectId){
+    public List<Row> queryData(String projectId) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
         List<Row> rows = projectDao.query(QUERY_DATA);
@@ -36,10 +37,13 @@ public class AllPassOrFailQuery {
         return rows;
     }
 
-    public List<AllPassOrFail> queryObj(String projectId){
+    public List<AllPassOrFail> queryObj(String projectId) {
+        LOG.info("开始导出全科及格全科不及格率数据.....");
         List<Row> rows = queryData(projectId);
 
-        return rows.stream().map(r -> packObj(projectId, r)).collect(Collectors.toList());
+        List<AllPassOrFail> result = rows.stream().map(r -> packObj(projectId, r)).collect(Collectors.toList());
+        LOG.info("全科及格全科不及格率数据导出完毕.....");
+        return result;
     }
 
     private AllPassOrFail packObj(String projectId, Row r) {
