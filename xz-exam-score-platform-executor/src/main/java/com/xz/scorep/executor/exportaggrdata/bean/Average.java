@@ -7,11 +7,15 @@ import java.io.Serializable;
 
 /**
  * 平均分
+ *
  * @author by fengye on 2017/7/17.
  */
-public class Average extends MongoAggrObject implements Serializable{
+public class Average extends MongoAggrObject implements Serializable {
+
     private Range range;
+
     private Target target;
+
     private double average;
 
     public Range getRange() {

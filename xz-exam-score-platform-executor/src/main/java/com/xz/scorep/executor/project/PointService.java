@@ -9,10 +9,7 @@ import com.xz.scorep.executor.db.DAOFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author by fengye on 2017/6/26.
@@ -38,5 +35,11 @@ public class PointService {
             batchCommand.addParams(fullScore, pointId);
         }
         projectDao.execute(batchCommand);
+    }
+
+    public List<Point> listPoints(String projectId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        List<Point> points = projectDao.query(Point.class, "select * from points");
+        return points;
     }
 }

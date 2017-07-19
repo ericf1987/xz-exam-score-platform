@@ -12,7 +12,7 @@ public class AggregationDataExportTest extends BaseTest {
     @Autowired
     AggregationDataExport aggregationDataExport;
 
-    public static final String PROJECT_ID = "430200-13e01c025ac24c6497d916551b3ae7a6";
+    public static final String PROJECT_ID = "430000-6c4add56e5fb42b09f9de5387dfa59c0";
 
     @Test
     public void testExportData() throws Exception {
