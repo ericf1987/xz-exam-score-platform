@@ -32,14 +32,14 @@ public class QuestTypeScoreQuery {
 
 
     public List<Map<String, Object>> queryData(String projectId) {
-        LOG.info("开始导出题目题型得分数据.....");
+        LOG.info("开始导出  QuestTypeScore  数据.....");
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<Row> rows = projectDao.query(QUERY);
         List<Map<String, Object>> result = rows.stream()
                 .map(row -> pakObj(row, projectId))
                 .collect(Collectors.toList());
-        LOG.info("导出题目题型得分数据完毕.....");
+        LOG.info("导出  QuestTypeScore  数据完毕.....");
 
         return result;
     }
