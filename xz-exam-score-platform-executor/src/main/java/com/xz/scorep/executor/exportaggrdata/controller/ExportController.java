@@ -4,7 +4,9 @@ import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.exportaggrdata.service.AggregationDataExport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * 用于在服务器测试相关数据
@@ -21,7 +23,7 @@ public class ExportController {
     @PostMapping("/export/json")
     @ResponseBody
     public Result exportAggrData(@RequestParam("projectId") String projectId) {
-        Runnable runnable = () -> export.exportData(projectId);
+        Runnable runnable = () -> export.exportData(projectId, false);
         new Thread(runnable).start();
         return Result.success();
     }
