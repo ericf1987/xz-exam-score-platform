@@ -192,5 +192,17 @@
     </form>
     <br/><br/>
 </fieldset>
+
+<fieldset>
+    <legend>导出MYSQL统计数据</legend>
+    <form action="/export-data-dump/exportDataDump" method="post">
+        <div><label>项目ID: </label><input type="text" name="projectId"></div>
+        <div>
+            <label class="chk-item"><input type="checkbox" name="notifyImport" value="true"/>通知mongo导入文件</label> &nbsp;
+        </div>
+        <input type="submit" value="提交"/>
+    </form>
+    <br/><br/>
+</fieldset>
 </body>
 </html>

@@ -18,11 +18,11 @@ public class AggregationDataExportTest extends BaseTest {
     @Autowired
     AggregationDataExport aggregationDataExport;
 
-    public static final String PROJECT_ID = "430000-6c4add56e5fb42b09f9de5387dfa59c0";
+    public static final String PROJECT_ID = "430100-9a564abc5f0044b4a470c2f146de50ab";
 
     @Test
     public void testExportData() throws Exception {
-        aggregationDataExport.exportData(PROJECT_ID);
+        aggregationDataExport.exportData(PROJECT_ID, false);
     }
 
 }
