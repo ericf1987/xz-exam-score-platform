@@ -24,7 +24,8 @@ public class CreatorContext {
     //定义多个统计表创建器
     private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = Arrays.asList(
             new AllPassOrFailCreator(), new AverageCreator(), new RankLevelCreator(),
-            new RankLevelMapCreator(), new MaxMinCreator(), new ObjCorrectMapCreator()
+            new RankLevelMapCreator(), new MaxMinCreator(), new ObjCorrectMapCreator(),
+            new OverAverageCreator()
     );
 
     //全科及格率
@@ -36,6 +37,10 @@ public class CreatorContext {
     //最大最小分
     private final List<MaxMin> maxMins = new ArrayList<>();
 
+    //超出平均分
+    private final List<OverAverage> overAverages = new ArrayList<>();
+
+    //客观题正确率
     private final List<ObjCorrectMap> objCorrectMaps = new ArrayList<>();
 
     //排名等级
@@ -58,6 +63,11 @@ public class CreatorContext {
 
     public List<MaxMin> getMaxMins() {
         return maxMins;
+    }
+
+
+    public List<OverAverage> getOverAverages() {
+        return overAverages;
     }
 
     public List<RankLevel> getRankLevels() {

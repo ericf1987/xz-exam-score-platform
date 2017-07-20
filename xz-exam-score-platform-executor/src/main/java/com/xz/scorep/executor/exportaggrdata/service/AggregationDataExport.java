@@ -6,20 +6,10 @@ import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.api.server.mongoaggr.NotifyImportMysqlDump;
 import com.xz.scorep.executor.config.JsonConfig;
-import com.xz.scorep.executor.exportaggrdata.bean.AllPassOrFail;
-import com.xz.scorep.executor.exportaggrdata.bean.Average;
-import com.xz.scorep.executor.exportaggrdata.bean.MaxMin;
-import com.xz.scorep.executor.exportaggrdata.bean.ObjCorrectMap;
-import com.xz.scorep.executor.exportaggrdata.bean.RankLevel;
-import com.xz.scorep.executor.exportaggrdata.bean.RankLevelMap;
+import com.xz.scorep.executor.exportaggrdata.bean.*;
 import com.xz.scorep.executor.exportaggrdata.context.CreatorContext;
 import com.xz.scorep.executor.exportaggrdata.packcreator.AllPassOrFailCreator;
-import com.xz.scorep.executor.exportaggrdata.query.AllPassOrFailQuery;
-import com.xz.scorep.executor.exportaggrdata.query.AverageScoreQuery;
-import com.xz.scorep.executor.exportaggrdata.query.MaxMinQuery;
-import com.xz.scorep.executor.exportaggrdata.query.ObjCorrectMapQuery;
-import com.xz.scorep.executor.exportaggrdata.query.RankLevelMapQuery;
-import com.xz.scorep.executor.exportaggrdata.query.RankLevelQuery;
+import com.xz.scorep.executor.exportaggrdata.query.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +41,9 @@ public class AggregationDataExport {
 
     @Autowired
     ObjCorrectMapQuery objCorrectMapQuery;
+
+    @Autowired
+    OverAverageQuery overAverageQuery;
 
     @Autowired
     AllPassOrFailCreator allPassOrFailCreator;
@@ -99,9 +92,14 @@ public class AggregationDataExport {
 
         //全科不及格/及格率数据
         List<AllPassOrFail> allPassOrFails = allPassOrFailQuery.queryObj(projectId);
+        //平均分
         List<Average> averages = averageScoreQuery.queryData(projectId);
+        //最大最小分
         List<MaxMin> minMaxes = minMaxQuery.queryData(projectId);
+        //客观题正确率
         List<ObjCorrectMap> correctMaps = objCorrectMapQuery.queryData(projectId);
+        //超出平均分
+        List<OverAverage> overAverages = overAverageQuery.queryData(projectId);
         //等级排名
         List<RankLevel> rankLevels = rankLevelQuery.queryObj(projectId);
         //排名等第
@@ -111,6 +109,7 @@ public class AggregationDataExport {
         context.getAverages().addAll(averages);
         context.getMaxMins().addAll(minMaxes);
         context.getObjCorrectMaps().addAll(correctMaps);
+        context.getOverAverages().addAll(overAverages);
         context.getRankLevels().addAll(rankLevels);
         context.getRankLevelMaps().addAll(rankLevelMaps);
 
