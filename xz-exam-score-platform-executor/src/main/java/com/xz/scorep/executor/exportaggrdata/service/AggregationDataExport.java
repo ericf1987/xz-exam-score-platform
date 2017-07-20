@@ -1,7 +1,10 @@
 package com.xz.scorep.executor.exportaggrdata.service;
 
+import com.xz.ajiaedu.common.ajia.Param;
 import com.xz.ajiaedu.common.io.FileUtils;
+import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
+import com.xz.scorep.executor.api.server.mongoaggr.NotifyImportMysqlDump;
 import com.xz.scorep.executor.config.JsonConfig;
 import com.xz.scorep.executor.exportaggrdata.bean.AllPassOrFail;
 import com.xz.scorep.executor.exportaggrdata.bean.Average;
@@ -16,8 +19,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author by fengye on 2017/7/17.
@@ -37,19 +41,36 @@ public class AggregationDataExport {
     @Autowired
     AllPassOrFailCreator allPassOrFailCreator;
 
+    @Autowired
+    NotifyImportMysqlDump notifyImportMysqlDump;
+
     static final Logger LOG = LoggerFactory.getLogger(AggregationDataExport.class);
 
-    public void exportData(String projectId) {
+    public Result exportData(String projectId, boolean notifyImport) {
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+
+        String date = format.format(Calendar.getInstance().getTime());
 
         // 本地文件路径
         String dumpPath = jsonConfig.getDumpPath();
         if (StringUtil.isEmpty(dumpPath)) {
             throw new IllegalStateException("json导出路径为空");
         }
-        String filePath = dumpPath + UUID.randomUUID().toString() + ".zip";
+
+        String filePath = StringUtil.joinPaths(dumpPath, date, projectId + ".zip");
+
+        LOG.info("数据统计文件导出路径：{}", filePath);
 
         //创建文件压缩包
         createPack(projectId, filePath);
+
+        //通知mongodb进行导入
+        if (notifyImport) {
+            notifyImport(projectId, filePath);
+        }
+
+        return Result.success();
 
     }
 
@@ -69,5 +90,12 @@ public class AggregationDataExport {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void notifyImport(String projectId, String filePath) {
+        notifyImportMysqlDump.execute(
+                new Param().setParameter("projectId", projectId)
+                .setParameter("filePath", filePath)
+        );
     }
 }

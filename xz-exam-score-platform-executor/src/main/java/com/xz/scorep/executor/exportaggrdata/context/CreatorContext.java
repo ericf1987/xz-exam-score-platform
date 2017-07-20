@@ -22,9 +22,7 @@ import java.util.zip.ZipOutputStream;
 public class CreatorContext {
 
     //定义多个统计表创建器
-    private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = Arrays.asList(new ScoreDataEntryCreator[]{
-            new AllPassOrFailCreator(), new AverageCreator()
-    });
+    private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = Arrays.asList(new AllPassOrFailCreator(), new AverageCreator());
 
     //全科及格率
     private final List<AllPassOrFail> allPassOrFails = new ArrayList<>();
@@ -58,16 +56,14 @@ public class CreatorContext {
                 var3 = var14;
                 throw var14;
             } finally {
-                if(e != null) {
-                    if(var3 != null) {
-                        try {
-                            e.close();
-                        } catch (Throwable var13) {
-                            var3.addSuppressed(var13);
-                        }
-                    } else {
+                if(var3 != null) {
+                    try {
                         e.close();
+                    } catch (Throwable var13) {
+                        var3.addSuppressed(var13);
                     }
+                } else {
+                    e.close();
                 }
 
             }
@@ -82,10 +78,9 @@ public class CreatorContext {
     private void createEntries(ZipOutputStream zos, ScoreDataEntryCreator entryCreator) throws IOException {
         List entryDatas = entryCreator.createEntries(this);
         if(!CollectionUtils.isEmpty(entryDatas)) {
-            Iterator var4 = entryDatas.iterator();
 
-            while(var4.hasNext()) {
-                EntryData entryData = (EntryData)var4.next();
+            for (Object entryData1 : entryDatas) {
+                EntryData entryData = (EntryData) entryData1;
                 ZipEntry entry = new ZipEntry(entryData.getName());
                 zos.putNextEntry(entry);
                 zos.write(entryData.getContent());
