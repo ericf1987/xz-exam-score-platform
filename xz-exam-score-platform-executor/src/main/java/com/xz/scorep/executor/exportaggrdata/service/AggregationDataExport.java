@@ -6,16 +6,10 @@ import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.api.server.mongoaggr.NotifyImportMysqlDump;
 import com.xz.scorep.executor.config.JsonConfig;
-import com.xz.scorep.executor.exportaggrdata.bean.AllPassOrFail;
-import com.xz.scorep.executor.exportaggrdata.bean.Average;
-import com.xz.scorep.executor.exportaggrdata.bean.MaxMin;
-import com.xz.scorep.executor.exportaggrdata.bean.ObjCorrectMap;
+import com.xz.scorep.executor.exportaggrdata.bean.*;
 import com.xz.scorep.executor.exportaggrdata.context.CreatorContext;
 import com.xz.scorep.executor.exportaggrdata.packcreator.AllPassOrFailCreator;
-import com.xz.scorep.executor.exportaggrdata.query.AllPassOrFailQuery;
-import com.xz.scorep.executor.exportaggrdata.query.AverageScoreQuery;
-import com.xz.scorep.executor.exportaggrdata.query.MaxMinQuery;
-import com.xz.scorep.executor.exportaggrdata.query.ObjCorrectMapQuery;
+import com.xz.scorep.executor.exportaggrdata.query.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +41,9 @@ public class AggregationDataExport {
 
     @Autowired
     ObjCorrectMapQuery objCorrectMapQuery;
+
+    @Autowired
+    OverAverageQuery overAverageQuery;
 
     @Autowired
     AllPassOrFailCreator allPassOrFailCreator;
@@ -92,11 +89,13 @@ public class AggregationDataExport {
         List<Average> averages = averageScoreQuery.queryData(projectId);
         List<MaxMin> minMaxes = minMaxQuery.queryData(projectId);
         List<ObjCorrectMap> correctMaps = objCorrectMapQuery.queryData(projectId);
+        List<OverAverage> overAverages = overAverageQuery.queryData(projectId);
 
         context.getAllPassOrFails().addAll(allPassOrFails);
         context.getAverages().addAll(averages);
         context.getMaxMins().addAll(minMaxes);
         context.getObjCorrectMaps().addAll(correctMaps);
+        context.getOverAverages().addAll(overAverages);
         try {
             FileUtils.writeFile(context.createZipArchive(), new File(filePath));
         } catch (IOException e) {

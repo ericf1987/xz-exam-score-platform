@@ -23,7 +23,7 @@ public class CreatorContext {
 
     //定义多个统计表创建器
     private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = Arrays.asList(new AllPassOrFailCreator(), new AverageCreator(),
-            new MaxMinCreator(), new ObjCorrectMapCreator());
+            new MaxMinCreator(), new ObjCorrectMapCreator(), new OverAverageCreator());
 
     //全科及格率
     private final List<AllPassOrFail> allPassOrFails = new ArrayList<>();
@@ -34,7 +34,18 @@ public class CreatorContext {
     //最大最小分
     private final List<MaxMin> maxMins = new ArrayList<>();
 
+    //客观题正确率
     private final List<ObjCorrectMap> objCorrectMaps = new ArrayList<>();
+
+    private final List<OverAverage> overAverages = new ArrayList<>();
+
+    public List<OverAverage> getOverAverages() {
+        return overAverages;
+    }
+
+    public static List<ScoreDataEntryCreator> getEntryCreators() {
+        return ENTRY_CREATORS;
+    }
 
     public List<ObjCorrectMap> getObjCorrectMaps() {
         return objCorrectMaps;
