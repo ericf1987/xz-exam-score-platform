@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author by fengye on 2017/7/17.
@@ -44,6 +45,9 @@ public class AggregationDataExport {
 
     @Autowired
     OverAverageQuery overAverageQuery;
+
+    @Autowired
+    QuestTypeScoreQuery questTypeScoreQuery;
 
     @Autowired
     AllPassOrFailCreator allPassOrFailCreator;
@@ -100,6 +104,8 @@ public class AggregationDataExport {
         List<ObjCorrectMap> correctMaps = objCorrectMapQuery.queryData(projectId);
         //超出平均分
         List<OverAverage> overAverages = overAverageQuery.queryData(projectId);
+
+        List<Map<String, Object>> questTypeScoreMaps = questTypeScoreQuery.queryData(projectId);
         //等级排名
         List<RankLevel> rankLevels = rankLevelQuery.queryObj(projectId);
         //排名等第
@@ -110,11 +116,13 @@ public class AggregationDataExport {
         context.getMaxMins().addAll(minMaxes);
         context.getObjCorrectMaps().addAll(correctMaps);
         context.getOverAverages().addAll(overAverages);
+        context.getQuestTypeScores().addAll(questTypeScoreMaps);
         context.getRankLevels().addAll(rankLevels);
         context.getRankLevelMaps().addAll(rankLevelMaps);
 
         try {
             FileUtils.writeFile(context.createZipArchive(), new File(filePath));
+            LOG.info("文件写入成功");
         } catch (IOException e) {
             e.printStackTrace();
         }

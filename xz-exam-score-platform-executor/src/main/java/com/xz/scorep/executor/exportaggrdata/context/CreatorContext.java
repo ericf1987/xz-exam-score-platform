@@ -21,7 +21,7 @@ public class CreatorContext {
     //定义多个统计表创建器
     private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = new ArrayList<>();
 
-    static{
+    static {
         ENTRY_CREATORS.add(new AllPassOrFailCreator());
         ENTRY_CREATORS.add(new AverageCreator());
         ENTRY_CREATORS.add(new RankLevelCreator());
@@ -29,6 +29,8 @@ public class CreatorContext {
         ENTRY_CREATORS.add(new MaxMinCreator());
         ENTRY_CREATORS.add(new ObjCorrectMapCreator());
         ENTRY_CREATORS.add(new OverAverageCreator());
+        ENTRY_CREATORS.add(new QuestDeviationCreator());
+        ENTRY_CREATORS.add(new QuestTypeScoreCreator());
     }
 
     //全科及格率
@@ -43,8 +45,14 @@ public class CreatorContext {
     //超出平均分
     private final List<OverAverage> overAverages = new ArrayList<>();
 
+    //题目区分度
+    private final List<QuestDeviation> questDeviations = new ArrayList<>();
+
     //客观题正确率
     private final List<ObjCorrectMap> objCorrectMaps = new ArrayList<>();
+
+    //
+    private final List<Map<String, Object>> questTypeScores = new ArrayList<>();
 
     //排名等级
     private final List<RankLevel> rankLevels = new ArrayList<>();
@@ -68,9 +76,16 @@ public class CreatorContext {
         return maxMins;
     }
 
-
     public List<OverAverage> getOverAverages() {
         return overAverages;
+    }
+
+    public List<QuestDeviation> getQuestDeviations() {
+        return questDeviations;
+    }
+
+    public List<Map<String, Object>> getQuestTypeScores() {
+        return questTypeScores;
     }
 
     public List<RankLevel> getRankLevels() {
