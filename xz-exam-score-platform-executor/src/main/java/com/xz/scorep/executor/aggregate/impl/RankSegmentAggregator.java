@@ -82,7 +82,7 @@ public class RankSegmentAggregator extends Aggregator {
 
         projectDao.execute("truncate table rank_segment");
 
-        //processData(projectDao, Range.SCHOOL, getRankSegmentParam(projectId));
+//        processData(projectDao, Range.SCHOOL, getRankSegmentParam(projectId));
 
         ThreadPoolExecutor executor = Executors.newBlockingThreadPoolExecutor(3, 3, 3);
 
@@ -121,7 +121,7 @@ public class RankSegmentAggregator extends Aggregator {
                     r_d -> subject_id.equals(r_d.getString("subject_id")) && range_id.equals(r_d.getString("range_id"))
             ).collect(Collectors.toList());
 
-            List<Map<String, Object>> rankSegments = calculateRankSegment(current, rankInSegment, cnt);
+            List<Map<String, Object>> rankSegments = calculateRankSegment(current, rankInSegment, rankSegmentParam , cnt);
             rankSegments.stream().forEach(r -> {
                 r.put("range_type", rangeName);
                 r.put("subject_id", subject_id);
@@ -134,7 +134,7 @@ public class RankSegmentAggregator extends Aggregator {
         projectDao.insert(result, "rank_segment");
     }
 
-    private List<Map<String, Object>> calculateRankSegment(List<Row> current, double[] rankInSegment, int cnt) {
+    private List<Map<String, Object>> calculateRankSegment(List<Row> current, double[] rankInSegment, double[] rankSegmentParam, int cnt) {
         List<Map<String, Object>> result = new ArrayList<>();
         for (int i = 0; i < rankInSegment.length; i++) {
 
@@ -150,7 +150,7 @@ public class RankSegmentAggregator extends Aggregator {
             //排名位于排名分段之间
             int count = current.stream().filter(c -> match(c.getIntegerObject("rank"), head, tail)).collect(Collectors.toList()).size();
             Map<String, Object> map = new HashMap<>();
-            map.put("rank_percent", rankInSegment[i]);
+            map.put("rank_percent", rankSegmentParam[i]);
             map.put("segment_count", count);
             map.put("segment_rate", DoubleUtils.round((double) count / cnt, false));
             result.add(map);

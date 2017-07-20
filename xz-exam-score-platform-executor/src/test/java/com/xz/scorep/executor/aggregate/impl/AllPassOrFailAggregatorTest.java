@@ -19,9 +19,10 @@ public class AllPassOrFailAggregatorTest extends BaseTest {
     @Autowired
     AllPassOrFailAggregator allPassOrFailAggregator;
 
+
     @Test
     public void testAggregate() throws Exception {
-        allPassOrFailAggregator.aggregate(new AggregateParameter(PROJECT3_ID));
+        allPassOrFailAggregator.aggregate(new AggregateParameter("430100-59f2afde35a44b92ae3d2c4c10bd4075"));
     }
 
     @Test

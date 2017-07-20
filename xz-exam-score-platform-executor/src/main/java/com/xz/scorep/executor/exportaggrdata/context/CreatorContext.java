@@ -21,7 +21,7 @@ public class CreatorContext {
     //定义多个统计表创建器
     private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = new ArrayList<>();
 
-    static {
+    static{
         ENTRY_CREATORS.add(new AllPassOrFailCreator());
         ENTRY_CREATORS.add(new AverageCreator());
         ENTRY_CREATORS.add(new RankLevelCreator());
@@ -29,6 +29,7 @@ public class CreatorContext {
         ENTRY_CREATORS.add(new MaxMinCreator());
         ENTRY_CREATORS.add(new ObjCorrectMapCreator());
         ENTRY_CREATORS.add(new OverAverageCreator());
+        ENTRY_CREATORS.add(new RankSegmentCreator());
         ENTRY_CREATORS.add(new QuestDeviationCreator());
         ENTRY_CREATORS.add(new QuestTypeScoreCreator());
     }
@@ -59,6 +60,9 @@ public class CreatorContext {
 
     //排名等第
     private final List<RankLevelMap> rankLevelMaps = new ArrayList<>();
+
+    //分数分段
+    private final List<RankSegment> rankSegments = new ArrayList<>();
 
     public List<AllPassOrFail> getAllPassOrFails() {
         return allPassOrFails;
@@ -94,6 +98,10 @@ public class CreatorContext {
 
     public List<RankLevelMap> getRankLevelMaps() {
         return rankLevelMaps;
+    }
+
+    public List<RankSegment> getRankSegments() {
+        return rankSegments;
     }
 
     public byte[] createZipArchive() {

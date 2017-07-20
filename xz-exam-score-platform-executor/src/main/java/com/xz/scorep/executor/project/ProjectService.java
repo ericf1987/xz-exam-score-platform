@@ -119,6 +119,12 @@ public class ProjectService {
         dao.execute("create table all_pass_or_fail (range_type varchar(20), range_id varchar(40),all_pass_count int(11),all_pass_rate decimal(5,2),all_fail_count int(11),all_fail_rate decimal(5,2))");
         dao.execute("create index idxapfri on all_pass_or_fail(range_id)");
 
+        //全科优秀和全科良好率
+        dao.execute("create table all_excellent_or_good(range_type varchar(20), range_id varchar(40)," +
+                "all_excellent_count int(11),all_excellent_rate decimal(5,2)," +
+                "all_good_count int(11),all_good_rate decimal(5,2))");
+        dao.execute("create index idxapf on all_excellent_or_good(range_id)");
+
         // 分数分段表
         dao.execute("create table score_segments(" +
                 "range_type varchar(20),range_id VARCHAR(40),target_type VARCHAR(20),target_id VARCHAR(40)," +
