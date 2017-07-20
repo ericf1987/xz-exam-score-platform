@@ -28,9 +28,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
- * 统计全科及格率和全科不及格率
+ * 统计全科优秀率和良好率
  *
- * @author luckylo
+ * @author caijianghua
  */
 @AggregateTypes(AggregateType.Basic)
 @AggregateOrder(16)
