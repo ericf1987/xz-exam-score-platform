@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author luckylo
- * @createTime 2017-07-20.
+ * @createTime 2017-07-20
  */
 @Component
 public class ObjCorrectMapQuery {

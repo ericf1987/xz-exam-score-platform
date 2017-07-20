@@ -50,6 +50,9 @@ public class RankLevelQuery {
     public static final String PROJECT_DATA_QUERY = "select * from rank_level_project";
 
     public List<RankLevel> queryObj(String projectId) {
+
+        LOG.info("开始查询 rank_level 数据.....");
+
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
         //按科目查询班级 学校 总体的学生排名情况
@@ -89,6 +92,8 @@ public class RankLevelQuery {
 
             rankLevelList.add(rankLevelObj);
         }
+
+        LOG.info("查询完成 rank_level 共 {} 条.....", rankLevelList.size());
 
         return rankLevelList;
 

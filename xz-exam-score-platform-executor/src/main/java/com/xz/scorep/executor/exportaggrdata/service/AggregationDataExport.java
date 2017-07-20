@@ -59,6 +59,9 @@ public class AggregationDataExport {
     RankLevelMapQuery rankLevelMapQuery;
 
     @Autowired
+    RankSegmentQuery rankSegmentQuery;
+
+    @Autowired
     NotifyImportMysqlDump notifyImportMysqlDump;
 
     static final Logger LOG = LoggerFactory.getLogger(AggregationDataExport.class);
@@ -110,6 +113,9 @@ public class AggregationDataExport {
         List<RankLevel> rankLevels = rankLevelQuery.queryObj(projectId);
         //排名等第
         List<RankLevelMap> rankLevelMaps = rankLevelMapQuery.queryObj(projectId);
+        //排名分段
+        List<RankSegment> rankSegments = rankSegmentQuery.queryObj(projectId);
+
 
         context.getAllPassOrFails().addAll(allPassOrFails);
         context.getAverages().addAll(averages);
@@ -119,6 +125,7 @@ public class AggregationDataExport {
         context.getQuestTypeScores().addAll(questTypeScoreMaps);
         context.getRankLevels().addAll(rankLevels);
         context.getRankLevelMaps().addAll(rankLevelMaps);
+        context.getRankSegments().addAll(rankSegments);
 
         try {
             FileUtils.writeFile(context.createZipArchive(), new File(filePath));

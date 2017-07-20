@@ -1,11 +1,8 @@
 package com.xz.scorep.executor.exportaggrdata.query;
 
 import com.xz.scorep.executor.BaseTest;
-import com.xz.scorep.executor.exportaggrdata.bean.RankSegment;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.junit.Assert.*;
 
 /**
  * @author by fengye on 2017/7/20.
