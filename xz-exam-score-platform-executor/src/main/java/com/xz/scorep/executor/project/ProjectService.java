@@ -196,7 +196,7 @@ public class ProjectService {
 
         //排名分段
         dao.execute("CREATE TABLE rank_segment(subject_id VARCHAR(10),range_id VARCHAR(40),range_type VARCHAR(20),rank_percent DECIMAL(5,2),segment_count INT(11),segment_rate DECIMAL(5,2))");
-        dao.execute("CREATE INDEX idx_rank_segment ON rank_segment(range_id, subject_id, rankPercent)");
+        dao.execute("CREATE INDEX idx_rank_segment ON rank_segment(range_id, subject_id, rank_percent)");
 
         //知识点，能力层级，双向细目相关
         dao.execute("create table score_point(student_id varchar(40), point_id varchar(10), total_score decimal(6,2))");
