@@ -2,6 +2,8 @@ package com.xz.scorep.executor.aggregate.impl;
 
 import com.xz.scorep.executor.BaseTest;
 import com.xz.scorep.executor.aggregate.AggregateParameter;
+import com.xz.scorep.executor.reportconfig.ReportConfig;
+import com.xz.scorep.executor.reportconfig.ReportConfigService;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -13,7 +15,19 @@ public class RankSegmentAggregatorTest extends BaseTest{
     @Autowired
     RankSegmentAggregator rankSegmentAggregator;
 
-    public static final String PROJECT_ID = "430300-29c4d40d93bf41a5a82baffe7e714dd9";
+    public static final String PROJECT_ID = "430200-13e01c025ac24c6497d916551b3ae7a6";
+
+    @Autowired
+    ReportConfigService reportConfigService;
+
+    @Test
+    public void test() {
+        ReportConfig reportConfig = reportConfigService.queryReportConfig(PROJECT_ID);
+
+        int rankSegmentCount = reportConfig.getRankSegmentCount();
+
+        System.out.println(rankSegmentCount);
+    }
 
     @Test
     public void testGetRankSegmentParam() throws Exception {

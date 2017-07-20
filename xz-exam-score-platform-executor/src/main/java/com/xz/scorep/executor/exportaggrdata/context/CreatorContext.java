@@ -22,8 +22,10 @@ import java.util.zip.ZipOutputStream;
 public class CreatorContext {
 
     //定义多个统计表创建器
-    private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = Arrays.asList(new AllPassOrFailCreator(), new AverageCreator(),
-            new MaxMinCreator(), new ObjCorrectMapCreator());
+    private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = Arrays.asList(
+            new AllPassOrFailCreator(), new AverageCreator(), new RankLevelCreator(),
+            new RankLevelMapCreator(), new MaxMinCreator(), new ObjCorrectMapCreator()
+    );
 
     //全科及格率
     private final List<AllPassOrFail> allPassOrFails = new ArrayList<>();
@@ -36,6 +38,20 @@ public class CreatorContext {
 
     private final List<ObjCorrectMap> objCorrectMaps = new ArrayList<>();
 
+    //排名等级
+    private final List<RankLevel> rankLevels = new ArrayList<>();
+
+    //排名等第
+    private final List<RankLevelMap> rankLevelMaps = new ArrayList<>();
+
+    public List<AllPassOrFail> getAllPassOrFails() {
+        return allPassOrFails;
+    }
+
+    public List<Average> getAverages() {
+        return averages;
+    }
+
     public List<ObjCorrectMap> getObjCorrectMaps() {
         return objCorrectMaps;
     }
@@ -44,12 +60,12 @@ public class CreatorContext {
         return maxMins;
     }
 
-    public List<AllPassOrFail> getAllPassOrFails() {
-        return allPassOrFails;
+    public List<RankLevel> getRankLevels() {
+        return rankLevels;
     }
 
-    public List<Average> getAverages() {
-        return averages;
+    public List<RankLevelMap> getRankLevelMaps() {
+        return rankLevelMaps;
     }
 
     public byte[] createZipArchive() {

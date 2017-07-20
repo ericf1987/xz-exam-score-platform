@@ -10,12 +10,16 @@ import com.xz.scorep.executor.exportaggrdata.bean.AllPassOrFail;
 import com.xz.scorep.executor.exportaggrdata.bean.Average;
 import com.xz.scorep.executor.exportaggrdata.bean.MaxMin;
 import com.xz.scorep.executor.exportaggrdata.bean.ObjCorrectMap;
+import com.xz.scorep.executor.exportaggrdata.bean.RankLevel;
+import com.xz.scorep.executor.exportaggrdata.bean.RankLevelMap;
 import com.xz.scorep.executor.exportaggrdata.context.CreatorContext;
 import com.xz.scorep.executor.exportaggrdata.packcreator.AllPassOrFailCreator;
 import com.xz.scorep.executor.exportaggrdata.query.AllPassOrFailQuery;
 import com.xz.scorep.executor.exportaggrdata.query.AverageScoreQuery;
 import com.xz.scorep.executor.exportaggrdata.query.MaxMinQuery;
 import com.xz.scorep.executor.exportaggrdata.query.ObjCorrectMapQuery;
+import com.xz.scorep.executor.exportaggrdata.query.RankLevelMapQuery;
+import com.xz.scorep.executor.exportaggrdata.query.RankLevelQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +54,12 @@ public class AggregationDataExport {
 
     @Autowired
     AllPassOrFailCreator allPassOrFailCreator;
+
+    @Autowired
+    RankLevelQuery rankLevelQuery;
+
+    @Autowired
+    RankLevelMapQuery rankLevelMapQuery;
 
     @Autowired
     NotifyImportMysqlDump notifyImportMysqlDump;
@@ -92,11 +102,18 @@ public class AggregationDataExport {
         List<Average> averages = averageScoreQuery.queryData(projectId);
         List<MaxMin> minMaxes = minMaxQuery.queryData(projectId);
         List<ObjCorrectMap> correctMaps = objCorrectMapQuery.queryData(projectId);
+        //等级排名
+        List<RankLevel> rankLevels = rankLevelQuery.queryObj(projectId);
+        //排名等第
+        List<RankLevelMap> rankLevelMaps = rankLevelMapQuery.queryObj(projectId);
 
         context.getAllPassOrFails().addAll(allPassOrFails);
         context.getAverages().addAll(averages);
         context.getMaxMins().addAll(minMaxes);
         context.getObjCorrectMaps().addAll(correctMaps);
+        context.getRankLevels().addAll(rankLevels);
+        context.getRankLevelMaps().addAll(rankLevelMaps);
+
         try {
             FileUtils.writeFile(context.createZipArchive(), new File(filePath));
         } catch (IOException e) {
