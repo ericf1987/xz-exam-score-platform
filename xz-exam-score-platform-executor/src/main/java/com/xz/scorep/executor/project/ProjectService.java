@@ -93,7 +93,7 @@ public class ProjectService {
         //客观题班级得分率
         dao.execute("create table objective_score_rate(quest_id varchar(40),quest_no varchar(20)," +
                 "subject_id varchar(20),range_id varchar(40),range_type varchar(20)," +
-                "answer text,score_rate decimal(6,4))");
+                "answer text,score_rate decimal(6,4),count int(11))");
         dao.execute("create index idxocr on objective_score_rate(quest_id,range_id,range_type)");
 
         //标准差
