@@ -22,7 +22,7 @@ public class ExportController {
     @ResponseBody
     public Result exportAggrData(@RequestParam("projectId") String projectId) {
         Runnable runnable = () -> export.exportData(projectId);
-        runnable.run();
+        new Thread(runnable).start();
         return Result.success();
     }
 }
