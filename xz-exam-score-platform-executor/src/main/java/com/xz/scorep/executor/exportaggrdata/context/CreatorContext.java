@@ -7,10 +7,7 @@ import com.xz.scorep.executor.exportaggrdata.packcreator.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -22,11 +19,17 @@ import java.util.zip.ZipOutputStream;
 public class CreatorContext {
 
     //定义多个统计表创建器
-    private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = Arrays.asList(
-            new AllPassOrFailCreator(), new AverageCreator(), new RankLevelCreator(),
-            new RankLevelMapCreator(), new MaxMinCreator(), new ObjCorrectMapCreator(),
-            new OverAverageCreator()
-    );
+    private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = new ArrayList<>();
+
+    static{
+        ENTRY_CREATORS.add(new AllPassOrFailCreator());
+        ENTRY_CREATORS.add(new AverageCreator());
+        ENTRY_CREATORS.add(new RankLevelCreator());
+        ENTRY_CREATORS.add(new RankLevelMapCreator());
+        ENTRY_CREATORS.add(new MaxMinCreator());
+        ENTRY_CREATORS.add(new ObjCorrectMapCreator());
+        ENTRY_CREATORS.add(new OverAverageCreator());
+    }
 
     //全科及格率
     private final List<AllPassOrFail> allPassOrFails = new ArrayList<>();
