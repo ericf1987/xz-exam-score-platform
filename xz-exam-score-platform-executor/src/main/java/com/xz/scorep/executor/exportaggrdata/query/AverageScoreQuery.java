@@ -100,7 +100,7 @@ public class AverageScoreQuery {
                 .flatMap(x -> x.stream())
                 .collect(Collectors.toList());
         LOG.info("objectiveRows  size ... {}", objectiveRows.size());
-        List<Row> pointRows = pointService.listPoints(projectId).stream()
+        List<Row> pointRows = pointService.listPoints(projectId).parallelStream()
                 .map(point -> queryPointData(projectId, point))
                 .flatMap(x -> x.stream())
                 .collect(Collectors.toList());

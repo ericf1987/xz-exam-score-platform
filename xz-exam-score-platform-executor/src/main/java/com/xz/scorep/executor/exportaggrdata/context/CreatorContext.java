@@ -1,15 +1,9 @@
 package com.xz.scorep.executor.exportaggrdata.context;
 
 import com.xz.ajiaedu.common.lang.CollectionUtils;
-import com.xz.scorep.executor.exportaggrdata.bean.AllPassOrFail;
-import com.xz.scorep.executor.exportaggrdata.bean.Average;
-import com.xz.scorep.executor.exportaggrdata.bean.EntryData;
-import com.xz.scorep.executor.exportaggrdata.bean.MaxMin;
+import com.xz.scorep.executor.exportaggrdata.bean.*;
 import com.xz.scorep.executor.exportaggrdata.exception.CreatorException;
-import com.xz.scorep.executor.exportaggrdata.packcreator.AllPassOrFailCreator;
-import com.xz.scorep.executor.exportaggrdata.packcreator.AverageCreator;
-import com.xz.scorep.executor.exportaggrdata.packcreator.MaxMinCreator;
-import com.xz.scorep.executor.exportaggrdata.packcreator.ScoreDataEntryCreator;
+import com.xz.scorep.executor.exportaggrdata.packcreator.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,7 +22,8 @@ import java.util.zip.ZipOutputStream;
 public class CreatorContext {
 
     //定义多个统计表创建器
-    private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = Arrays.asList(new AllPassOrFailCreator(), new AverageCreator(), new MaxMinCreator());
+    private static final List<ScoreDataEntryCreator> ENTRY_CREATORS = Arrays.asList(new AllPassOrFailCreator(), new AverageCreator(),
+            new MaxMinCreator(), new ObjCorrectMapCreator());
 
     //全科及格率
     private final List<AllPassOrFail> allPassOrFails = new ArrayList<>();
@@ -37,8 +32,13 @@ public class CreatorContext {
     private final List<Average> averages = new ArrayList<>();
 
     //最大最小分
-
     private final List<MaxMin> maxMins = new ArrayList<>();
+
+    private final List<ObjCorrectMap> objCorrectMaps = new ArrayList<>();
+
+    public List<ObjCorrectMap> getObjCorrectMaps() {
+        return objCorrectMaps;
+    }
 
     public List<MaxMin> getMaxMins() {
         return maxMins;
