@@ -42,7 +42,7 @@ public class ScoreLevelMapQuery {
 
     static final Logger LOG = LoggerFactory.getLogger(ScoreLevelMapQuery.class);
 
-    public static final String QUERY_DATA = "select * from scoreLevelMap";
+    public static final String QUERY_DATA = "select * from scorelevelmap";
 
     public List<ScoreLevelMap> queryObj(String projectId) {
 
