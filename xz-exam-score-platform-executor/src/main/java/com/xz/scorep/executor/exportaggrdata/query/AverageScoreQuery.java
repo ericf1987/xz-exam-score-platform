@@ -44,9 +44,6 @@ public class AverageScoreQuery {
 
     private static final Logger LOG = LoggerFactory.getLogger(AverageScoreQuery.class);
 
-    public static final String SUBJECT_PROJECT_DATA = "select * from `{{table}}` score,student\n" +
-            "where student.id  = score.student_id";
-
     public static final String PROJECT_DATA = "select '{{rangeName}}' range_name,student.{{rangeId}} range_id, \n" +
             "'{{targetName}}' target_name,'{{targetId}}' target_id\n" +
             "from `score_project` score ,student\n" +
@@ -67,14 +64,18 @@ public class AverageScoreQuery {
             "and score.point_id = '{{point_id}}'\n" +
             "GROUP BY student.{{range_id}};";
 
-    public static final String POINT_DATA = "select * from `score_point` score,student\n" +
-            "where score.student_id = student.id";
-
     public static final String POINT_LEVEL = "SELECT score.point, score.level, AVG(score.total_score) average, \n" +
             "stu.{{rangeId}} range_id,'{{rangeName}}' range_name\n" +
             "FROM score_point_level score, student stu\n" +
             "WHERE score.student_id = stu.id  \n" +
             "GROUP BY score.point, score.level, stu.{{rangeId}};";
+
+    public static final String SUBJECT_LEVEL = "select student.{{rangeId}} range_id,'{{rangeName}}' range_name ," +
+            "avg(score.total_score) average,score.`subject`,score.`level`,'{{targetName}}' target_name\n" +
+            "from score_subject_level score,student\n" +
+            "where score.student_id = student.id\n" +
+            "GROUP BY \n" +
+            "student.{{rangeId}},score.`subject`,score.`level`;";
 
     public static final String QUEST_DATA = "select avg(score.score) average,'{{rangeName}}' range_name," +
             "student.{{rangeId}} range_id,'{{targetName}}' target_name,'{{targetId}}' target_id\n" +
@@ -95,22 +96,29 @@ public class AverageScoreQuery {
                 .flatMap(x -> x.stream())
                 .collect(Collectors.toList());
         LOG.info("subjectRows  size ... {}", subjectRows.size());
+
         List<Row> objectiveRows = subjects.stream()
                 .map(subject -> queryObjectiveData(projectId, subject))
                 .flatMap(x -> x.stream())
                 .collect(Collectors.toList());
         LOG.info("objectiveRows  size ... {}", objectiveRows.size());
+
         List<Row> pointRows = pointService.listPoints(projectId).parallelStream()
                 .map(point -> queryPointData(projectId, point))
                 .flatMap(x -> x.stream())
                 .collect(Collectors.toList());
         LOG.info("pointRows  size ... {}", pointRows.size());
 
+        List<Row> pointLevelRows = queryPointLevelData(projectId);
+        LOG.info("pointLevelRows  size ... {}", pointLevelRows.size());
 
-//        List<Row> result = addAll(projectRows, subjectRows, objectiveRows, pointRows,pointLevelRows,subjectLevelRows,questRows);
-        List<Row> result = addAll(projectRows, subjectRows, objectiveRows, pointRows);
-        LOG.info("result size  ...{}", result.size());
-//        List<Row> result = addAll(objectiveRows);
+        List<Row> subjectLevelRows = querySubjectLevelData(projectId);
+        LOG.info("subjectLevelRows size ... {}", subjectLevelRows.size());
+
+        List<Row> questRows = queryQuestData(projectId);
+        LOG.info("questRows  size ... {}", questRows.size());
+
+        List<Row> result = addAll(projectRows, subjectRows, objectiveRows, pointRows, pointLevelRows, subjectLevelRows, questRows);
         List<Average> collect = result.stream().map(row -> pakObj(row, projectId)).collect(Collectors.toList());
         LOG.info("查询完成 AverageScore  共 {} 条数据......", collect.size());
         return collect;
@@ -190,8 +198,27 @@ public class AverageScoreQuery {
 
     }
 
+    private List<Row> queryPointLevelData(String projectId) {
+        List<Row> result = new ArrayList<>();
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String provinceSql = POINT_LEVEL.replace("{{rangeName}}", Range.PROVINCE)
+                .replace("{{rangeId}}", Range.PROVINCE);
+        List<Row> provinceRows = projectDao.query(provinceSql);
+        pointLevelConvertToResult(result, provinceRows);
 
-    private List<Row> processQuestData(String projectId) {
+        String schoolSql = POINT_LEVEL.replace("{{rangeName}}", Range.SCHOOL)
+                .replace("{{rangeId}}", "school_id");
+        List<Row> schoolRows = projectDao.query(schoolSql);
+        pointLevelConvertToResult(result, schoolRows);
+
+        String classSql = POINT_LEVEL.replace("{{rangeName}}", Range.CLASS)
+                .replace("{{rangeId}}", "class_id");
+        List<Row> classRows = projectDao.query(classSql);
+        pointLevelConvertToResult(result, classRows);
+        return result;
+    }
+
+    private List<Row> queryQuestData(String projectId) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
         String tmp = QUEST_DATA.replace("{{targetName}}", Target.SUBJECT);
         List<ExamQuest> quests = questService.queryQuests(projectId);
@@ -213,31 +240,36 @@ public class AverageScoreQuery {
         return result;
     }
 
-    private List<Row> processSubjectLevelData(String projectId) {
-        return null;
-    }
-
-    private List<Row> processPointLevelData(String projectId) {
-        List<Row> result = new ArrayList<>();
+    private List<Row> querySubjectLevelData(String projectId) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
-        String provinceSql = POINT_LEVEL.replace("{{rangeName}}", Range.PROVINCE)
-                .replace("{{rangeId}}", Range.PROVINCE);
-        List<Row> provinceRows = projectDao.query(provinceSql);
-        convertToResult(result, provinceRows);
+        List<Row> result = new ArrayList<>();
+        String tmp = SUBJECT_LEVEL.replace("{{targetName}}", Target.SUBJECT_LEVEL);
+        List<Row> classRows = projectDao.query(tmp.replace("{{rangeId}}", "class_id").replace("{{rangeName}}", Range.CLASS));
+        List<Row> schoolRows = projectDao.query(tmp.replace("{{rangeId}}", "school_id").replace("{{rangeName}}", Range.SCHOOL));
+        List<Row> provinceRows = projectDao.query(tmp.replace("{{rangeId}}", Range.PROVINCE).replace("{{rangeName}}", Range.PROVINCE));
 
-        String schoolSql = POINT_LEVEL.replace("{{rangeName}}", Range.SCHOOL)
-                .replace("{{rangeId}}", "school_id");
-        List<Row> schoolRows = projectDao.query(schoolSql);
-        convertToResult(result, schoolRows);
+        subjectLevelConvertToResult(result, classRows);
+        subjectLevelConvertToResult(result, schoolRows);
+        subjectLevelConvertToResult(result, provinceRows);
 
-        String classSql = POINT_LEVEL.replace("{{rangeName}}", Range.CLASS)
-                .replace("{{rangeId}}", "class_id");
-        List<Row> classRows = projectDao.query(classSql);
-        convertToResult(result, classRows);
         return result;
     }
 
-    private void convertToResult(List<Row> result, List<Row> rows) {
+    private void subjectLevelConvertToResult(List<Row> result, List<Row> rows) {
+        rows.forEach(row -> {
+            Map<String, String> map = new HashMap<>();
+            String targetName = row.getString("target_name");
+            String rangeId = row.getString("range_id");
+            String rangeName = row.getString("range_name");
+            double average = row.getDouble("average", 0);
+            map.put("level", row.getString("level"));
+            map.put("subject", row.getString("subject"));
+            result.add(createRow(average, rangeName, rangeId, targetName, map));
+        });
+
+    }
+
+    private void pointLevelConvertToResult(List<Row> result, List<Row> rows) {
         rows.forEach(row -> {
             double average = row.getDouble("average", 0);
             String rangeId = row.getString("range_id");
@@ -248,7 +280,6 @@ public class AverageScoreQuery {
             result.add(createRow(average, rangeName, rangeId, Target.POINT_LEVEL, pointLevel));
         });
     }
-
 
     private Row createRow(double average, String rangeName, String rangeId, String targetName, Object targetId) {
         Row result = new Row();

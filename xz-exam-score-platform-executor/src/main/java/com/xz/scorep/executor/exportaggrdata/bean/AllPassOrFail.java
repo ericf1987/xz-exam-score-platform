@@ -6,9 +6,10 @@ import java.io.Serializable;
 
 /**
  * 全科及格/不及格率
+ *
  * @author by fengye on 2017/7/17.
  */
-public class AllPassOrFail extends MongoAggrObject implements Serializable{
+public class AllPassOrFail extends MongoAggrObject implements Serializable {
     private Range range;
 
     private int allPassCount;
@@ -18,6 +19,38 @@ public class AllPassOrFail extends MongoAggrObject implements Serializable{
     private int allFailCount;
 
     private double allFailRate;
+
+    private int allExcellentCount;
+
+    private double allExcellentRate;
+
+    private int allGoodCount;
+
+    private double allGoodRate;
+
+    public AllPassOrFail() {
+    }
+
+    public AllPassOrFail(Range range, int allPassCount, double allPassRate, int allFailCount, double allFailRate) {
+        this.range = range;
+        this.allPassCount = allPassCount;
+        this.allPassRate = allPassRate;
+        this.allFailCount = allFailCount;
+        this.allFailRate = allFailRate;
+    }
+
+    public AllPassOrFail(Range range, int allPassCount, double allPassRate, int allFailCount, double allFailRate,
+                         int allExcellentCount, double allExcellentRate, int allGoodCount, double allGoodRate) {
+        this.range = range;
+        this.allPassCount = allPassCount;
+        this.allPassRate = allPassRate;
+        this.allFailCount = allFailCount;
+        this.allFailRate = allFailRate;
+        this.allExcellentCount = allExcellentCount;
+        this.allExcellentRate = allExcellentRate;
+        this.allGoodCount = allGoodCount;
+        this.allGoodRate = allGoodRate;
+    }
 
     public Range getRange() {
         return range;
@@ -59,15 +92,36 @@ public class AllPassOrFail extends MongoAggrObject implements Serializable{
         this.allFailRate = allFailRate;
     }
 
-    public AllPassOrFail() {
+    public int getAllExcellentCount() {
+        return allExcellentCount;
     }
 
-    public AllPassOrFail(Range range, int allPassCount, double allPassRate, int allFailCount, double allFailRate) {
-        this.range = range;
-        this.allPassCount = allPassCount;
-        this.allPassRate = allPassRate;
-        this.allFailCount = allFailCount;
-        this.allFailRate = allFailRate;
+    public void setAllExcellentCount(int allExcellentCount) {
+        this.allExcellentCount = allExcellentCount;
+    }
+
+    public double getAllExcellentRate() {
+        return allExcellentRate;
+    }
+
+    public void setAllExcellentRate(double allExcellentRate) {
+        this.allExcellentRate = allExcellentRate;
+    }
+
+    public int getAllGoodCount() {
+        return allGoodCount;
+    }
+
+    public void setAllGoodCount(int allGoodCount) {
+        this.allGoodCount = allGoodCount;
+    }
+
+    public double getAllGoodRate() {
+        return allGoodRate;
+    }
+
+    public void setAllGoodRate(double allGoodRate) {
+        this.allGoodRate = allGoodRate;
     }
 
     @Override
@@ -78,6 +132,10 @@ public class AllPassOrFail extends MongoAggrObject implements Serializable{
                 ", allPassRate=" + allPassRate +
                 ", allFailCount=" + allFailCount +
                 ", allFailRate=" + allFailRate +
+                ", allExcellentCount=" + allExcellentCount +
+                ", allExcellentRate=" + allExcellentRate +
+                ", allGoodCount=" + allGoodCount +
+                ", allGoodRate=" + allGoodRate +
                 '}';
     }
 }

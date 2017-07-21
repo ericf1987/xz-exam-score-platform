@@ -12,8 +12,9 @@ import java.util.List;
  * @author by fengye on 2017/7/17.
  */
 @Component
-public class AllPassOrFailCreator implements ScoreDataEntryCreator{
+public class AllPassOrFailCreator implements ScoreDataEntryCreator {
 
+    //包含全科及格率,全科不及格率,全科优秀率,全科良好率
     public static final String ENTRY_NAME = "all_subject_pass_rate.json";
 
     @Override

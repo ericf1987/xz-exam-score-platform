@@ -27,7 +27,9 @@ public class AllPassOrFailQuery {
 
     private static final Logger LOG = LoggerFactory.getLogger(AllPassOrFailQuery.class);
 
-    public static final String QUERY_DATA = "select * from all_pass_or_fail";
+    private static final String QUERY_DATA = "select * from all_pass_or_fail a\n" +
+            "left join all_excellent_or_good b\n" +
+            "on a.range_type = b.range_type and a.range_id = b.range_id";
 
     public List<Row> queryData(String projectId) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
@@ -52,8 +54,16 @@ public class AllPassOrFailQuery {
         range.setName(r.getString("range_type"));
         range.setId(r.getString("range_id"));
         allPassOrFail.setRange(range);
+
+        allPassOrFail.setAllExcellentCount(r.getInteger("all_excellent_count", 0));
+        allPassOrFail.setAllExcellentRate(r.getDouble("all_excellent_rate", 0));
+
+        allPassOrFail.setAllGoodCount(r.getInteger("all_good_count", 0));
+        allPassOrFail.setAllGoodRate(r.getDouble("all_good_rate", 0));
+
         allPassOrFail.setAllPassCount(r.getInteger("all_pass_count", 0));
         allPassOrFail.setAllPassRate(r.getDouble("all_pass_rate", 0));
+
         allPassOrFail.setAllFailCount(r.getInteger("all_fail_count", 0));
         allPassOrFail.setAllFailRate(r.getDouble("all_fail_rate", 0));
 
