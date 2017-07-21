@@ -106,16 +106,16 @@ public class AllExcellentGoodFailAggregator extends Aggregator {
         StringBuilder sqlBuilder = new StringBuilder("select st.id as student_id,st.class_id,st.school_id,");
 
         // if (score_001>=90 and score_002>=90 and ..., 'true', 'false') as all_excellent
-        String allPass = "if (" + String.join(" and ", subjects.stream().map(
+        String allExcellent = "if (" + String.join(" and ", subjects.stream().map(
                 subject -> "score_" + subject.getId() + ">=" + excellentScore.get(subject.getId()))
                 .collect(Collectors.toList())) + ", 'true', 'false') as all_excellent";
 
         // if (score_001>=80 and score_002>=80 and ..., 'true', 'false') as all_good
-        String allFail = "if (" + String.join(" and ", subjects.stream().map(
+        String allGood = "if (" + String.join(" and ", subjects.stream().map(
                 subject -> "score_" + subject.getId() + ">=" + goodScores.get(subject.getId()))
                 .collect(Collectors.toList())) + ", 'true', 'false') as all_good";
 
-        sqlBuilder.append(allPass).append(",").append(allFail).append(" from (select s.student_id,");
+        sqlBuilder.append(allExcellent).append(",").append(allGood).append(" from (select s.student_id,");
 
         String scoreColumns = String.join(",", subjects.stream().map(
                 subject -> "ifnull(score_subject_" + subject.getId() + ".score,0) as score_" + subject.getId())
@@ -153,7 +153,8 @@ public class AllExcellentGoodFailAggregator extends Aggregator {
                 provinceAllExcellentCount.incrementAndGet();
                 schoolAllExcellentCount.incre(row.getString("school_id"));
                 classAllExcellentCount.incre(row.getString("class_id"));
-            } else if (row.get("all_good").equals("true")) {
+            }
+            if (row.get("all_good").equals("true")) {
                 provinceAllGoodCount.incrementAndGet();
                 schoolAllGoodCount.incre(row.getString("school_id"));
                 classAllGoodCount.incre(row.getString("class_id"));
