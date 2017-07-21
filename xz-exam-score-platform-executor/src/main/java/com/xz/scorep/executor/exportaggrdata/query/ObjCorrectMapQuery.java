@@ -31,13 +31,13 @@ public class ObjCorrectMapQuery {
     private DAOFactory daoFactory;
 
     public List<ObjCorrectMap> queryData(String projectId) {
-        LOG.info("开始导出  ObjCorrectMap  得分率......");
+        LOG.info("开始查询 ObjCorrectMap  数据......");
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<Row> rows = projectDao.query(QUERY_DATA);
         List<ObjCorrectMap> result = rows.stream()
                 .map(row -> pakObj(row, projectId))
                 .collect(Collectors.toList());
-        LOG.info("ObjCorrectMap  导出完毕......");
+        LOG.info("查询完成 ObjCorrectMap  共 {} 条数据......", result.size());
         return result;
     }
 

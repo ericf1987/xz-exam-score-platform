@@ -31,13 +31,13 @@ public class MaxMinQuery {
     public static final String QUERY_MIN_MAX_DATA = "select * from max_min_score ";
 
     public List<MaxMin> queryData(String projectId) {
-        LOG.info("开始导出 maxMin 数据.....");
+        LOG.info("开始查询 maxMin 数据.....");
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<Row> query = projectDao.query(QUERY_MIN_MAX_DATA);
         List<MaxMin> collect = query.stream()
                 .map(row -> pakObj(row, projectId))
                 .collect(Collectors.toList());
-        LOG.info("maxMin  导出数据完毕.....");
+        LOG.info("查询完成 maxMin  共 {} 条数据.....", collect.size());
         return collect;
     }
 
