@@ -1,5 +1,9 @@
 package com.xz.scorep.executor.exportaggrdata.bean;
 
+import com.hyd.simplecache.utils.MD5;
+
+import java.util.UUID;
+
 /**
  * @author by fengye on 2017/7/17.
  */
@@ -23,5 +27,10 @@ public class MongoAggrObject {
 
     public void setMd5(String md5) {
         this.md5 = md5;
+    }
+
+    public void setAggrObject(MongoAggrObject mongoAggrObject, String projectId){
+        mongoAggrObject.setProject(projectId);
+        mongoAggrObject.setMd5(MD5.digest(UUID.randomUUID().toString()));
     }
 }

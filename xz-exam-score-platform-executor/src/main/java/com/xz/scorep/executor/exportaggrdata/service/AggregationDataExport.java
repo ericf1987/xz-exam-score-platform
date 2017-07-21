@@ -71,6 +71,9 @@ public class AggregationDataExport {
     ScoreLevelMapQuery scoreLevelMapQuery;
 
     @Autowired
+    ScoreRateQuery scoreRateQuery;
+
+    @Autowired
     NotifyImportMysqlDump notifyImportMysqlDump;
 
     static final Logger LOG = LoggerFactory.getLogger(AggregationDataExport.class);
@@ -130,6 +133,8 @@ public class AggregationDataExport {
         List<RankSegment> rankSegments = rankSegmentQuery.queryObj(projectId);
         //分数等级
         List<ScoreLevelMap> scoreLevelMaps = scoreLevelMapQuery.queryObj(projectId);
+        //得分率
+        List<ScoreRate> scoreRates = scoreRateQuery.queryObj(projectId);
 
         context.getAllPassOrFails().addAll(allPassOrFails);
         context.getAverages().addAll(averages);
@@ -143,6 +148,7 @@ public class AggregationDataExport {
         context.getRankLevelMaps().addAll(rankLevelMaps);
         context.getRankSegments().addAll(rankSegments);
         context.getScoreLevelMaps().addAll(scoreLevelMaps);
+        context.getScoreRates().addAll(scoreRates);
 
         try {
             FileUtils.writeFile(context.createZipArchive(), new File(filePath));

@@ -21,7 +21,11 @@ public class SqlUtils {
         return sql.replace(tag, replace);
     }
 
-    public static class GroupType{
+    public static String replaceSubjectId(String sql, String replace) {
+        return sql.replace("{{subject_id}}", replace);
+    }
+
+    public static class GroupType {
         public static final String MAX = "MAX";
         public static final String MIN = "MIN";
         public static final String AVG = "AVG";
@@ -70,7 +74,7 @@ public class SqlUtils {
                         Range.CLASS.equals(rangeName) ? sql.replace("{{range_id}}", "class_id") : sql;
     }
 
-    public static String renderGroupType(String sql, String... groupTypes){
+    public static String renderGroupType(String sql, String... groupTypes) {
         StringBuilder builder = new StringBuilder();
         for (String groupType : groupTypes) {
             builder.append(groupType).append("(scores.score) ").append(groupType).append(",");

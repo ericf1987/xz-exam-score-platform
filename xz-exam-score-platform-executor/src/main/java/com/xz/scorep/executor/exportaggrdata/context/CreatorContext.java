@@ -7,7 +7,10 @@ import com.xz.scorep.executor.exportaggrdata.packcreator.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -34,6 +37,7 @@ public class CreatorContext {
         ENTRY_CREATORS.add(new QuestTypeScoreCreator());
         ENTRY_CREATORS.add(new ScoreLevelMapCreator());
         ENTRY_CREATORS.add(new QuestTypeScoreAverageCreator());
+        ENTRY_CREATORS.add(new ScoreRateCreator());
     }
 
     //全科及格率
@@ -71,6 +75,9 @@ public class CreatorContext {
 
     //分数等级
     private final List<ScoreLevelMap> scoreLevelMaps = new ArrayList<>();
+
+    //得分率
+    public List<ScoreRate> scoreRates = new ArrayList<>();
 
     //题目题型得分平均分
     public List<QuestTypeScoreAverage> getQuestTypeScoreAverages() {
@@ -119,6 +126,10 @@ public class CreatorContext {
 
     public List<ScoreLevelMap> getScoreLevelMaps() {
         return scoreLevelMaps;
+    }
+
+    public List<ScoreRate> getScoreRates() {
+        return scoreRates;
     }
 
     public byte[] createZipArchive() {
