@@ -93,8 +93,6 @@ public class AllExcellentGoodFailAggregator extends Aggregator {
                 )
         ));
         String sql = generateSql(subjects, goodScore, excellentScore);
-        System.out.println(excellentScore);
-        System.out.println(sql);
 
         List<Row> rows = projectDao.query(sql);
 
@@ -107,12 +105,12 @@ public class AllExcellentGoodFailAggregator extends Aggregator {
                                Map<String, Double> excellentScore) {
         StringBuilder sqlBuilder = new StringBuilder("select st.id as student_id,st.class_id,st.school_id,");
 
-        // if (score_001>=90 and score_002>=90 and ..., 'true', 'false') as all_pass
+        // if (score_001>=90 and score_002>=90 and ..., 'true', 'false') as all_excellent
         String allPass = "if (" + String.join(" and ", subjects.stream().map(
                 subject -> "score_" + subject.getId() + ">=" + excellentScore.get(subject.getId()))
                 .collect(Collectors.toList())) + ", 'true', 'false') as all_excellent";
 
-        // if (score_001>=80 and score_002>=80 and ..., 'true', 'false') as all_pass
+        // if (score_001>=80 and score_002>=80 and ..., 'true', 'false') as all_good
         String allFail = "if (" + String.join(" and ", subjects.stream().map(
                 subject -> "score_" + subject.getId() + ">=" + goodScores.get(subject.getId()))
                 .collect(Collectors.toList())) + ", 'true', 'false') as all_good";
