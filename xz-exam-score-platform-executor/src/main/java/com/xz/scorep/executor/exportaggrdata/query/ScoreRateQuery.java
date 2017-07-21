@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.xz.scorep.executor.exportaggrdata.utils.AggrBeanUtils.setTarget;
+
 /**
  * @author by fengye on 2017/7/21.
  */
@@ -83,13 +85,7 @@ public class ScoreRateQuery {
         range.setName(Range.STUDENT);
 
         Target target = new Target();
-        if(!StringUtils.isEmpty(subjectId)){
-            target.setId(subjectId);
-            target.setName(Target.SUBJECT);
-        }else{
-            target.setId(projectId);
-            target.setName(Target.PROJECT);
-        }
+        setTarget(projectId, subjectId, target);
 
         scoreRate.setAggrObject(scoreRate, projectId);
         scoreRate.setRange(range);

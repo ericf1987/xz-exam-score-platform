@@ -38,6 +38,7 @@ public class CreatorContext {
         ENTRY_CREATORS.add(new ScoreLevelMapCreator());
         ENTRY_CREATORS.add(new QuestTypeScoreAverageCreator());
         ENTRY_CREATORS.add(new ScoreRateCreator());
+        ENTRY_CREATORS.add(new StdDeviationCreator());
     }
 
     //全科及格率
@@ -78,6 +79,8 @@ public class CreatorContext {
 
     //得分率
     public List<ScoreRate> scoreRates = new ArrayList<>();
+
+    public List<StdDeviation> stdDeviations = new ArrayList<>();
 
     //题目题型得分平均分
     public List<QuestTypeScoreAverage> getQuestTypeScoreAverages() {
@@ -130,6 +133,10 @@ public class CreatorContext {
 
     public List<ScoreRate> getScoreRates() {
         return scoreRates;
+    }
+
+    public List<StdDeviation> getStdDeviations() {
+        return stdDeviations;
     }
 
     public byte[] createZipArchive() {

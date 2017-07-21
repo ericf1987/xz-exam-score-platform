@@ -8,6 +8,7 @@ import com.xz.scorep.executor.bean.*;
 import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.exportaggrdata.bean.ScoreLevelMap;
+import com.xz.scorep.executor.exportaggrdata.utils.AggrBeanUtils;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.project.SubjectService;
@@ -19,6 +20,9 @@ import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.xz.scorep.executor.exportaggrdata.utils.AggrBeanUtils.*;
+import static com.xz.scorep.executor.utils.SqlUtils.chooseProjectOrSubject;
 
 /**
  * @author by fengye on 2017/7/20.
@@ -97,13 +101,6 @@ public class ScoreLevelMapQuery {
         }
     }
 
-    private boolean chooseProjectOrSubject(String projectId, String subjectId, Row r) {
-
-        return StringUtils.isEmpty(subjectId) ?
-                projectId.equals(r.getString("target_id")) : subjectId.equals(r.getString("target_id"));
-
-    }
-
     private ScoreLevelMap packScoreLevelMap(String projectId, String subjectId, String rangeName, String rangeId, List<Row> data) {
 
         ScoreLevelMap scoreLevelMapObj = new ScoreLevelMap();
@@ -115,13 +112,7 @@ public class ScoreLevelMapQuery {
         range.setName(rangeName);
 
         Target target = new Target();
-        if(StringUtils.isEmpty(subjectId)){
-            target.setId(projectId);
-            target.setName(Target.PROJECT);
-        }else{
-            target.setId(subjectId);
-            target.setName(Target.SUBJECT);
-        }
+        setTarget(projectId, subjectId, target);
 
         List<Map<String, Object>> scoreLevels = new ArrayList<>();
         for (Row row : data) {
@@ -147,4 +138,5 @@ public class ScoreLevelMapQuery {
 
         return scoreLevelMapObj;
     }
+
 }

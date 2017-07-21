@@ -6,8 +6,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.junit.Assert.*;
-
 /**
  * @author luckylo
  * @createTime 2017-07-19.

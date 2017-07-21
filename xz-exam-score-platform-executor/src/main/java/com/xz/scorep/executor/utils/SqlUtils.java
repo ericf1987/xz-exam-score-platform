@@ -1,8 +1,10 @@
 package com.xz.scorep.executor.utils;
 
 import com.hyd.dao.DAO;
+import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.bean.Range;
+import org.springframework.util.StringUtils;
 
 /**
  * @author by fengye on 2017/5/7.
@@ -66,7 +68,7 @@ public class SqlUtils {
      *
      * @param rangeName 维度名称
      * @param sql       SQL语句
-     * @return
+     * @return 返回结果
      */
     public static String replaceRangeId(String rangeName, String sql) {
         return Range.PROVINCE.equals(rangeName) ? sql.replace("{{range_id}}", "province") :
@@ -86,5 +88,20 @@ public class SqlUtils {
         return "AVG".equals(groupType) ? sql.replace("{{group_type}}", "AVG") :
                 "MAX".equals(groupType) ? sql.replace("{{group_type}}", "MAX") :
                         "MIN".equals(groupType) ? sql.replace("{{group_type}}", "MIN") : sql;
+    }
+
+    /**
+     * 记录中的target_id匹配项目ID或者科目ID
+     *
+     * @param projectId 项目ID
+     * @param subjectId 科目ID
+     * @param r         单行记录
+     * @return 返回结果
+     */
+    public static boolean chooseProjectOrSubject(String projectId, String subjectId, Row r) {
+
+        return StringUtils.isEmpty(subjectId) ?
+                projectId.equals(r.getString("target_id")) : subjectId.equals(r.getString("target_id"));
+
     }
 }
