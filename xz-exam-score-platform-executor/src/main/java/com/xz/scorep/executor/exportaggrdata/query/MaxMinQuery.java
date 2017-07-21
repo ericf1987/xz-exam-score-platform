@@ -37,7 +37,7 @@ public class MaxMinQuery {
         List<MaxMin> collect = query.stream()
                 .map(row -> pakObj(row, projectId))
                 .collect(Collectors.toList());
-        LOG.info("导出 maxMin 数据完毕.....");
+        LOG.info("maxMin  导出数据完毕.....");
         return collect;
     }
 

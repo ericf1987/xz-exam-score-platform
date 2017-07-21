@@ -39,7 +39,7 @@ public class OverAverageQuery {
 
 
     public List<OverAverage> queryData(String projectId) {
-        LOG.info("开始导出超出平均分数据....");
+        LOG.info("开始导出  OverAverage  数据....");
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<Row> projectOverAverage = projectDao.query(QUERY.replace("{{table}}", "over_average_project"));
 
@@ -52,7 +52,7 @@ public class OverAverageQuery {
         List<OverAverage> result = list.stream()
                 .map(li -> pakObj(li, projectId))
                 .collect(Collectors.toList());
-        LOG.info("导出超出平均分数据完毕....");
+        LOG.info("导出  OverAverage  数据完毕....");
         return result;
     }
 

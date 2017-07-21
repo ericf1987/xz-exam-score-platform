@@ -32,6 +32,7 @@ public class CreatorContext {
         ENTRY_CREATORS.add(new RankSegmentCreator());
         ENTRY_CREATORS.add(new QuestDeviationCreator());
         ENTRY_CREATORS.add(new QuestTypeScoreCreator());
+        ENTRY_CREATORS.add(new ScoreLevelMapCreator());
     }
 
     //全科及格率
@@ -61,8 +62,11 @@ public class CreatorContext {
     //排名等第
     private final List<RankLevelMap> rankLevelMaps = new ArrayList<>();
 
-    //分数分段
+    //排名分段
     private final List<RankSegment> rankSegments = new ArrayList<>();
+
+    //分数等级
+    private final List<ScoreLevelMap> scoreLevelMaps = new ArrayList<>();
 
     public List<AllPassOrFail> getAllPassOrFails() {
         return allPassOrFails;
@@ -102,6 +106,10 @@ public class CreatorContext {
 
     public List<RankSegment> getRankSegments() {
         return rankSegments;
+    }
+
+    public List<ScoreLevelMap> getScoreLevelMaps() {
+        return scoreLevelMaps;
     }
 
     public byte[] createZipArchive() {

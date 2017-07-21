@@ -38,11 +38,11 @@ public class AllPassOrFailQuery {
     }
 
     public List<AllPassOrFail> queryObj(String projectId) {
-        LOG.info("开始导出全科及格全科不及格率数据.....");
+        LOG.info("开始导出  AllPassOrFail  数据.....");
         List<Row> rows = queryData(projectId);
 
         List<AllPassOrFail> result = rows.stream().map(r -> packObj(projectId, r)).collect(Collectors.toList());
-        LOG.info("全科及格全科不及格率数据导出完毕.....");
+        LOG.info("AllPassOrFail  数据导出完毕.....");
         return result;
     }
 

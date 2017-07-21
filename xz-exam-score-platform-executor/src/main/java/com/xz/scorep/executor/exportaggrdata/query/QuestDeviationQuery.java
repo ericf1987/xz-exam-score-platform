@@ -30,13 +30,13 @@ public class QuestDeviationQuery {
     private DAOFactory daoFactory;
 
     public List<QuestDeviation> queryData(String projectId) {
-        LOG.info("开始导出題目区分度....");
+        LOG.info("开始导出  QuestDeviation  ....");
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<Row> rows = projectDao.query(QUERY);
         List<QuestDeviation> result = rows.stream()
                 .map(row -> pakObj(row, projectId))
                 .collect(Collectors.toList());
-        LOG.info("題目区分度导出完毕.... result size {}", result.size());
+        LOG.info("QuestDeviation  导出完毕.... ");
         return result;
     }
 

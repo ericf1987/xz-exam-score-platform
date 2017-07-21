@@ -85,7 +85,7 @@ public class AverageScoreQuery {
     public List<Average> queryData(String projectId) {
         //project,subject,subjectCombination,subjectObjective,point,pointLevel,subjectLevel,quest
         List<ExamSubject> subjects = subjectService.listSubjects(projectId);
-        LOG.info("开始导出平均分数据.....");
+        LOG.info("开始导出  AverageScore  数据.....");
 
         List<Row> projectRows = queryProjectData(projectId);
         LOG.info("projectRows  size ... {}", projectRows.size());
@@ -112,7 +112,7 @@ public class AverageScoreQuery {
         LOG.info("result size  ...{}", result.size());
 //        List<Row> result = addAll(objectiveRows);
         List<Average> collect = result.stream().map(row -> pakObj(row, projectId)).collect(Collectors.toList());
-        LOG.info("平均分数据导出完毕......");
+        LOG.info("AverageScore  数据导出完毕......");
         return collect;
     }
 

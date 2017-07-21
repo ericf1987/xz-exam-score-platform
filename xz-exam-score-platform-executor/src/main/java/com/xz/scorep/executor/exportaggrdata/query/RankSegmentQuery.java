@@ -10,6 +10,8 @@ import com.xz.scorep.executor.exportaggrdata.bean.RankSegment;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.project.SubjectService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -37,9 +39,13 @@ public class RankSegmentQuery {
     @Autowired
     SubjectService subjectService;
 
+    static final Logger LOG = LoggerFactory.getLogger(RankSegmentQuery.class);
+
     public static final String QUERY_DATA = "select * from rank_segment";
 
     public List<RankSegment> queryObj(String projectId){
+
+        LOG.info("开始查询 rank_level 数据.....");
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
@@ -60,6 +66,8 @@ public class RankSegmentQuery {
         }
 
         doProcess(projectId, rows, projectSchools, projectClasses, result, "000");
+
+        LOG.info("查询完成 rankSegment 共 {} 条.....", result.size());
 
         return result;
     }

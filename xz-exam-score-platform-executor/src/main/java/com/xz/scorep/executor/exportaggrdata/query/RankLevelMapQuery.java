@@ -10,6 +10,8 @@ import com.xz.scorep.executor.exportaggrdata.bean.RankLevelMap;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.project.SubjectService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -37,11 +39,15 @@ public class RankLevelMapQuery {
     @Autowired
     SubjectService subjectService;
 
+    static final Logger LOG = LoggerFactory.getLogger(RankLevelMapQuery.class);
+
     public static final String SCHOOL_DATA_QUERY = "select * from rank_level_map_school";
     public static final String CLASS_DATA_QUERY = "select * from rank_level_map_class";
     public static final String PROJECT_DATA_QUERY = "select * from rank_level_map_project";
 
     public List<RankLevelMap> queryObj(String projectId){
+
+        LOG.info("开始查询 rank_level_map 数据.....");
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
@@ -94,6 +100,8 @@ public class RankLevelMapQuery {
             ).collect(Collectors.toList());
             result.add(packProjectRankLevelMap(projectId, Range.CLASS, classId, projectData));
         }
+
+        LOG.info("查询完成 rank_level_map 共 {} 条.....", result.size());
 
         return result;
     }
