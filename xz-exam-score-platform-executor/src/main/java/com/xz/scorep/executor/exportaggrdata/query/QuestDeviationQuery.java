@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Component
 public class QuestDeviationQuery {
 
-    public static final String QUERY = "select * quest_deviation";
+    public static final String QUERY = "select * from quest_deviation";
 
     private static final Logger LOG = LoggerFactory.getLogger(QuestDeviationQuery.class);
 
@@ -30,13 +30,13 @@ public class QuestDeviationQuery {
     private DAOFactory daoFactory;
 
     public List<QuestDeviation> queryData(String projectId) {
-        LOG.info("开始导出  QuestDeviation  ....");
+        LOG.info("开始查询 QuestDeviation  ....");
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<Row> rows = projectDao.query(QUERY);
-        List<QuestDeviation> result = rows.stream()
+        List<QuestDeviation> result = rows.parallelStream()
                 .map(row -> pakObj(row, projectId))
                 .collect(Collectors.toList());
-        LOG.info("QuestDeviation  导出完毕.... ");
+        LOG.info("查询完成 QuestDeviation  共 {} 条数据.... ", result.size());
         return result;
     }
 

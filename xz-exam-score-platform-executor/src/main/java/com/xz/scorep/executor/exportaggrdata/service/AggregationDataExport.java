@@ -47,6 +47,9 @@ public class AggregationDataExport {
     OverAverageQuery overAverageQuery;
 
     @Autowired
+    QuestDeviationQuery questDeviationQuery;
+
+    @Autowired
     QuestTypeScoreQuery questTypeScoreQuery;
 
     @Autowired
@@ -110,7 +113,9 @@ public class AggregationDataExport {
         List<ObjCorrectMap> correctMaps = objCorrectMapQuery.queryData(projectId);
         //超出平均分
         List<OverAverage> overAverages = overAverageQuery.queryData(projectId);
-
+        //题目区分度
+        List<QuestDeviation> questDeviations = questDeviationQuery.queryData(projectId);
+        //题目题型得分
         List<Map<String, Object>> questTypeScoreMaps = questTypeScoreQuery.queryData(projectId);
         //等级排名
         List<RankLevel> rankLevels = rankLevelQuery.queryObj(projectId);
@@ -126,6 +131,7 @@ public class AggregationDataExport {
         context.getMaxMins().addAll(minMaxes);
         context.getObjCorrectMaps().addAll(correctMaps);
         context.getOverAverages().addAll(overAverages);
+        context.getQuestDeviations().addAll(questDeviations);
         context.getQuestTypeScores().addAll(questTypeScoreMaps);
         context.getRankLevels().addAll(rankLevels);
         context.getRankLevelMaps().addAll(rankLevelMaps);
