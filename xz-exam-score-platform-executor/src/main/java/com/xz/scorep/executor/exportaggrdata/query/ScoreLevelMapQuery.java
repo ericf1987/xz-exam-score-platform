@@ -78,7 +78,7 @@ public class ScoreLevelMapQuery {
             String schoolId = projectSchool.getId();
 
             List<Row> data = rows.stream().filter(
-                    r -> schoolId.equals(r.getString("range_id")) && subjectId.equals(r.getString("target_id"))
+                    r -> schoolId.equals(r.getString("range_id")) && chooseProjectOrSubject(projectId, subjectId, r)
             ).collect(Collectors.toList());
 
             //学校单个科目数据
@@ -89,12 +89,19 @@ public class ScoreLevelMapQuery {
             String classId = projectClass.getId();
 
             List<Row> data = rows.stream().filter(
-                    r -> classId.equals(r.getString("range_id")) && subjectId.equals(r.getString("target_id"))
+                    r -> classId.equals(r.getString("range_id")) && chooseProjectOrSubject(projectId, subjectId, r)
             ).collect(Collectors.toList());
 
             //班级单个科目数据
             scoreLevelMaps.add(packScoreLevelMap(projectId, subjectId, Range.CLASS, classId, data));
         }
+    }
+
+    private boolean chooseProjectOrSubject(String projectId, String subjectId, Row r) {
+
+        return StringUtils.isEmpty(subjectId) ?
+                projectId.equals(r.getString("target_id")) : subjectId.equals(r.getString("target_id"));
+
     }
 
     private ScoreLevelMap packScoreLevelMap(String projectId, String subjectId, String rangeName, String rangeId, List<Row> data) {
@@ -134,6 +141,8 @@ public class ScoreLevelMapQuery {
             scoreLevels.add(map);
         }
 
+        scoreLevelMapObj.setRange(range);
+        scoreLevelMapObj.setTarget(target);
         scoreLevelMapObj.getScoreLevels().addAll(scoreLevels);
 
         return scoreLevelMapObj;
