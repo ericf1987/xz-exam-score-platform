@@ -27,19 +27,20 @@ public class CreatorContext {
     static {
         ENTRY_CREATORS.add(new AllPassOrFailCreator());
         ENTRY_CREATORS.add(new AverageCreator());
+        ENTRY_CREATORS.add(new MaxMinCreator());
+        ENTRY_CREATORS.add(new OverAverageCreator());
+        ENTRY_CREATORS.add(new QuestDeviationCreator());
+        ENTRY_CREATORS.add(new ObjCorrectMapCreator());
+        ENTRY_CREATORS.add(new QuestTypeScoreCreator());
+        ENTRY_CREATORS.add(new QuestTypeScoreAverageCreator());
         ENTRY_CREATORS.add(new RankLevelCreator());
         ENTRY_CREATORS.add(new RankLevelMapCreator());
-        ENTRY_CREATORS.add(new MaxMinCreator());
-        ENTRY_CREATORS.add(new ObjCorrectMapCreator());
-        ENTRY_CREATORS.add(new OverAverageCreator());
         ENTRY_CREATORS.add(new RankSegmentCreator());
-        ENTRY_CREATORS.add(new QuestDeviationCreator());
-        ENTRY_CREATORS.add(new QuestTypeScoreCreator());
         ENTRY_CREATORS.add(new ScoreLevelMapCreator());
-        ENTRY_CREATORS.add(new QuestTypeScoreAverageCreator());
+        ENTRY_CREATORS.add(new TScoreCreator());
         ENTRY_CREATORS.add(new ScoreRateCreator());
         ENTRY_CREATORS.add(new StdDeviationCreator());
-        ENTRY_CREATORS.add(new TScoreCreator());
+        ENTRY_CREATORS.add(new SubjectRateCreator());
     }
 
     //全科及格率
@@ -84,12 +85,12 @@ public class CreatorContext {
     //得分率
     public List<ScoreRate> scoreRates = new ArrayList<>();
 
+    //标准差
     public List<StdDeviation> stdDeviations = new ArrayList<>();
 
-    //题目题型得分平均分
-    public List<QuestTypeScoreAverage> getQuestTypeScoreAverages() {
-        return questTypeScoreAverages;
-    }
+    //科目贡献度
+    public List<SubjectRate> subjectRates = new ArrayList<>();
+
 
     public List<AllPassOrFail> getAllPassOrFails() {
         return allPassOrFails;
@@ -99,12 +100,12 @@ public class CreatorContext {
         return averages;
     }
 
-    public List<ObjCorrectMap> getObjCorrectMaps() {
-        return objCorrectMaps;
-    }
-
     public List<MaxMin> getMaxMins() {
         return maxMins;
+    }
+
+    public List<ObjCorrectMap> getObjCorrectMaps() {
+        return objCorrectMaps;
     }
 
     public List<OverAverage> getOverAverages() {
@@ -145,6 +146,14 @@ public class CreatorContext {
 
     public List<TScore> gettScores() {
         return tScores;
+    }
+
+    public List<SubjectRate> getSubjectRates() {
+        return subjectRates;
+    }
+
+    public List<QuestTypeScoreAverage> getQuestTypeScoreAverages() {
+        return questTypeScoreAverages;
     }
 
     public byte[] createZipArchive() {
