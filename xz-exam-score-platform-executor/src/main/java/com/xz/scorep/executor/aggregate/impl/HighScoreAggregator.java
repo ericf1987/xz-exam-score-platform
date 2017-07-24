@@ -107,11 +107,11 @@ public class HighScoreAggregator extends Aggregator {
         double rate = reportConfig.getHighScoreRate();
 
         projectDao.execute("truncate table high_score");
-        LOG.info("项目ID {} 开始统计高分段学生平均分....");
+        LOG.info("项目ID {} 开始统计高分段学生平均分....", projectId);
 
         aggregate0(projectId, projectDao, rate);
 
-        LOG.info("项目ID {} 高分段学生平均分始统统计完成....");
+        LOG.info("项目ID {} 高分段学生平均分始统统计完成....", projectId);
 
     }
 
@@ -189,20 +189,13 @@ public class HighScoreAggregator extends Aggregator {
 
     private void aggregateQuestHighScore(String projectId, DAO projectDao, double rate) {
         List<Map<String, Object>> insertMap = new ArrayList<>();
-        Runnable runnable = () -> processData(projectId, projectDao, rate, insertMap);
-        Thread thread = new Thread(runnable);
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            LOG.info("统计失败.....");
-        }
+        processData(projectId, projectDao, rate, insertMap);
         projectDao.insert(insertMap, "high_score");
     }
 
     private void processData(String projectId, DAO projectDao, double rate, List<Map<String, Object>> insertMap) {
         questService.queryQuests(projectId)
-                .parallelStream()
+                .stream()
                 .forEach(quest -> {
                     String questId = quest.getId();
                     String table = "score_" + questId;

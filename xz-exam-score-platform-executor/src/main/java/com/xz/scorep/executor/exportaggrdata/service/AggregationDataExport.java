@@ -83,6 +83,9 @@ public class AggregationDataExport {
     SubjectRateQuery subjectRateQuery;
 
     @Autowired
+    TopAverageQuery topAverageQuery;
+
+    @Autowired
     NotifyImportMysqlDump notifyImportMysqlDump;
 
     static final Logger LOG = LoggerFactory.getLogger(AggregationDataExport.class);
@@ -150,6 +153,8 @@ public class AggregationDataExport {
         List<TScore> tScores = tScoreQuery.queryData(projectId);
         //科目贡献度
         List<SubjectRate> subjectRates = subjectRateQuery.queryObj(projectId);
+        //高分段平均分
+        List<TopAverage> topAverages = topAverageQuery.queryData(projectId);
 
         context.getAllPassOrFails().addAll(allPassOrFails);
         context.getAverages().addAll(averages);
@@ -167,6 +172,7 @@ public class AggregationDataExport {
         context.getStdDeviations().addAll(stdDeviations);
         context.gettScores().addAll(tScores);
         context.getSubjectRates().addAll(subjectRates);
+        context.getTopAverages().addAll(topAverages);
 
         try {
             FileUtils.writeFile(context.createZipArchive(), new File(filePath));
