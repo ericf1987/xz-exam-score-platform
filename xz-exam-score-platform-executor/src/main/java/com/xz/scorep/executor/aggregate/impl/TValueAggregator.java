@@ -5,6 +5,7 @@ import com.hyd.dao.Row;
 import com.xz.scorep.executor.aggregate.*;
 import com.xz.scorep.executor.bean.ExamSubject;
 import com.xz.scorep.executor.db.DAOFactory;
+import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.project.SubjectService;
 import org.slf4j.Logger;
@@ -41,6 +42,9 @@ public class TValueAggregator extends Aggregator {
     private static final String QUERY_SCHOOL_LIST = "select * from average_score where range_type = 'School' and " +
             "target_type = 'Subject' and target_id = '{{subjectId}}' ";
 
+    private static final String QUERY_CLASS_LIST = "select * from average_score where range_type = 'Class' and " +
+            "target_type = 'Subject' and target_id = '{{subjectId}}' ";
+
     @Autowired
     private DAOFactory daoFactory;
 
@@ -49,6 +53,9 @@ public class TValueAggregator extends Aggregator {
 
     @Autowired
     private SchoolService schoolService;
+
+    @Autowired
+    private ClassService classService;
 
     @Override
     public void aggregate(AggregateParameter aggregateParameter) throws Exception {
@@ -94,6 +101,22 @@ public class TValueAggregator extends Aggregator {
             double value = calculateTValue(stdDeviation, averageScore, schoolAverage);
 
             Map<String, Object> map = createMap("School", schoolId, subjectId, value);
+            insertMap.add(map);
+        });
+
+        List<Row> classList = projectDao.query(QUERY_CLASS_LIST.replace("{{subjectId}}", subjectId));
+        classService.listClasses(projectId).forEach(clazz -> {
+            String classlId = clazz.getId();
+            Row classRow = classList.stream().filter(row -> classlId.equals(row.getString("range_id")))
+                    .findFirst().get();
+            if (null == classRow) {
+                return;
+            }
+
+            double classAverage = classRow.getDouble("average_score", 0);
+            double value = calculateTValue(stdDeviation, averageScore, classAverage);
+
+            Map<String, Object> map = createMap("Class", classlId, subjectId, value);
             insertMap.add(map);
         });
 
