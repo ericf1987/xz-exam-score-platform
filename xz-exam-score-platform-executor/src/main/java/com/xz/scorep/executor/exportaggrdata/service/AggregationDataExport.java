@@ -77,6 +77,9 @@ public class AggregationDataExport {
     StdDeviationQuery stdDeviationQuery;
 
     @Autowired
+    TScoreQuery tScoreQuery;
+
+    @Autowired
     NotifyImportMysqlDump notifyImportMysqlDump;
 
     static final Logger LOG = LoggerFactory.getLogger(AggregationDataExport.class);
@@ -140,6 +143,8 @@ public class AggregationDataExport {
         List<ScoreRate> scoreRates = scoreRateQuery.queryObj(projectId);
         //标准差
         List<StdDeviation> stdDeviations = stdDeviationQuery.queryObj(projectId);
+        //T分值
+        List<TScore> tScores = tScoreQuery.queryData(projectId);
 
         context.getAllPassOrFails().addAll(allPassOrFails);
         context.getAverages().addAll(averages);
@@ -155,6 +160,7 @@ public class AggregationDataExport {
         context.getScoreLevelMaps().addAll(scoreLevelMaps);
         context.getScoreRates().addAll(scoreRates);
         context.getStdDeviations().addAll(stdDeviations);
+        context.gettScores().addAll(tScores);
 
         try {
             FileUtils.writeFile(context.createZipArchive(), new File(filePath));
