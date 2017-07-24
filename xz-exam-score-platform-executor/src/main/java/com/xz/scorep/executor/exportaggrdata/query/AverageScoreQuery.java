@@ -89,34 +89,34 @@ public class AverageScoreQuery {
         LOG.info("开始查询 AverageScore  数据.....");
 
         List<Row> projectRows = queryProjectData(projectId);
-        LOG.info("projectRows  size ... {}", projectRows.size());
+        LOG.info("   projectRows  size ... {}", projectRows.size());
 
         List<Row> subjectRows = subjects.stream()
                 .map(subject -> querySubjectData(projectId, subject))
                 .flatMap(x -> x.stream())
                 .collect(Collectors.toList());
-        LOG.info("subjectRows  size ... {}", subjectRows.size());
+        LOG.info("   subjectRows  size ... {}", subjectRows.size());
 
         List<Row> objectiveRows = subjects.stream()
                 .map(subject -> queryObjectiveData(projectId, subject))
                 .flatMap(x -> x.stream())
                 .collect(Collectors.toList());
-        LOG.info("objectiveRows  size ... {}", objectiveRows.size());
+        LOG.info("   objectiveRows  size ... {}", objectiveRows.size());
 
         List<Row> pointRows = pointService.listPoints(projectId).parallelStream()
                 .map(point -> queryPointData(projectId, point))
                 .flatMap(x -> x.stream())
                 .collect(Collectors.toList());
-        LOG.info("pointRows  size ... {}", pointRows.size());
+        LOG.info("   pointRows  size ... {}", pointRows.size());
 
         List<Row> pointLevelRows = queryPointLevelData(projectId);
-        LOG.info("pointLevelRows  size ... {}", pointLevelRows.size());
+        LOG.info("   pointLevelRows  size ... {}", pointLevelRows.size());
 
         List<Row> subjectLevelRows = querySubjectLevelData(projectId);
-        LOG.info("subjectLevelRows size ... {}", subjectLevelRows.size());
+        LOG.info("   subjectLevelRows size ... {}", subjectLevelRows.size());
 
         List<Row> questRows = queryQuestData(projectId);
-        LOG.info("questRows  size ... {}", questRows.size());
+        LOG.info("   questRows  size ... {}", questRows.size());
 
         List<Row> result = addAll(projectRows, subjectRows, objectiveRows, pointRows, pointLevelRows, subjectLevelRows, questRows);
         List<Average> collect = result.stream().map(row -> pakObj(row, projectId)).collect(Collectors.toList());

@@ -17,7 +17,7 @@ public class TValueAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        aggregator.aggregate(new AggregateParameter("430300-29c4d40d93bf41a5a82baffe7e714dd9"));
+        aggregator.aggregate(new AggregateParameter("430200-13e01c025ac24c6497d916551b3ae7a6"));
     }
 
 }
