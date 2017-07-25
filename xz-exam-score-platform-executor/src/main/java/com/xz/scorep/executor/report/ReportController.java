@@ -2,6 +2,7 @@ package com.xz.scorep.executor.report;
 
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
+import com.xz.scorep.executor.aggregate.AggregateType;
 import com.xz.scorep.executor.aggregate.AggregationService;
 import com.xz.scorep.executor.db.DAOFactory;
 import org.slf4j.Logger;
@@ -48,7 +49,7 @@ public class ReportController {
         }
 
         subjectId = "000".equals(subjectId) ? "" : subjectId;
-        Result result = aggregationService.checkProjectStatus(projectId, subjectId);
+        Result result = aggregationService.checkProjectStatus(projectId, subjectId, AggregateType.Quick.name());
         if (!result.isSuccess()) {
             return result;
         }

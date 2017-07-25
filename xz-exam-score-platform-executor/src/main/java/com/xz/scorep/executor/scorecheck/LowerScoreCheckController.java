@@ -3,6 +3,7 @@ package com.xz.scorep.executor.scorecheck;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
+import com.xz.scorep.executor.aggregate.AggregateType;
 import com.xz.scorep.executor.aggregate.AggregationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 监控平台低分检查
@@ -47,7 +49,10 @@ public class LowerScoreCheckController {
         List<String> subjectIdList = new ArrayList<>(Arrays.asList(subjectIds.split(",")));
         subjectIdList.removeIf(StringUtil::isBlank);
 
-        Result result = aggregationService.checkProjectStatus(projectId, null);
+        LOG.info("subjectIdList .... {}", subjectIdList);
+        List<String> collect = subjectIdList.stream().map(str -> "\"" + str + "\"").collect(Collectors.toList());
+        String subjectId = String.join(",", collect);
+        Result result = aggregationService.checkProjectStatus(projectId, subjectId, AggregateType.Check.name());
         if (!result.isSuccess()) {
             return result;
         }

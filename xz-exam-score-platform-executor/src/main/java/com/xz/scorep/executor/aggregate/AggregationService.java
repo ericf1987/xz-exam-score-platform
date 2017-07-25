@@ -19,7 +19,7 @@ import java.util.Date;
 @Service
 public class AggregationService {
 
-    public static final String QUERY_AGGREGATION_STATUS = "select * from aggregation where aggr_type = 'Quick' and project_id = '{{projectId}}' {{condition}} order by start_time desc";
+    public static final String QUERY_AGGREGATION_STATUS = "select * from aggregation where aggr_type = '{{type}}' and project_id = '{{projectId}}' {{condition}} order by start_time desc";
 
     private static final Logger LOG = LoggerFactory.getLogger(AggregationService.class);
 
@@ -70,17 +70,20 @@ public class AggregationService {
     }
 
 
-    public Result checkProjectStatus(String projectId, String subjectId) {
+    public Result checkProjectStatus(String projectId, String subjectId,String type) {
         DAO managerDao = daoFactory.getManagerDao();
         ExamProject project = projectService.findProject(projectId);
         if (ProjectStatus.Importing.name().equals(project.getStatus())) {
             return Result.fail(1, "正在统计项目,请稍后再试");
         }
-        String condition = StringUtil.isEmpty(subjectId) ? "" : " and subject_id = '" + subjectId + "'";
+        String condition = StringUtil.isEmpty(subjectId) ? "" : " and subject_id in (" + subjectId + ")";
 
-        Row row = managerDao.queryFirst(QUERY_AGGREGATION_STATUS
+        String replace = QUERY_AGGREGATION_STATUS
+                .replace("{{type}}",type)
                 .replace("{{projectId}}", projectId)
-                .replace("{{condition}}", condition));
+                .replace("{{condition}}", condition);
+        LOG.info("sql is  {}", replace);
+        Row row = managerDao.queryFirst(replace);
         LOG.info("项目ID {} ,科目ID {} ，row {}", projectId, subjectId, row);
         if (row == null) {
             return Result.fail(1, "尚未找到项目,请确保项目已统计");
