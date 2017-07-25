@@ -3,10 +3,10 @@ package com.xz.scorep.executor.exportaggrdata.query;
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.cryption.MD5;
-import com.xz.scorep.executor.bean.ExamSubject;
-import com.xz.scorep.executor.bean.Range;
-import com.xz.scorep.executor.bean.Target;
+import com.xz.scorep.executor.bean.*;
 import com.xz.scorep.executor.db.DAOFactory;
+import com.xz.scorep.executor.project.PointService;
+import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,8 +72,14 @@ public class TotalScoreQuery {
             "left join `{{table}}` score\n" +
             "on score.student_id = student.id ";
 
+    private static final String POINT_DATA = "select '{{rangeType}}' range_type,student.{{rangeId}} range_id,\n" +
+            "'{{targetType}}' target_type,score.point_id target_id,SUM(score.total_score) total_score\n" +
+            "from score_point score ,student\n" +
+            "where student.id = score.student_id\n" +
+            "GROUP BY student.{{rangeId}},score.point_id";
 
-    private static final Logger LOG = LoggerFactory.getLogger(TotalScoreQuery.class);
+    private static final String STUDENT_POINT_DATA = "select 'student' range_type,student_id range_id," +
+            "'point' target_type,point_id target_id,total_score from score_point";
 
     @Autowired
     private DAOFactory daoFactory;
@@ -81,32 +87,91 @@ public class TotalScoreQuery {
     @Autowired
     private SubjectService subjectService;
 
+    @Autowired
+    private QuestService questService;
+
+    @Autowired
+    private PointService pointService;
+
+    private static final Logger LOG = LoggerFactory.getLogger(TotalScoreQuery.class);
+
     public List<Map<String, Object>> queryData(String projectId) {
         LOG.info("开始查询 TotalScore  数据 ....");
         List<ExamSubject> subjects = subjectService.listSubjects(projectId);
         //project
-        List<Row> projectRows = processProjectData(projectId);
+        List<Row> projectRows = queryProjectData(projectId);
         LOG.info("   projectRows  size  is ... {}", projectRows.size());
         //subject and  subjectCombination
         List<Row> subjectRows = subjects
                 .stream()
-                .map(subject -> processSubjectData(projectId, subject))
+                .map(subject -> querySubjectData(projectId, subject))
                 .flatMap(x -> x.stream())
                 .collect(Collectors.toList());
         LOG.info("   subjectRows  size  is ... {}", subjectRows.size());
 
+        //subjective and objective
         List<Row> objectiveRows = subjects.stream()
                 .map(subject -> queryObjectiveData(projectId, subject))
                 .flatMap(x -> x.stream())
                 .collect(Collectors.toList());
         LOG.info("   objectiveRows  size ... {}", objectiveRows.size());
 
+        //quest  range 为  class,school,province     (数量不对)
+        List<Row> questRows = questService.queryQuests(projectId)
+                .parallelStream()
+                .map(quest -> queryQuestData(projectId, quest))
+                .flatMap(x -> x.stream())
+                .collect(Collectors.toList());
+        LOG.info("   questRows  size ... {}", questRows.size());
 
-        List<Row> collect = addAll(projectRows, subjectRows, objectiveRows);
-//        List<Row> collect = addAll(objectiveRows);
+        //point range 为 student ,class ,school ,province
+        List<Row> pointRows = queryPointData(projectId);
+        LOG.info("   pointRows  size ... {}", pointRows.size());
+
+
+//        List<Row> collect = addAll(projectRows, subjectRows, objectiveRows);
+        List<Row> collect = addAll(questRows, pointRows);
         List<Map<String, Object>> result = collect.stream().map(row -> packObj(row, projectId)).collect(Collectors.toList());
         LOG.info("查询完成 TotalScore 共 {} 条.....", result.size());
         return result;
+    }
+
+    private List<Row> queryPointData(String projectId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String tmp = POINT_DATA.replace("{{targetType}}", Target.POINT);
+
+        List<Row> provinceRows = projectDao.query(tmp.replace("{{rangeType}}", Range.PROVINCE).replace("{{rangeId}}", Range.PROVINCE));
+        List<Row> schoolRows = projectDao.query(tmp.replace("{{rangeType}}", Range.SCHOOL).replace("{{rangeId}}", "school_id"));
+        List<Row> classRows = projectDao.query(tmp.replace("{{rangeType}}", Range.CLASS).replace("{{rangeId}}", "class_id"));
+        List<Row> studentRows = projectDao.query(STUDENT_POINT_DATA);
+        return addAll(provinceRows, schoolRows, classRows, studentRows);
+    }
+
+    private List<Row> queryProjectData(String projectId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        long count = subjectService.listSubjects(projectId)
+                .stream()
+                .filter(subject -> !Boolean.getBoolean(subject.getVirtualSubject()))
+                .count();
+
+        List<Row> provinceRows = projectDao.query(PROVINCE_DATA.replace("{{table}}", "score_project").replace("{{targetType}}", Target.PROJECT).replace("{{targetId}}", projectId));
+        List<Row> schoolRows = projectDao.query(SCHOOL_DATA.replace("{{table}}", "score_project").replace("{{targetType}}", Target.PROJECT).replace("{{targetId}}", projectId));
+        List<Row> classRows = projectDao.query(CLASS_DATA.replace("{{table}}", "score_project").replace("{{targetType}}", Target.PROJECT).replace("{{targetId}}", projectId));
+        List<Row> studentRows = projectDao.query(PROJECT_STUDENT_DATA.replace("{{targetType}}", Target.PROJECT).replace("{{targetId}}", projectId).replace("{{count}}", String.valueOf(count)));
+
+        return addAll(provinceRows, schoolRows, classRows, studentRows);
+    }
+
+    private List<Row> querySubjectData(String projectId, ExamSubject subject) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String subjectId = subject.getId();
+        String table = "score_subject_" + subjectId;
+        String target = subjectId.length() > 3 ? Target.SUBJECT_COMBINATION : Target.SUBJECT;
+        List<Row> provinceRows = projectDao.query(PROVINCE_DATA.replace("{{table}}", table).replace("{{targetType}}", target).replace("{{targetId}}", subjectId));
+        List<Row> schoolRows = projectDao.query(SCHOOL_DATA.replace("{{table}}", table).replace("{{targetType}}", target).replace("{{targetId}}", subjectId));
+        List<Row> classRows = projectDao.query(CLASS_DATA.replace("{{table}}", table).replace("{{targetType}}", target).replace("{{targetId}}", subjectId));
+        List<Row> studentRows = projectDao.query(SUBJECT_STUDENT_DATA.replace("{{table}}", table).replace("{{targetType}}", target).replace("{{targetId}}", subjectId));
+        return addAll(provinceRows, schoolRows, classRows, studentRows);
     }
 
     private List<Row> queryObjectiveData(String projectId, ExamSubject subject) {
@@ -147,36 +212,14 @@ public class TotalScoreQuery {
                 objectiveProvinceRows, objectiveSchoolRows, objectiveClassRows, objectiveStudentRows);
     }
 
-    private void removeAndPut(Map<String, String> subMap, Row row) {
-        row.remove("isAbsent");
-        row.put("target_id", subMap);
-    }
-
-    private List<Row> processSubjectData(String projectId, ExamSubject subject) {
+    private List<Row> queryQuestData(String projectId, ExamQuest quest) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
-        String subjectId = subject.getId();
-        String table = "score_subject_" + subjectId;
-        String target = subjectId.length() > 3 ? Target.SUBJECT_COMBINATION : Target.SUBJECT;
-        List<Row> provinceRows = projectDao.query(PROVINCE_DATA.replace("{{table}}", table).replace("{{targetType}}", target).replace("{{targetId}}", subjectId));
-        List<Row> schoolRows = projectDao.query(SCHOOL_DATA.replace("{{table}}", table).replace("{{targetType}}", target).replace("{{targetId}}", subjectId));
-        List<Row> classRows = projectDao.query(CLASS_DATA.replace("{{table}}", table).replace("{{targetType}}", target).replace("{{targetId}}", subjectId));
-        List<Row> studentRows = projectDao.query(SUBJECT_STUDENT_DATA.replace("{{table}}", table).replace("{{targetType}}", target).replace("{{targetId}}", subjectId));
-        return addAll(provinceRows, schoolRows, classRows, studentRows);
-    }
-
-    private List<Row> processProjectData(String projectId) {
-        DAO projectDao = daoFactory.getProjectDao(projectId);
-        long count = subjectService.listSubjects(projectId)
-                .stream()
-                .filter(subject -> !Boolean.getBoolean(subject.getVirtualSubject()))
-                .count();
-
-        List<Row> provinceRows = projectDao.query(PROVINCE_DATA.replace("{{table}}", "score_project").replace("{{targetType}}", Target.PROJECT).replace("{{targetId}}", projectId));
-        List<Row> schoolRows = projectDao.query(SCHOOL_DATA.replace("{{table}}", "score_project").replace("{{targetType}}", Target.PROJECT).replace("{{targetId}}", projectId));
-        List<Row> classRows = projectDao.query(CLASS_DATA.replace("{{table}}", "score_project").replace("{{targetType}}", Target.PROJECT).replace("{{targetId}}", projectId));
-        List<Row> studentRows = projectDao.query(PROJECT_STUDENT_DATA.replace("{{targetType}}", Target.PROJECT).replace("{{targetId}}", projectId).replace("{{count}}", String.valueOf(count)));
-
-        return addAll(provinceRows, schoolRows, classRows, studentRows);
+        String questId = quest.getId();
+        String table = "score_" + questId;
+        List<Row> provinceRows = projectDao.query(PROVINCE_DATA.replace("{{table}}", table).replace("{{targetType}}", Target.QUEST).replace("{{targetId}}", questId));
+        List<Row> schoolRows = projectDao.query(SCHOOL_DATA.replace("{{table}}", table).replace("{{targetType}}", Target.QUEST).replace("{{targetId}}", questId));
+        List<Row> classRows = projectDao.query(CLASS_DATA.replace("{{table}}", table).replace("{{targetType}}", Target.QUEST).replace("{{targetId}}", questId));
+        return addAll(provinceRows, schoolRows, classRows);
     }
 
     private List<Row> addAll(List<Row>... lists) {
@@ -186,6 +229,11 @@ public class TotalScoreQuery {
         }
         result.removeIf(HashMap::isEmpty);
         return result;
+    }
+
+    private void removeAndPut(Map<String, String> subMap, Row row) {
+        row.remove("isAbsent");
+        row.put("target_id", subMap);
     }
 
     private Map<String, Object> packObj(Row row, String projectId) {
@@ -200,7 +248,7 @@ public class TotalScoreQuery {
 
         result.put("range", range);
         result.put("target", target);
-        result.put("totalScore", row.getDouble("totalScore", 0));
+        result.put("totalScore", row.getDouble("total_score", 0));
 
         //因查询维度不同,此部分数据可能不存在,可能部分存在
         //////////////////////////////////////////////////////////////////

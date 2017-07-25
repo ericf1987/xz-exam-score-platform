@@ -185,7 +185,7 @@ public class AverageScoreQuery {
 
     private List<Row> queryPointData(String projectId, Point point) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
-        String tem = POINT_DATA_Group.replace("{{target_name}}", "point").replace("{{point_id}}", point.getPointId());
+        String tem = POINT_DATA_Group.replace("{{target_name}}", Target.POINT).replace("{{point_id}}", point.getPointId());
 
         List<Row> classRows = projectDao.query(tem.replace("{{range_name}}", Range.CLASS).replace("{{range_id}}", "class_id"));
         List<Row> schoolRows = projectDao.query(tem.replace("{{range_name}}", Range.SCHOOL).replace("{{range_id}}", "school_id"));
