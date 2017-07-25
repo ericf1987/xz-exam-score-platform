@@ -75,7 +75,6 @@ public class PaperImgServer implements Server {
 
         //获取可以正常连接的数据库...
         String database = DataBaseUtils.getDataBaseName(projectId, subjectId, daoFactory);
-        LOG.info("本次查询得到的数据库为 {} ... ", database);
         if (StringUtil.isEmpty(database)) {
             return Result.fail(1, "终止生成pdf");
         }
