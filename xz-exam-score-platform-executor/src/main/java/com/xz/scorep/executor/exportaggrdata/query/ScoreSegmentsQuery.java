@@ -9,6 +9,8 @@ import com.xz.scorep.executor.exportaggrdata.bean.ScoreSegment;
 import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.project.SubjectService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -43,7 +45,11 @@ public class ScoreSegmentsQuery {
 
     public static final String QUERY_DATA = "select * from score_segments";
 
+    static final Logger LOG = LoggerFactory.getLogger(ScoreSegmentsQuery.class);
+
     public List<ScoreSegment> queryObj(String projectId) {
+
+        LOG.info("开始查询 score_segment 数据.....");
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
 
@@ -55,7 +61,11 @@ public class ScoreSegmentsQuery {
 
         List<Row> rows = projectDao.query(QUERY_DATA);
 
-        return doProcess(projectId, examSubjects, projectSchools, projectClasses, rows);
+        List<ScoreSegment> result = doProcess(projectId, examSubjects, projectSchools, projectClasses, rows);
+
+        LOG.info("查询完成 score_segment 共 {} 条.....", result.size());
+
+        return result;
     }
 
     private List<ScoreSegment> doProcess(String projectId, List<ExamSubject> examSubjects, List<ProjectSchool> projectSchools, List<ProjectClass> projectClasses, List<Row> rows) {
@@ -86,7 +96,7 @@ public class ScoreSegmentsQuery {
 
     private void filterAndPack(String projectId, String rangeName, String rangeId, List<ExamSubject> examSubjects, List<Row> rows, List<ScoreSegment> result) {
 
-        if(null != examSubjects){
+        if (null != examSubjects) {
             examSubjects.forEach(s -> {
                 String subjectId = s.getId();
 
@@ -96,7 +106,7 @@ public class ScoreSegmentsQuery {
 
                 result.add(packScoreSegment(projectId, rangeName, rangeId, subjectId, matchRows));
             });
-        }else{
+        } else {
             List<Row> matchRows = rows.stream().filter(
                     r -> rangeId.equals(r.getString("range_id")) && projectId.equals(r.getString("target_id"))
             ).collect(Collectors.toList());
