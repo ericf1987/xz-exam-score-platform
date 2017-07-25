@@ -4,6 +4,7 @@ import com.xz.ajiaedu.common.lang.CollectionUtils;
 import com.xz.scorep.executor.exportaggrdata.bean.*;
 import com.xz.scorep.executor.exportaggrdata.exception.CreatorException;
 import com.xz.scorep.executor.exportaggrdata.packcreator.*;
+import com.xz.scorep.executor.exportaggrdata.query.ScoreSegmentsQuery;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,6 +43,7 @@ public class CreatorContext {
         ENTRY_CREATORS.add(new StdDeviationCreator());
         ENTRY_CREATORS.add(new SubjectRateCreator());
         ENTRY_CREATORS.add(new TopAverageCreator());
+        ENTRY_CREATORS.add(new TotalScoreCreator());
         ENTRY_CREATORS.add(new ScoreSegmentsCreator());
     }
 
@@ -85,18 +87,21 @@ public class CreatorContext {
     private final List<TScore> tScores = new ArrayList<>();
 
     //得分率
-    public List<ScoreRate> scoreRates = new ArrayList<>();
+    public final List<ScoreRate> scoreRates = new ArrayList<>();
 
     //标准差
-    public List<StdDeviation> stdDeviations = new ArrayList<>();
+    public final List<StdDeviation> stdDeviations = new ArrayList<>();
 
     //科目贡献度
-    public List<SubjectRate> subjectRates = new ArrayList<>();
+    public final List<SubjectRate> subjectRates = new ArrayList<>();
 
     //高分段平均分
     private final List<TopAverage> topAverages = new ArrayList<>();
 
-    //分数分段
+    //totalScore 总分
+    private final List<Map<String, Object>> totalScores = new ArrayList<>();
+
+    //scoreSegments
     private final List<ScoreSegment> scoreSegments = new ArrayList<>();
 
     public List<AllPassOrFail> getAllPassOrFails() {
@@ -165,6 +170,10 @@ public class CreatorContext {
 
     public List<TopAverage> getTopAverages() {
         return topAverages;
+    }
+
+    public List<Map<String, Object>> getTotalScores() {
+        return totalScores;
     }
 
     public List<ScoreSegment> getScoreSegments() {

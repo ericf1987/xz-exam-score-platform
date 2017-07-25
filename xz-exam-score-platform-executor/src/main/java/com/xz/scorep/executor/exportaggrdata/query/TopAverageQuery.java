@@ -38,7 +38,7 @@ public class TopAverageQuery {
     private ReportConfigService reportConfigService;
 
     public List<TopAverage> queryData(String projectId) {
-        LOG.info("开始查询  TopAverage  数据 ....");
+        LOG.info("开始查询 TopAverage  数据 ....");
         DAO projectDao = daoFactory.getProjectDao(projectId);
         ReportConfig reportConfig = reportConfigService.queryReportConfig(projectId);
         double scoreRate = reportConfig.getHighScoreRate();
@@ -47,7 +47,7 @@ public class TopAverageQuery {
                 .map(row -> pakObj(row, projectId, scoreRate))
                 .collect(Collectors.toList());
 
-        LOG.info("查询  TopAverage  完成,共 {} 条数据 ....", result.size());
+        LOG.info("查询完成 TopAverage  完成,共 {} 条数据 ....", result.size());
         return result;
     }
 

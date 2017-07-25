@@ -1,10 +1,17 @@
 package com.xz.scorep.executor.exportaggrdata.controller;
 
 import com.xz.ajiaedu.common.http.HttpRequest;
+import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.BaseTest;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author luckylo
@@ -20,4 +27,5 @@ public class ExportControllerTest extends BaseTest {
         String res = request.requestPost();
         System.out.println(res);
     }
+
 }
