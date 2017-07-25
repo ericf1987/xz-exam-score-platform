@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 排名等第
  * @author by fengye on 2017/7/20.
  */
 public class RankLevelMap extends MongoAggrObject implements Serializable{

@@ -45,7 +45,7 @@ public class RankSegmentQuery {
 
     public List<RankSegment> queryObj(String projectId){
 
-        LOG.info("开始查询 rank_level 数据.....");
+        LOG.info("开始查询 rank_segment 数据.....");
 
         DAO projectDao = daoFactory.getProjectDao(projectId);
 

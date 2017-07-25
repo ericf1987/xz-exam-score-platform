@@ -18,7 +18,7 @@ public class ScoreSegmentsAggregatorTest extends BaseTest {
 
     @Test
     public void aggregate() throws Exception {
-        scoreSegmentsAggregator.aggregate(new AggregateParameter(PROJECT_ID));
+        scoreSegmentsAggregator.aggregate(new AggregateParameter("430200-13e01c025ac24c6497d916551b3ae7a6"));
     }
 
 }

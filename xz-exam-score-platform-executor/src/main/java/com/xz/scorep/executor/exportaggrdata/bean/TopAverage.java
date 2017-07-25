@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 /**
+ * 高分段平均分
  * @author luckylo
  * @createTime 2017-07-24.
  */

@@ -1,6 +1,5 @@
 package com.xz.scorep.executor.exportaggrdata.bean;
 
-import com.xz.scorep.executor.bean.Range;
 import com.xz.scorep.executor.bean.Target;
 
 import java.io.Serializable;
@@ -8,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 排名
+ * 排名等级
  * @author by fengye on 2017/7/20.
  */
 public class RankLevel extends MongoAggrObject implements Serializable{

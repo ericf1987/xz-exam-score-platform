@@ -5,6 +5,7 @@ import com.xz.scorep.executor.bean.Range;
 import java.io.Serializable;
 
 /**
+ * 题型平均分
  * @author luckylo
  * @createTime 2017-07-21.
  */

@@ -9,16 +9,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 排名分段
- * @author by fengye on 2017/7/20.
+ * 分数分段
+ * @author by fengye on 2017/7/25.
  */
-public class RankSegment extends MongoAggrObject implements Serializable{
+public class ScoreSegment extends MongoAggrObject implements Serializable{
 
     private Range range;
 
     private Target target;
 
-    private List<Map<String, Object>> rankSegments = new ArrayList();
+    private List<Map<String, Object>> scoreSegments = new ArrayList<>();
 
     public Range getRange() {
         return range;
@@ -36,25 +36,29 @@ public class RankSegment extends MongoAggrObject implements Serializable{
         this.target = target;
     }
 
-    public List<Map<String, Object>> getRankSegments() {
-        return rankSegments;
+    public List<Map<String, Object>> getScoreSegments() {
+        return scoreSegments;
     }
 
-    public RankSegment() {
+    public void setScoreSegments(List<Map<String, Object>> scoreSegments) {
+        this.scoreSegments = scoreSegments;
     }
 
-    public RankSegment(Range range, Target target, List<Map<String, Object>> rankSegments) {
+    public ScoreSegment() {
+    }
+
+    public ScoreSegment(Range range, Target target, List<Map<String, Object>> scoreSegments) {
         this.range = range;
         this.target = target;
-        this.rankSegments = rankSegments;
+        this.scoreSegments = scoreSegments;
     }
 
     @Override
     public String toString() {
-        return "RankSegment{" +
+        return "ScoreSegment{" +
                 "range=" + range +
                 ", target=" + target +
-                ", rankSegments=" + rankSegments +
+                ", scoreSegments=" + scoreSegments +
                 '}';
     }
 }

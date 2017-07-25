@@ -6,6 +6,7 @@ import com.xz.scorep.executor.bean.Target;
 import java.io.Serializable;
 
 /**
+ * 超均率
  * @author luckylo
  * @createTime 2017-07-20.
  */

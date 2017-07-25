@@ -6,6 +6,7 @@ import com.xz.scorep.executor.bean.Target;
 import java.io.Serializable;
 
 /**
+ * 得分率
  * @author by fengye on 2017/7/21.
  */
 public class ScoreRate extends MongoAggrObject implements Serializable{

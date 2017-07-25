@@ -6,6 +6,8 @@ import com.xz.scorep.executor.bean.Target;
 import java.io.Serializable;
 
 /**
+ * T分值
+ *
  * @author luckylo
  * @createTime 2017-07-24.
  */

@@ -6,6 +6,7 @@ import com.xz.scorep.executor.bean.Target;
 import java.io.Serializable;
 
 /**
+ * 标准差
  * @author by fengye on 2017/7/21.
  */
 public class StdDeviation extends MongoAggrObject implements Serializable{

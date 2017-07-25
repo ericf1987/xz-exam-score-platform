@@ -42,6 +42,7 @@ public class CreatorContext {
         ENTRY_CREATORS.add(new StdDeviationCreator());
         ENTRY_CREATORS.add(new SubjectRateCreator());
         ENTRY_CREATORS.add(new TopAverageCreator());
+        ENTRY_CREATORS.add(new ScoreSegmentsCreator());
     }
 
     //全科及格率
@@ -95,6 +96,8 @@ public class CreatorContext {
     //高分段平均分
     private final List<TopAverage> topAverages = new ArrayList<>();
 
+    //分数分段
+    private final List<ScoreSegment> scoreSegments = new ArrayList<>();
 
     public List<AllPassOrFail> getAllPassOrFails() {
         return allPassOrFails;
@@ -162,6 +165,10 @@ public class CreatorContext {
 
     public List<TopAverage> getTopAverages() {
         return topAverages;
+    }
+
+    public List<ScoreSegment> getScoreSegments() {
+        return scoreSegments;
     }
 
     public byte[] createZipArchive() {

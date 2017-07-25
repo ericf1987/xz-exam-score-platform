@@ -5,6 +5,7 @@ import com.hyd.simplecache.utils.MD5;
 import java.util.UUID;
 
 /**
+ * mongo统计对象
  * @author by fengye on 2017/7/17.
  */
 public class MongoAggrObject {

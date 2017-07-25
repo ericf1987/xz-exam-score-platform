@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 科目贡献度
  * @author by fengye on 2017/7/21.
  */
 public class SubjectRate extends MongoAggrObject implements Serializable {

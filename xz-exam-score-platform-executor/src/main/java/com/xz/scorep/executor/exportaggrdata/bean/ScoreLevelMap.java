@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 分数等级
  * @author by fengye on 2017/7/20.
  */
 public class ScoreLevelMap extends MongoAggrObject implements Serializable{
