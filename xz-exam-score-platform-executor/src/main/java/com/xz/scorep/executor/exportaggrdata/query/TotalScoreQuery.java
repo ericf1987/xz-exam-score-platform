@@ -243,9 +243,7 @@ public class TotalScoreQuery {
         List<Row> provinceRows = projectDao.query(PROVINCE_DATA.replace("{{table}}", table).replace("{{targetType}}", Target.QUEST).replace("{{targetId}}", questId));
         List<Row> schoolRows = projectDao.query(SCHOOL_DATA.replace("{{table}}", table).replace("{{targetType}}", Target.QUEST).replace("{{targetId}}", questId));
         List<Row> classRows = projectDao.query(CLASS_DATA.replace("{{table}}", table).replace("{{targetType}}", Target.QUEST).replace("{{targetId}}", questId));
-        List<Row> rows = addAll(provinceRows, schoolRows, classRows);
-        LOG.info(" quest {} ,size {}", questId, rows.size());
-        return rows;
+        return addAll(provinceRows, schoolRows, classRows);
     }
 
     private List<Row> queryPointData(String projectId) {
