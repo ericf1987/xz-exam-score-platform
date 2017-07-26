@@ -2,6 +2,7 @@ package com.xz.scorep.executor.api.server.express;
 
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.ajia.Param;
+import com.xz.ajiaedu.common.lang.NaturalOrderComparator;
 import com.xz.ajiaedu.common.lang.Result;
 import com.xz.scorep.executor.api.annotation.Function;
 import com.xz.scorep.executor.api.annotation.Parameter;
@@ -16,10 +17,7 @@ import com.xz.scorep.executor.project.SubjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.xz.scorep.executor.utils.SqlUtils.GroupType;
@@ -130,16 +128,14 @@ public class ExpressReportServer implements Server {
         sAndOStatusMap.put("schoolSubjectiveMap", school_subjectiveMap);
 
         //5.得分较高的题目
-        List<Row> school_scoreRate = topScoreRateQuery.getScoreRate(projectId, subjectId, Range.CLASS, classId, examQuests, true, GroupType.AVG);
-        List<Row> class_scoreRate = topScoreRateQuery.getScoreRate(projectId, subjectId, Range.SCHOOL, schoolId, examQuests, true, GroupType.AVG);
+        List<Row> school_scoreRate = topScoreRateQuery.getScoreRate(projectId, subjectId, Range.SCHOOL, schoolId, examQuests, true, GroupType.AVG);
+        List<Row> class_scoreRate = topScoreRateQuery.getScoreRate(projectId, subjectId, Range.CLASS, classId, examQuests, true, GroupType.AVG);
         List<Row> combined_scoreRate = topScoreRateQuery.combineByRange(class_scoreRate, school_scoreRate);
 
         //较高top5
         List<Row> score_rate_top = topScoreRateQuery.getTop(combined_scoreRate, TOP_COUNT, false);
-        System.out.println("top5" + score_rate_top.toString());
         //较低top5
         List<Row> score_rate_bottom = topScoreRateQuery.getTop(combined_scoreRate, TOP_COUNT, true);
-        System.out.println("bottom5" + score_rate_bottom.toString());
 
         Map<String, Object> scoreRateMap = new HashMap<>();
         scoreRateMap.put("top5", score_rate_top);
@@ -154,6 +150,12 @@ public class ExpressReportServer implements Server {
         List<Row> class_subjective_detail = questAnswerAndScoreQuery.querySubjectiveResult(projectId, subjectId, Range.CLASS, classId, subjectiveQuests);
         List<Row> school_subjective_detail = questAnswerAndScoreQuery.querySubjectiveResult(projectId, subjectId, Range.SCHOOL, schoolId, subjectiveQuests);
         List<Row> subjective_detail = topScoreRateQuery.combineByRange(class_subjective_detail, school_subjective_detail);
+
+        Comparator comparator = new NaturalOrderComparator();
+
+        //按照题号升序排列
+        Collections.sort(objective_detail, (o1, o2) -> comparator.compare(o1.getString("questno"), o2.getString("questno")));
+        Collections.sort(subjective_detail, (o1, o2) -> comparator.compare(o1.getString("questno"), o2.getString("questno")));
 
         Map<String, Object> quest_detail = new HashMap<>();
         quest_detail.put("objectiveDetail", objective_detail);

@@ -37,7 +37,10 @@ public class SAndOQuestQuery {
     public static final String QUERY_MAX_SCORE_STUDENT = "SELECT student_id FROM {{table_name}}_{{subject_id}} score WHERE score = (\n" +
             "SELECT {{group_type}}(score) FROM {{table_name}}_{{subject_id}} score, student stu\n" +
             "WHERE score.`student_id` = stu.`id`\n" +
-            "AND stu.{{range_id}} = ?)";
+            "AND stu.{{range_id}} = ?)" +
+            "AND student_id IN (\n" +
+            "select id from student where {{range_id}} = ?)";
+
 
     public Map<String, Object> getSAndOMap(String projectId, String subjectId, String rangeName, String rangeId, boolean isObjective) {
 

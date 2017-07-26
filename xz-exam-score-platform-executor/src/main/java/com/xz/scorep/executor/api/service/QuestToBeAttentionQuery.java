@@ -5,6 +5,7 @@ import com.xz.scorep.executor.bean.ExamQuest;
 import com.xz.scorep.executor.cache.CacheFactory;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.QuestService;
+import com.xz.scorep.executor.utils.DoubleUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -36,7 +37,11 @@ public class QuestToBeAttentionQuery {
         List<Row> rows = topScoreRateQuery.combineByRange(classData, schoolData);
 
         //按照班级学校平均得分率的差值的绝对值排序
-        rows.forEach(r -> r.put("dValue", Math.abs(r.getDouble("rate", 0) - r.getDouble("parent_rate", 0))));
+        rows.forEach(r -> {
+            r.put("dValue", DoubleUtils.round(Math.abs(r.getDouble("rate", 0) - r.getDouble("parent_rate", 0))));
+            r.put("parent_rate", DoubleUtils.toPercent(r.getDouble("parent_rate", 0)));
+            r.put("rate", DoubleUtils.toPercent(r.getDouble("rate", 0)));
+        });
 
         return rows.stream().sorted((Row r1, Row r2) -> {
             Double d1 = r1.getDouble("dValue", 0);
