@@ -48,7 +48,9 @@ public class ExamBaseInfoQuery {
     public static final String QUERY_MAX_SCORE_STU = "SELECT * FROM score_subject_{{subject_id}} WHERE score = (\n" +
             "SELECT MAX(score) FROM score_subject_{{subject_id}} score, student stu\n" +
             "WHERE score.student_id = stu.id\n" +
-            "AND stu.{{range_id}} = ?)";
+            "AND stu.{{range_id}} = ?)" +
+            "AND student_id IN (\n" +
+            "select id from student where {{range_id}} = ?)";
 
     //按维度查询平均分排名
     public static final String QUERY_RANK_BY_CLASS = "SELECT AVG(score) score, stu.class_Id FROM score_subject_{{subject_id}} score, student stu\n" +
@@ -157,7 +159,7 @@ public class ExamBaseInfoQuery {
      */
     public String getMaxScoreStudentName(String projectId, String rangeId, String sql) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
-        List<Row> query = projectDao.query(sql, rangeId);
+        List<Row> query = projectDao.query(sql, rangeId, rangeId);
         String name = "";
         if (null != query) {
             switch (query.size()) {

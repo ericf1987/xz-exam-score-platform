@@ -46,11 +46,14 @@ public class TopScoreRateQuery {
 
     public List<Row> getTop(List<Row> combinedRows, int count, boolean asc) {
 
-        return combinedRows.stream().sorted((Row r1, Row r2) -> {
+        //按照班级得分率排序
+        List<Row> rows = combinedRows.stream().sorted((Row r1, Row r2) -> {
             Double d1 = r1.getDouble("rate", 0);
             Double d2 = r2.getDouble("rate", 0);
             return asc ? d1.compareTo(d2) : d2.compareTo(d1);
         }).limit(count).collect(Collectors.toList());
+
+        return rows;
     }
 
     public List<Row> combineByRange(List<Row> classData, List<Row> schoolData) {
@@ -59,7 +62,7 @@ public class TopScoreRateQuery {
             String questId = c.getString("questId");
             schoolData.stream().filter(s -> questId.equals(s.getString("questId"))).forEach(s -> {
                 c.put("parent_range_id", s.getString("range_id"));
-                c.put("parent_avg", s.getDouble("avg", 0));
+                c.put("parent_avg", DoubleUtils.round(s.getDouble("avg", 0)));
                 c.put("parent_rate", s.getDouble("rate", 0));
             });
         });
@@ -80,6 +83,8 @@ public class TopScoreRateQuery {
     public List<Row> getScoreRate(String projectId, String subjectId, String rangeName, String rangeId,
                                   List<ExamQuest> examQuests, boolean asc, String... groupTypes) {
         List<Row> var7 = getQuestScoresGroup(projectId, subjectId, rangeName, examQuests, groupTypes);
+
+        var7.forEach(var -> var.put("avg", DoubleUtils.round(var.getDouble("avg", 0))));
 
         List<Row> var8 = var7.stream().filter(r -> rangeId.equals(r.getString("range_id"))).collect(Collectors.toList());
         var8.forEach(row -> row.put("rate", DoubleUtils.round(row.getDouble("avg", 0) / Double.parseDouble(row.getString("fullScore")), true)));
