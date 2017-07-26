@@ -3,9 +3,11 @@ package com.xz.scorep.executor.exportaggrdata.query;
 import com.hyd.dao.DAO;
 import com.hyd.dao.Row;
 import com.xz.ajiaedu.common.cryption.MD5;
-import com.xz.scorep.executor.bean.*;
+import com.xz.scorep.executor.bean.ExamQuest;
+import com.xz.scorep.executor.bean.ExamSubject;
+import com.xz.scorep.executor.bean.Range;
+import com.xz.scorep.executor.bean.Target;
 import com.xz.scorep.executor.db.DAOFactory;
-import com.xz.scorep.executor.project.PointService;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
 import org.slf4j.Logger;
@@ -81,6 +83,34 @@ public class TotalScoreQuery {
     private static final String STUDENT_POINT_DATA = "select 'student' range_type,student_id range_id," +
             "'point' target_type,point_id target_id,total_score from score_point";
 
+
+    private static final String POINT_LEVEL_DATA = "select '{{rangeType}}' range_type,student.{{rangeId}} range_id," +
+            "sum(score.total_score) total_score,\n" +
+            "score.point,score.`level`,'{{targetType}}' target_type\n" +
+            "from score_point_level score,student\n" +
+            "where score.student_id = student.id\n" +
+            "GROUP BY \n" +
+            "student.{{rangeId}},score.point,score.`level`";
+
+    private static final String STUDENT_POINT_LEVEL_DATA = "select '{{rangeType}}' range_type, student_id range_id ,\n" +
+            "point,`level`,'{{targetType}}' target_type,sum(total_score) total_score\n" +
+            "from score_point_level\n" +
+            "GROUP BY student_id,point,`level`";
+
+    private static final String SUBJECT_LEVEL_DATA = "select '{{rangeType}}' range_type,student.{{rangeId}} range_id," +
+            "sum(score.total_score) total_score,\n" +
+            "score.`subject`,score.`level`,'{{targetType}}' target_type\n" +
+            "from score_subject_level score,student\n" +
+            "where score.student_id = student.id\n" +
+            "GROUP BY \n" +
+            "student.{{rangeId}},score.`subject`,score.`level`;";
+
+    private static final String STUDENT_SUBJECT_LEVEL_DATA = "select '{{rangeType}}' range_type,student_id range_id," +
+            "sum(total_score) total_score,\n" +
+            "`subject`,`level`,'{{targetType}}' target_type\n" +
+            "from score_subject_level \n" +
+            "GROUP BY student_id,`subject`,`level`";
+
     @Autowired
     private DAOFactory daoFactory;
 
@@ -90,8 +120,6 @@ public class TotalScoreQuery {
     @Autowired
     private QuestService questService;
 
-    @Autowired
-    private PointService pointService;
 
     private static final Logger LOG = LoggerFactory.getLogger(TotalScoreQuery.class);
 
@@ -118,7 +146,7 @@ public class TotalScoreQuery {
 
         //quest  range 为  class,school,province     (数量不对)
         List<Row> questRows = questService.queryQuests(projectId)
-                .parallelStream()
+                .stream()
                 .map(quest -> queryQuestData(projectId, quest))
                 .flatMap(x -> x.stream())
                 .collect(Collectors.toList());
@@ -128,23 +156,19 @@ public class TotalScoreQuery {
         List<Row> pointRows = queryPointData(projectId);
         LOG.info("   pointRows  size ... {}", pointRows.size());
 
+        //pointLevel range 为 student ,class ,school ,province
+        List<Row> pointLevelRows = queryPointLevelRows(projectId);
+        LOG.info("   pointLevelRows  size ... {}", pointLevelRows.size());
 
-//        List<Row> collect = addAll(projectRows, subjectRows, objectiveRows);
-        List<Row> collect = addAll(questRows, pointRows);
+        //subjectLevel range 为 student ,class ,school ,province
+        List<Row> subjectLevelRows = querySubjectLevelRows(projectId);
+        LOG.info("   subjectLevelRows  size ... {}", subjectLevelRows.size());
+
+        List<Row> collect = addAll(projectRows, subjectRows, objectiveRows, questRows, pointRows, pointLevelRows, subjectLevelRows);
+//        List<Row> collect = addAll(questRows, pointRows);
         List<Map<String, Object>> result = collect.stream().map(row -> packObj(row, projectId)).collect(Collectors.toList());
         LOG.info("查询完成 TotalScore 共 {} 条.....", result.size());
         return result;
-    }
-
-    private List<Row> queryPointData(String projectId) {
-        DAO projectDao = daoFactory.getProjectDao(projectId);
-        String tmp = POINT_DATA.replace("{{targetType}}", Target.POINT);
-
-        List<Row> provinceRows = projectDao.query(tmp.replace("{{rangeType}}", Range.PROVINCE).replace("{{rangeId}}", Range.PROVINCE));
-        List<Row> schoolRows = projectDao.query(tmp.replace("{{rangeType}}", Range.SCHOOL).replace("{{rangeId}}", "school_id"));
-        List<Row> classRows = projectDao.query(tmp.replace("{{rangeType}}", Range.CLASS).replace("{{rangeId}}", "class_id"));
-        List<Row> studentRows = projectDao.query(STUDENT_POINT_DATA);
-        return addAll(provinceRows, schoolRows, classRows, studentRows);
     }
 
     private List<Row> queryProjectData(String projectId) {
@@ -219,7 +243,54 @@ public class TotalScoreQuery {
         List<Row> provinceRows = projectDao.query(PROVINCE_DATA.replace("{{table}}", table).replace("{{targetType}}", Target.QUEST).replace("{{targetId}}", questId));
         List<Row> schoolRows = projectDao.query(SCHOOL_DATA.replace("{{table}}", table).replace("{{targetType}}", Target.QUEST).replace("{{targetId}}", questId));
         List<Row> classRows = projectDao.query(CLASS_DATA.replace("{{table}}", table).replace("{{targetType}}", Target.QUEST).replace("{{targetId}}", questId));
-        return addAll(provinceRows, schoolRows, classRows);
+        List<Row> rows = addAll(provinceRows, schoolRows, classRows);
+        LOG.info(" quest {} ,size {}", questId, rows.size());
+        return rows;
+    }
+
+    private List<Row> queryPointData(String projectId) {
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String tmp = POINT_DATA.replace("{{targetType}}", Target.POINT);
+
+        List<Row> provinceRows = projectDao.query(tmp.replace("{{rangeType}}", Range.PROVINCE).replace("{{rangeId}}", Range.PROVINCE));
+        List<Row> schoolRows = projectDao.query(tmp.replace("{{rangeType}}", Range.SCHOOL).replace("{{rangeId}}", "school_id"));
+        List<Row> classRows = projectDao.query(tmp.replace("{{rangeType}}", Range.CLASS).replace("{{rangeId}}", "class_id"));
+        List<Row> studentRows = projectDao.query(STUDENT_POINT_DATA);
+        return addAll(provinceRows, schoolRows, classRows, studentRows);
+    }
+
+    private List<Row> queryPointLevelRows(String projectId) {
+        List<Row> result = new ArrayList<>();
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String tmp = POINT_LEVEL_DATA.replace("{{targetType}}", Target.POINT_LEVEL);
+        List<Row> provinceRows = projectDao.query(tmp.replace("{{rangeType}}", Range.PROVINCE).replace("{{rangeId}}", Range.PROVINCE));
+        List<Row> schoolRows = projectDao.query(tmp.replace("{{rangeType}}", Range.SCHOOL).replace("{{rangeId}}", "school_id"));
+        List<Row> classRows = projectDao.query(tmp.replace("{{rangeType}}", Range.CLASS).replace("{{rangeId}}", "class_id"));
+        List<Row> studentRows = projectDao.query(STUDENT_POINT_LEVEL_DATA.replace("{{rangeType}}", Range.STUDENT).replace("targetType", Target.POINT_LEVEL));
+
+        pointLevelConvertToResult(provinceRows, result);
+        pointLevelConvertToResult(schoolRows, result);
+        pointLevelConvertToResult(classRows, result);
+        pointLevelConvertToResult(studentRows, result);
+
+        return result;
+    }
+
+    private List<Row> querySubjectLevelRows(String projectId) {
+        List<Row> result = new ArrayList<>();
+        DAO projectDao = daoFactory.getProjectDao(projectId);
+        String tmp = SUBJECT_LEVEL_DATA.replace("{{targetType}}", Target.SUBJECT_LEVEL);
+        List<Row> provinceRows = projectDao.query(tmp.replace("{{rangeType}}", Range.PROVINCE).replace("{{rangeId}}", Range.PROVINCE));
+        List<Row> schoolRows = projectDao.query(tmp.replace("{{rangeType}}", Range.SCHOOL).replace("{{rangeId}}", "school_id"));
+        List<Row> classRows = projectDao.query(tmp.replace("{{rangeType}}", Range.CLASS).replace("{{rangeId}}", "class_id"));
+        List<Row> studentRows = projectDao.query(STUDENT_SUBJECT_LEVEL_DATA.replace("{{rangeType}}", Range.STUDENT).replace("{{targetType}}", Target.SUBJECT_LEVEL));
+
+        subjectLevelConvertToResult(provinceRows, result);
+        subjectLevelConvertToResult(schoolRows, result);
+        subjectLevelConvertToResult(classRows, result);
+        subjectLevelConvertToResult(studentRows, result);
+
+        return result;
     }
 
     private List<Row> addAll(List<Row>... lists) {
@@ -234,6 +305,47 @@ public class TotalScoreQuery {
     private void removeAndPut(Map<String, String> subMap, Row row) {
         row.remove("isAbsent");
         row.put("target_id", subMap);
+    }
+
+    private void pointLevelConvertToResult(List<Row> rows, List<Row> result) {
+        rows.forEach(row -> {
+            Map<String, Object> targetId = new HashMap<>();
+
+            String rangeId = row.getString("range_id");
+            String rangeType = row.getString("rangeType");
+            String targetType = row.getString("targetType");
+            double totalScore = row.getDouble("total_score", 0);
+
+            targetId.put("point", row.getString("point"));
+            targetId.put("level", row.getString("level"));
+
+            result.add(createRow(rangeType, rangeId, targetType, targetId, totalScore));
+        });
+    }
+
+    private void subjectLevelConvertToResult(List<Row> rows, List<Row> result) {
+        rows.forEach(row -> {
+            Map<String, Object> targetId = new HashMap<>();
+            String rangeId = row.getString("range_id");
+            String rangeType = row.getString("range_type");
+            String targetType = row.getString("target_type");
+            double totalScore = row.getDouble("total_score", 0);
+
+            targetId.put("subject", row.getString("subject"));
+            targetId.put("level", row.getString("level"));
+
+            result.add(createRow(rangeType, rangeId, targetType, targetId, totalScore));
+        });
+    }
+
+    private Row createRow(String rangeType, String rangeId, String targetType, Object targetId, double totalScore) {
+        Row row = new Row();
+        row.put("range_id", rangeId);
+        row.put("range_type", rangeType);
+        row.put("targetType", targetType);
+        row.put("total_score", totalScore);
+        row.put("targetId", targetId);
+        return row;
     }
 
     private Map<String, Object> packObj(Row row, String projectId) {
