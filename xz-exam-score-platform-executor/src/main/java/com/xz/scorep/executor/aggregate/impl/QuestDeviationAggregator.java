@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -79,6 +80,8 @@ public class QuestDeviationAggregator extends Aggregator {
                                 aggrQuestDistinction(projectId, projectDao, quest, studentScoreList, studentInfoList, counter, pool)));
 
         LOG.info("项目 ID {} 统计题目区分度完成 ...", projectId);
+        pool.awaitTermination(1, TimeUnit.DAYS);
+        pool.shutdown();
     }
 
     private void aggrQuestDistinction(String projectId, DAO projectDao, ExamQuest quest, List<Row> studentTotalScoreList, List<Row> studentInfoList, AsyncCounter counter, ThreadPoolExecutor pool) {
@@ -89,15 +92,15 @@ public class QuestDeviationAggregator extends Aggregator {
 
         try {
             //处理Province维度区分度
-            pool.submit(() -> processProvinceData(quest, studentTotalScoreList, insertMap, questScoreRows));
+            processProvinceData(quest, studentTotalScoreList, insertMap, questScoreRows);
 
             //处理School维度区分度
-            pool.submit(() -> schoolService.listSchool(projectId)
-                    .forEach(school -> processSchoolData(quest, school, studentTotalScoreList, insertMap, questScoreRows, studentInfoList)));
+            schoolService.listSchool(projectId)
+                    .forEach(school -> processSchoolData(quest, school, studentTotalScoreList, insertMap, questScoreRows, studentInfoList));
 
             //处理Class维度区分度
-            pool.submit(() -> classService.listClasses(projectId)
-                    .forEach(clazz -> processClassData(quest, clazz, studentTotalScoreList, insertMap, questScoreRows, studentInfoList)));
+            classService.listClasses(projectId)
+                    .forEach(clazz -> processClassData(quest, clazz, studentTotalScoreList, insertMap, questScoreRows, studentInfoList));
         } finally {
 
             projectDao.insert(insertMap, "quest_deviation");
