@@ -14,6 +14,7 @@ import com.xz.scorep.executor.project.ClassService;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SchoolService;
 import com.xz.scorep.executor.project.SubjectService;
+import com.xz.scorep.executor.utils.DoubleUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -140,7 +141,6 @@ public class ExpressReportServer implements Server {
         Map<String, Object> scoreRateMap = new HashMap<>();
         scoreRateMap.put("top5", score_rate_top);
         scoreRateMap.put("bottom5", score_rate_bottom);
-        System.out.println(scoreRateMap.toString());
 
         //6.客观题，主观题详情
         List<Row> class_objective_detail = questAnswerAndScoreQuery.queryObjectiveResult(projectId, subjectId, Range.CLASS, classId, objectiveQuests);
@@ -150,6 +150,17 @@ public class ExpressReportServer implements Server {
         List<Row> class_subjective_detail = questAnswerAndScoreQuery.querySubjectiveResult(projectId, subjectId, Range.CLASS, classId, subjectiveQuests);
         List<Row> school_subjective_detail = questAnswerAndScoreQuery.querySubjectiveResult(projectId, subjectId, Range.SCHOOL, schoolId, subjectiveQuests);
         List<Row> subjective_detail = topScoreRateQuery.combineByRange(class_subjective_detail, school_subjective_detail);
+
+        //转化为百分号
+        objective_detail.stream().forEach(o -> {
+            o.put("rate", DoubleUtils.toPercent(o.getDouble("rate", 0)));
+            o.put("parent_rate", DoubleUtils.toPercent(o.getDouble("parent_rate", 0)));
+        });
+
+        subjective_detail.stream().forEach(s -> {
+            s.put("rate", DoubleUtils.toPercent(s.getDouble("rate", 0)));
+            s.put("parent_rate", DoubleUtils.toPercent(s.getDouble("parent_rate", 0)));
+        });
 
         Comparator comparator = new NaturalOrderComparator();
 

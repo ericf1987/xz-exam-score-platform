@@ -14,6 +14,7 @@ import com.xz.scorep.executor.bean.SubjectLevel;
 import com.xz.scorep.executor.db.DAOFactory;
 import com.xz.scorep.executor.project.QuestService;
 import com.xz.scorep.executor.project.SubjectService;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,7 +79,7 @@ public class PointAndAbilityLevelScoreAggregator extends Aggregator {
         LOG.info("结束执行 学生知识点、能力层级、双向细目 统计:{}， 耗时:{}", this.getClass().getSimpleName(), end - begin);
     }
 
-    private void doAggregate(String projectId, DAO projectDao, String subjectId) {
+    public void doAggregate(String projectId, DAO projectDao, String subjectId) {
         List<ExamQuest> examQuests = questService.queryQuests(projectId, subjectId);
         List<Row> rows = calculateQuestScoreBySubjectId(projectDao, examQuests);
 
@@ -115,7 +116,16 @@ public class PointAndAbilityLevelScoreAggregator extends Aggregator {
             }
 
             //小题对应的知识点
-            Map<String, Object> points = (Map) JSONUtils.parse(first.get());
+
+            String points = first.get();
+
+            if(StringUtils.isBlank(points)){
+                continue;
+            }
+
+            Map<String, Object> pointsMap = (Map) JSONUtils.parse(points);
+
+            //在mongo统计库，如果小题没有知识点，会用Null标记知识点，所以这里必须处理
 
             DoubleCounterMap<String> point_counter_map = new DoubleCounterMap<>();
             DoubleCounterMap<PointLevel> point_Level_counter_map = new DoubleCounterMap<>();
@@ -124,11 +134,11 @@ public class PointAndAbilityLevelScoreAggregator extends Aggregator {
             //知识点得分结果计算
             if (point_result_map.containsKey(studentId)) {
                 point_counter_map.putAll(point_result_map.get(studentId));
-                for (String pointId : points.keySet()) {
+                for (String pointId : pointsMap.keySet()) {
                     point_counter_map.incre(pointId, score);
                 }
             } else {
-                for (String pointId : points.keySet()) {
+                for (String pointId : pointsMap.keySet()) {
                     point_counter_map.incre(pointId, score);
                 }
             }
@@ -136,13 +146,13 @@ public class PointAndAbilityLevelScoreAggregator extends Aggregator {
             //知识点能力层级结果计算
             if (point_level_result_map.containsKey(studentId)) {
                 point_Level_counter_map.putAll(point_level_result_map.get(studentId));
-                for (String pointId : points.keySet()) {
-                    List<String> abilityLevels = (List<String>) points.get(pointId);
+                for (String pointId : pointsMap.keySet()) {
+                    List<String> abilityLevels = (List<String>) pointsMap.get(pointId);
                     abilityLevels.forEach(level -> point_Level_counter_map.incre(new PointLevel(pointId, level), score));
                 }
             } else {
-                for (String pointId : points.keySet()) {
-                    List<String> abilityLevels = (List<String>) points.get(pointId);
+                for (String pointId : pointsMap.keySet()) {
+                    List<String> abilityLevels = (List<String>) pointsMap.get(pointId);
                     abilityLevels.forEach(level -> point_Level_counter_map.incre(new PointLevel(pointId, level), score));
                 }
             }
@@ -150,13 +160,13 @@ public class PointAndAbilityLevelScoreAggregator extends Aggregator {
             //科目能力层级结果计算
             if (subject_level_result_map.containsKey(studentId)) {
                 subject_level_counter_map.putAll(subject_level_result_map.get(studentId));
-                for (String pointId : points.keySet()) {
-                    List<String> abilityLevels = (List<String>) points.get(pointId);
+                for (String pointId : pointsMap.keySet()) {
+                    List<String> abilityLevels = (List<String>) pointsMap.get(pointId);
                     abilityLevels.forEach(level -> subject_level_counter_map.incre(new SubjectLevel(subjectId, level), score));
                 }
             } else {
-                for (String pointId : points.keySet()) {
-                    List<String> abilityLevels = (List<String>) points.get(pointId);
+                for (String pointId : pointsMap.keySet()) {
+                    List<String> abilityLevels = (List<String>) pointsMap.get(pointId);
                     abilityLevels.forEach(level -> subject_level_counter_map.incre(new SubjectLevel(subjectId, level), score));
                 }
             }
