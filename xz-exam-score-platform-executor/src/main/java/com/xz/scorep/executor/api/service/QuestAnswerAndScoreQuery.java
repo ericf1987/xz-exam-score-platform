@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import static com.xz.scorep.executor.utils.SqlUtils.GroupType;
 
 /**
+ * 客观题，主观题详情
  * @author by fengye on 2017/7/6.
  */
 @Component

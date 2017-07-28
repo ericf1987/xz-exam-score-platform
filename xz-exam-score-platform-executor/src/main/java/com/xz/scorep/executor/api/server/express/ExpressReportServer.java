@@ -177,6 +177,12 @@ public class ExpressReportServer implements Server {
         List<Row> school_tb_attention = questToBeAttentionQuery.queryToBeAttentionQuest(projectId, subjectId, Range.SCHOOL, schoolId, examQuests);
         List<Row> attentionQuestList = questToBeAttentionQuery.combineByRange(class_tb_attention, school_tb_attention);
 
+        //标记主观题或客观题
+        attentionQuestList.stream().forEach(q -> {
+            ExamQuest quest = questService.findQuest(projectId, q.getString("questid"));
+            q.put("quest_type", quest.isObjective() ? "客观题" : "主观题");
+        });
+
 
         Map<String, Object> toBeAttention = new HashMap<>();
         toBeAttention.put("attentionQuests", attentionQuestList);

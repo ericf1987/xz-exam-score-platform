@@ -76,6 +76,13 @@ public class SqlUtils {
                         Range.CLASS.equals(rangeName) ? sql.replace("{{range_id}}", "class_id") : sql;
     }
 
+    /**
+     * 拼接得分的多个分组函数
+     *
+     * @param sql        SQL语句
+     * @param groupTypes 分组函数名称
+     * @return 返回结果
+     */
     public static String renderGroupType(String sql, String... groupTypes) {
         StringBuilder builder = new StringBuilder();
         for (String groupType : groupTypes) {
