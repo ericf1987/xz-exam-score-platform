@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * @author by fengye on 2017/6/21.
  */
 @AggregateTypes(AggregateType.Advanced)
-@AggregateOrder(80)
+@AggregateOrder(81)
 @Component
 public class RankSegmentAggregator extends Aggregator {
 

@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * @author by fengye on 2017/6/27.
  */
 @AggregateTypes(AggregateType.Advanced)
-@AggregateOrder(82)
+@AggregateOrder(84)
 @Component
 public class PointAndAbilityLevelScoreAggregator extends Aggregator {
 

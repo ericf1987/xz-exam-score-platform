@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  * @author by fengye on 2017/6/28.
  */
 @AggregateTypes(AggregateType.Advanced)
-@AggregateOrder(83)
+@AggregateOrder(85)
 @Component
 public class PointAndAbilityLevelSumToRangeAggregator extends Aggregator{
 

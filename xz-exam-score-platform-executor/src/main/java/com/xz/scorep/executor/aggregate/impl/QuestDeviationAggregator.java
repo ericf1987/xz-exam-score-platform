@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @AggregateTypes({AggregateType.Advanced})
-@AggregateOrder(82)
+@AggregateOrder(83)
 public class QuestDeviationAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(QuestDeviationAggregator.class);
@@ -80,8 +80,8 @@ public class QuestDeviationAggregator extends Aggregator {
                                 aggrQuestDistinction(projectId, projectDao, quest, studentScoreList, studentInfoList, counter, pool)));
 
         LOG.info("项目 ID {} 统计题目区分度完成 ...", projectId);
-        pool.awaitTermination(1, TimeUnit.DAYS);
         pool.shutdown();
+        pool.awaitTermination(1, TimeUnit.DAYS);
     }
 
     private void aggrQuestDistinction(String projectId, DAO projectDao, ExamQuest quest, List<Row> studentTotalScoreList, List<Row> studentInfoList, AsyncCounter counter, ThreadPoolExecutor pool) {

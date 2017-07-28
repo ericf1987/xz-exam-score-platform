@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  * @author by fengye on 2017/6/19.
  */
 @AggregateTypes(AggregateType.Advanced)
-@AggregateOrder(70)
+@AggregateOrder(71)
 @Component
 public class RankLevelSubjectAggregator extends Aggregator {
 

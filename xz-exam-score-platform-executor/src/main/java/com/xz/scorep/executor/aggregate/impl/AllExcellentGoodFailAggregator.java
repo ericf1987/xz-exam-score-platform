@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * @author caijianghua
  */
 @AggregateTypes(AggregateType.Basic)
-@AggregateOrder(16)
+@AggregateOrder(14)
 @Component
 public class AllExcellentGoodFailAggregator extends Aggregator {
 

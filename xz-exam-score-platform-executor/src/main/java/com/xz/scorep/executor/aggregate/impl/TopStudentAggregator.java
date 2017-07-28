@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @AggregateTypes({AggregateType.Advanced})
-@AggregateOrder(71)
+@AggregateOrder(74)
 public class TopStudentAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(TopStudentAggregator.class);

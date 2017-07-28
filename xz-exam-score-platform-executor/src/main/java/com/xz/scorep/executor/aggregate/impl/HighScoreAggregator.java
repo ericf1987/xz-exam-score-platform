@@ -30,7 +30,7 @@ import java.util.Map;
  */
 @Component
 @AggregateTypes({AggregateType.Advanced})
-@AggregateOrder(72)
+@AggregateOrder(75)
 public class HighScoreAggregator extends Aggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(HighScoreAggregator.class);

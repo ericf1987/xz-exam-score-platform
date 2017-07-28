@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * @author by fengye on 2017/6/22.
  */
 @AggregateTypes(AggregateType.Advanced)
-@AggregateOrder(81)
+@AggregateOrder(82)
 @Component
 public class QuestTypeScoreAggregator extends Aggregator {
 

@@ -205,19 +205,19 @@ public class ProjectService {
         dao.execute("CREATE INDEX idx_rank_segment ON rank_segment(range_id, subject_id, rank_percent)");
 
         //知识点，能力层级，双向细目相关
-        dao.execute("create table score_point(student_id varchar(40), point_id varchar(10), total_score decimal(6,2))");
+        dao.execute("create table score_point(student_id varchar(40), point_id varchar(40), total_score decimal(6,2))");
         dao.execute("CREATE INDEX idx_score_point ON score_point(student_id, point_id)");
 
-        dao.execute("create table score_point_level(student_id varchar(40), point varchar(10), level varchar(2), total_score decimal(6,2))");
+        dao.execute("create table score_point_level(student_id varchar(40), point varchar(40), level varchar(2), total_score decimal(6,2))");
         dao.execute("CREATE INDEX idx_score_point_level ON score_point_level(student_id, point, level)");
 
         dao.execute("create table score_subject_level(student_id varchar(40), subject varchar(10), level varchar(2), total_score decimal(6,2))");
         dao.execute("CREATE INDEX idx_score_subject_level ON score_subject_level(student_id, subject, level)");
 
-        dao.execute("CREATE TABLE score_point_range(range_id VARCHAR(40),range_type VARCHAR(20), point_id VARCHAR(10), total_score DECIMAL(10,2))");
+        dao.execute("CREATE TABLE score_point_range(range_id VARCHAR(40),range_type VARCHAR(20), point_id VARCHAR(40), total_score DECIMAL(10,2))");
         dao.execute("CREATE INDEX idx_score_point_range ON score_point_range(range_id,range_type, point_id)");
 
-        dao.execute("CREATE TABLE score_point_level_range(range_id VARCHAR(40),range_type VARCHAR(20), point VARCHAR(10), level VARCHAR(2), total_score DECIMAL(10,2))");
+        dao.execute("CREATE TABLE score_point_level_range(range_id VARCHAR(40),range_type VARCHAR(20), point VARCHAR(40), level VARCHAR(2), total_score DECIMAL(10,2))");
         dao.execute("CREATE INDEX idx_score_point_level_range ON score_point_level_range(range_id,range_type, point, level)");
 
         dao.execute("CREATE TABLE score_subject_level_range(range_id VARCHAR(40),range_type VARCHAR(20), subject VARCHAR(10), level VARCHAR(2), total_score DECIMAL(10,2))");
@@ -259,7 +259,7 @@ public class ProjectService {
 
         dao.execute("CREATE TABLE quest_point (" +
                 "  quest_id varchar(40) NOT NULL," +
-                "  point_id varchar(20) NOT NULL," +
+                "  point_id varchar(40) NOT NULL," +
                 "  point_name varchar(100) NOT NULL)");
 
         dao.execute("CREATE TABLE pss_task_fail ( " +
@@ -269,9 +269,9 @@ public class ProjectService {
                 " subject_id VARCHAR(3) NOT NULL, " +
                 " student_id VARCHAR(40) NOT NULL " +
                 ")");
-        dao.execute("CREATE TABLE points(point_id VARCHAR(20), point_name VARCHAR(128), subject_id VARCHAR(10), parent_point_id VARCHAR(20), full_score DECIMAL(5,2))");
+        dao.execute("CREATE TABLE points(point_id VARCHAR(40), point_name VARCHAR(128), subject_id VARCHAR(10), parent_point_id VARCHAR(40), full_score DECIMAL(5,2))");
         dao.execute("CREATE TABLE ability_level(level_id VARCHAR(4), level_name VARCHAR(10), subject_id VARCHAR(10), ability_type VARCHAR(2), study_stage VARCHAR(2))");
-        dao.execute("CREATE TABLE point_level(point varchar(20), level varchar(20), full_score decimal(5,2))");
+        dao.execute("CREATE TABLE point_level(point varchar(40), level varchar(20), full_score decimal(5,2))");
         dao.execute("CREATE TABLE subject_level(subject VARCHAR(20), level VARCHAR(20), full_score DECIMAL(5,2))");
     }
 

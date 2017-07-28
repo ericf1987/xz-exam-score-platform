@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * @author by fengye on 2017/6/20.
  */
 @AggregateTypes(AggregateType.Advanced)
-@AggregateOrder(73)
+@AggregateOrder(76)
 @Component
 public class RankLevelMapSubjectAggregator extends Aggregator{
 

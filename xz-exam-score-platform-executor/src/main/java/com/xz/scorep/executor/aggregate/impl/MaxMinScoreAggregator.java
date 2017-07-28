@@ -22,7 +22,7 @@ import java.util.List;
  */
 @Component
 @AggregateTypes({AggregateType.Advanced})
-@AggregateOrder(54)
+@AggregateOrder(52)
 public class MaxMinScoreAggregator extends Aggregator {
 
     private static Logger LOG = LoggerFactory.getLogger(MaxMinScoreAggregator.class);

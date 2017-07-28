@@ -31,7 +31,7 @@ import java.util.Map;
  */
 
 @AggregateTypes({AggregateType.Advanced})
-@AggregateOrder(53)
+@AggregateOrder(51)
 @Component
 public class ScoreRateAggregator extends Aggregator {
 
