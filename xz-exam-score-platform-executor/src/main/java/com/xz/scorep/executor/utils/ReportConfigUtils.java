@@ -26,6 +26,8 @@ public class ReportConfigUtils {
 
     public static List<String> convertReportConfig(ReportConfig reportConfig) {
         List<String> list = new ArrayList<>(DEFAULT);
+
+        //先默认剔除丢卷学生
         list.remove(ScoreType.LOST.getName());
 
         if (Boolean.valueOf(reportConfig.getRemoveAbsentStudent())) {
