@@ -4,7 +4,6 @@ import com.xz.ajiaedu.common.lang.Result;
 import com.xz.ajiaedu.common.lang.StringUtil;
 import com.xz.scorep.executor.aggregate.AggregateType;
 import com.xz.scorep.executor.aggregate.AggregationService;
-import com.xz.scorep.executor.db.DAOFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +53,9 @@ public class ReportController {
             return result;
         }
 
+        if (!StringUtil.isBlank(subjectId)) {
+            projectId = projectId + "_" + subjectId + "_bak";
+        }
 
         try {
             Map<?, ?> reportContent = report.generateReport(projectId, schoolId, subjectId);
