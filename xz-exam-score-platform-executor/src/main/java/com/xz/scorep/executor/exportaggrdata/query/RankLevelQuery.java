@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 排名信息查询
@@ -67,36 +68,43 @@ public class RankLevelQuery {
         List<Row> province_rank_list = projectDao.query(PROVINCE_DATA_QUERY);
         List<Row> project_rank_list = projectDao.query(PROJECT_DATA_QUERY);
 
-        List<RankLevel> rankLevelList = new ArrayList<>();
-
-        for (String studentId : studentIds) {
-            for (ExamSubject examSubject : examSubjects) {
-                String subjectId = examSubject.getId();
-
-                RankLevel rankLevelObj = new RankLevel();
-
-                //单科的等级排名数据
-                Map<String, Object> rankLevelMap = getRankLevel(class_rank_list, school_rank_list, province_rank_list, studentId, subjectId);
-
-                packOneRankLevelObj(projectId, subjectId, rankLevelObj, studentId, rankLevelMap);
-
-                rankLevelList.add(rankLevelObj);
-            }
-
-            RankLevel rankLevelObj = new RankLevel();
-
-            //全科的等级排名数据
-            Map<String, Object> projectRankLevel = getProjectRankLevel(project_rank_list, studentId);
-
-            packOneRankLevelObj(projectId, null, rankLevelObj, studentId, projectRankLevel);
-
-            rankLevelList.add(rankLevelObj);
-        }
+        List<RankLevel> rankLevelList = studentIds.parallelStream()
+                .map(studentId -> packOneStudentRankLevel(studentId, examSubjects, projectId,
+                        class_rank_list, school_rank_list, province_rank_list, project_rank_list))
+                .flatMap(x -> x.stream())
+                .collect(Collectors.toList());
 
         LOG.info("查询完成 rank_level 共 {} 条.....", rankLevelList.size());
 
         return rankLevelList;
 
+    }
+
+    private List<RankLevel> packOneStudentRankLevel(String studentId, List<ExamSubject> examSubjects, String projectId,
+                                                    List<Row> class_rank_list, List<Row> school_rank_list, List<Row> province_rank_list,
+                                                    List<Row> project_rank_list) {
+        List<RankLevel> rankLevelList = new ArrayList<>();
+        for (ExamSubject examSubject : examSubjects) {
+            String subjectId = examSubject.getId();
+
+            RankLevel rankLevelObj = new RankLevel();
+
+            //单科的等级排名数据
+            Map<String, Object> rankLevelMap = getRankLevel(class_rank_list, school_rank_list, province_rank_list, studentId, subjectId);
+
+            packOneRankLevelObj(projectId, subjectId, rankLevelObj, studentId, rankLevelMap);
+
+            rankLevelList.add(rankLevelObj);
+        }
+
+        RankLevel rankLevelObj = new RankLevel();
+
+        //全科的等级排名数据
+        Map<String, Object> projectRankLevel = getProjectRankLevel(project_rank_list, studentId);
+        packOneRankLevelObj(projectId, null, rankLevelObj, studentId, projectRankLevel);
+        rankLevelList.add(rankLevelObj);
+
+        return rankLevelList;
     }
 
     private Map<String, Object> getProjectRankLevel(List<Row> project_rank_list, String studentId) {
@@ -145,10 +153,10 @@ public class RankLevelQuery {
 
     private void packOneRankLevelObj(String projectId, String subjectId, RankLevel rankLevelObj, String student_id, Map<String, Object> rankLevel) {
         Target subjectTarget = new Target();
-        if(StringUtils.isBlank(subjectId)){
+        if (StringUtils.isBlank(subjectId)) {
             subjectTarget.setId(projectId);
             subjectTarget.setName(Target.PROJECT);
-        }else{
+        } else {
             subjectTarget.setId(subjectId);
             subjectTarget.setName(Target.SUBJECT);
         }
