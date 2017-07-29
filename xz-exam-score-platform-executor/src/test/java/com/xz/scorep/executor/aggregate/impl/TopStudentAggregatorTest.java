@@ -36,7 +36,7 @@ public class TopStudentAggregatorTest extends BaseTest {
     @Autowired
     TopStudentAggregator aggregator;
 
-    private static final String PROID = "430300-29c4d40d93bf41a5a82baffe7e714dd9";
+    private static final String PROID = "430000-6c4add56e5fb42b09f9de5387dfa59c0";
 
     @Test
     public void aggregate() throws Exception {

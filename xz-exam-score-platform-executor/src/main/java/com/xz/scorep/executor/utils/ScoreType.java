@@ -1,4 +1,4 @@
-package com.xz.scorep.executor.aggregate;
+package com.xz.scorep.executor.utils;
 
 /**
  * 主客观题得分,科目得分,项目总得分   得分来源类型
@@ -31,8 +31,6 @@ public enum ScoreType {
 
     @Override
     public String toString() {
-        return "ScoreType{" +
-                "name='" + name + '\'' +
-                '}';
+        return this.name;
     }
 }
