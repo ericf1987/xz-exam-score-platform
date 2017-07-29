@@ -31,6 +31,7 @@ public class QuestDeviationQuery {
 
     public List<QuestDeviation> queryData(String projectId) {
         LOG.info("开始查询 QuestDeviation  ....");
+        //部分数据不存在
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<Row> rows = projectDao.query(QUERY);
         List<QuestDeviation> result = rows.parallelStream()

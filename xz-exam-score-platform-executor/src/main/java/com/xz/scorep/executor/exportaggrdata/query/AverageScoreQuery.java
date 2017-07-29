@@ -57,12 +57,11 @@ public class AverageScoreQuery {
             "where score.student_id = student.id\n" +
             "GROUP BY student.{{range_id}}";
 
-    public static final String POINT_DATA_Group = "select '{{range_name}}' range_name,student.{{range_id}} range_id," +
+    public static final String POINT_DATA_Group = "select '{{range_name}}' range_name,student.{{range_id}} range_id,\n" +
             "'{{target_name}}' target_name,score.point_id target_id,\n" +
             "avg(score.total_score) average from `score_point` score,student \n" +
             "where score.student_id = student.id\n" +
-            "and score.point_id = '{{point_id}}'\n" +
-            "GROUP BY student.{{range_id}};";
+            "group by student.{{range_id}},score.point_id";
 
     public static final String POINT_LEVEL = "SELECT score.point, score.level, AVG(score.total_score) average, \n" +
             "stu.{{rangeId}} range_id,'{{rangeName}}' range_name\n" +
@@ -103,16 +102,13 @@ public class AverageScoreQuery {
                 .collect(Collectors.toList());
         LOG.info("   objectiveRows  size ... {}", objectiveRows.size());
 
-        List<Row> pointRows = pointService.listPoints(projectId).parallelStream()
-                .map(point -> queryPointData(projectId, point))
-                .flatMap(x -> x.stream())
-                .collect(Collectors.toList());
+        List<Row> pointRows = queryPointData(projectId);
         LOG.info("   pointRows  size ... {}", pointRows.size());
 
-        List<Row> pointLevelRows = queryPointLevelData(projectId);
+        List<Row> pointLevelRows = queryPointLevelData(projectId);//(少部分能力层级为0分的情况,具体待云报表测试)
         LOG.info("   pointLevelRows  size ... {}", pointLevelRows.size());
 
-        List<Row> subjectLevelRows = querySubjectLevelData(projectId);
+        List<Row> subjectLevelRows = querySubjectLevelData(projectId);//(少部分能力层级为0分的情况,具体待云报表测试)
         LOG.info("   subjectLevelRows size ... {}", subjectLevelRows.size());
 
         List<Row> questRows = queryQuestData(projectId);
@@ -183,18 +179,14 @@ public class AverageScoreQuery {
         return addAll(subjectiveClassRows, subjectiveSchoolRows, subjectiveProvinceRows, objectiveClassRows, objectiveSchoolRows, objectiveProvinceRows);
     }
 
-    private List<Row> queryPointData(String projectId, Point point) {
+    private List<Row> queryPointData(String projectId) {
         DAO projectDao = daoFactory.getProjectDao(projectId);
-        String tem = POINT_DATA_Group.replace("{{target_name}}", Target.POINT).replace("{{point_id}}", point.getPointId());
+        String tem = POINT_DATA_Group.replace("{{target_name}}", Target.POINT);
 
         List<Row> classRows = projectDao.query(tem.replace("{{range_name}}", Range.CLASS).replace("{{range_id}}", "class_id"));
         List<Row> schoolRows = projectDao.query(tem.replace("{{range_name}}", Range.SCHOOL).replace("{{range_id}}", "school_id"));
         List<Row> provinceRows = projectDao.query(tem.replace("{{range_name}}", Range.PROVINCE).replace("{{range_id}}", "province"));
-        List<Row> result = new ArrayList<>();
-        result.addAll(classRows);
-        result.addAll(schoolRows);
-        result.addAll(provinceRows);
-        return result;
+        return addAll(classRows, schoolRows, provinceRows);
 
     }
 
@@ -204,16 +196,19 @@ public class AverageScoreQuery {
         String provinceSql = POINT_LEVEL.replace("{{rangeName}}", Range.PROVINCE)
                 .replace("{{rangeId}}", Range.PROVINCE);
         List<Row> provinceRows = projectDao.query(provinceSql);
+        LOG.info("pointLevel province  size {} ....", provinceRows.size());
         pointLevelConvertToResult(result, provinceRows);
 
         String schoolSql = POINT_LEVEL.replace("{{rangeName}}", Range.SCHOOL)
                 .replace("{{rangeId}}", "school_id");
         List<Row> schoolRows = projectDao.query(schoolSql);
+        LOG.info("pointLevel school  size {} ....", schoolRows.size());
         pointLevelConvertToResult(result, schoolRows);
 
         String classSql = POINT_LEVEL.replace("{{rangeName}}", Range.CLASS)
                 .replace("{{rangeId}}", "class_id");
         List<Row> classRows = projectDao.query(classSql);
+        LOG.info("pointLevel class  size {} ....", classRows.size());
         pointLevelConvertToResult(result, classRows);
         return result;
     }
@@ -248,6 +243,7 @@ public class AverageScoreQuery {
         List<Row> schoolRows = projectDao.query(tmp.replace("{{rangeId}}", "school_id").replace("{{rangeName}}", Range.SCHOOL));
         List<Row> provinceRows = projectDao.query(tmp.replace("{{rangeId}}", Range.PROVINCE).replace("{{rangeName}}", Range.PROVINCE));
 
+        LOG.info("classSize {},schoolSize  {},provinceSize {}", classRows.size(), schoolRows.size(), provinceRows.size());
         subjectLevelConvertToResult(result, classRows);
         subjectLevelConvertToResult(result, schoolRows);
         subjectLevelConvertToResult(result, provinceRows);

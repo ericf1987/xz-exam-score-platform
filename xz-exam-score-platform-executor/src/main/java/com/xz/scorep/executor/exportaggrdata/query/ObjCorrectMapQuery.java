@@ -34,6 +34,7 @@ public class ObjCorrectMapQuery {
         LOG.info("开始查询 ObjCorrectMap  数据......");
         DAO projectDao = daoFactory.getProjectDao(projectId);
         List<Row> rows = projectDao.query(QUERY_DATA);
+        //当某个学校某题没有人答对的时候,school ,class维度数据会不对.
         List<ObjCorrectMap> result = rows.stream()
                 .map(row -> pakObj(row, projectId))
                 .collect(Collectors.toList());

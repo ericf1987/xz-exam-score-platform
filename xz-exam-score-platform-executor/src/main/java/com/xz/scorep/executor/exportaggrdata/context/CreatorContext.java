@@ -45,6 +45,7 @@ public class CreatorContext {
         ENTRY_CREATORS.add(new TopAverageCreator());
         ENTRY_CREATORS.add(new TotalScoreCreator());
         ENTRY_CREATORS.add(new ScoreSegmentsCreator());
+        ENTRY_CREATORS.add(new TopStudentListCreator());
     }
 
     //全科及格率
@@ -103,6 +104,9 @@ public class CreatorContext {
 
     //scoreSegments
     private final List<ScoreSegment> scoreSegments = new ArrayList<>();
+
+    //topStudentList
+    private final List<Map<String,Object>> topStudentLists = new ArrayList<>();
 
     public List<AllPassOrFail> getAllPassOrFails() {
         return allPassOrFails;
@@ -178,6 +182,10 @@ public class CreatorContext {
 
     public List<ScoreSegment> getScoreSegments() {
         return scoreSegments;
+    }
+
+    public List<Map<String, Object>> getTopStudentLists() {
+        return topStudentLists;
     }
 
     public byte[] createZipArchive() {

@@ -92,6 +92,9 @@ public class AggregationDataExport {
     TotalScoreQuery totalScoreQuery;
 
     @Autowired
+    TopStudentListQuery topStudentListQuery;
+
+    @Autowired
     NotifyImportMysqlDump notifyImportMysqlDump;
 
     static final Logger LOG = LoggerFactory.getLogger(AggregationDataExport.class);
@@ -165,6 +168,8 @@ public class AggregationDataExport {
         List<ScoreSegment> scoreSegments = scoreSegmentsQuery.queryObj(projectId);
         //totalScore
         List<Map<String, Object>> totalScores = totalScoreQuery.queryData(projectId);
+        //topStudentList
+        List<Map<String, Object>> topStudentList = topStudentListQuery.queryData(projectId);
 
         context.getAllPassOrFails().addAll(allPassOrFails);
         context.getAverages().addAll(averages);
@@ -185,6 +190,7 @@ public class AggregationDataExport {
         context.getTopAverages().addAll(topAverages);
         context.getScoreSegments().addAll(scoreSegments);
         context.getTotalScores().addAll(totalScores);
+        context.getTopStudentLists().addAll(topStudentList);
 
         try {
             FileUtils.writeFile(context.createZipArchive(), new File(filePath));
