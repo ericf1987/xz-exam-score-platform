@@ -72,6 +72,9 @@ public class BackupAggregateDataService {
         rootDao.execute("create table `" + dataBaseName + "`.subject like `" + projectId + "`.subject");
         rootDao.execute("create table `" + dataBaseName + "`.pss_task_fail like `" + projectId + "`.pss_task_fail");
 
+        //解决单科临时统计后,已统计过的单科查不到该数据
+        rootDao.execute("create table `" + dataBaseName + "`.scorelevelmap like `" + projectId + "`.scorelevelmap");
+
         rootDao.execute("create table `" + dataBaseName + "`.score_subject_" + subjectId + " like `" + projectId + "`.score_subject_" + subjectId);
         rootDao.execute("create table `" + dataBaseName + "`.score_objective_" + subjectId + " like `" + projectId + "`.score_objective_" + subjectId);
         rootDao.execute("create table `" + dataBaseName + "`.score_subjective_" + subjectId + " like `" + projectId + "`.score_subjective_" + subjectId);

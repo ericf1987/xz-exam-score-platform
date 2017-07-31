@@ -1,5 +1,7 @@
 package com.xz.scorep.manager.manager;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.xz.ajiaedu.common.http.HttpRequest;
 import com.xz.scorep.manager.BaseTest;
 import org.junit.Test;
@@ -28,7 +30,7 @@ public class ManagerControllerTest extends BaseTest {
     @Test
     public void testGetProjectServer() throws Exception {
         getProjectServer("430100-62fb00af4f04407e9e4383aa7cd4fdf0", false);
-        getProjectServer("1111111111", true);
+//        getProjectServer("1111111111", true);
     }
 
     private void getProjectServer(String projectId, boolean autoAssign) throws IOException {
@@ -36,6 +38,10 @@ public class ManagerControllerTest extends BaseTest {
                 .setParameter("projectId", projectId)
                 .setParameter("autoAssign", String.valueOf(autoAssign));
 
-        System.out.println(httpRequest.requestPost());
+        String post = httpRequest.requestPost();
+        System.out.println(post);
+        JSONObject json = JSON.parseObject(post);
+        JSONObject data = json.getJSONObject("data");
+        System.out.println("url :" + data.getString("host") + ":" + data.getString("port"));
     }
 }
