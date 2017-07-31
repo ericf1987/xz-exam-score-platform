@@ -49,6 +49,7 @@ public class ReportController {
 
         subjectId = "000".equals(subjectId) ? "" : subjectId;
         Result result = aggregationService.checkProjectStatus(projectId, subjectId, AggregateType.Quick.name());
+        LOG.info("result  为 {}", result);
         if (!result.isSuccess()) {
             return result;
         }

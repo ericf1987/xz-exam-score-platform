@@ -72,10 +72,10 @@ public class AggregationService {
 
     public Result checkProjectStatus(String projectId, String subjectId,String type) {
         DAO managerDao = daoFactory.getManagerDao();
-        ExamProject project = projectService.findProject(projectId);
-        if (ProjectStatus.Importing.name().equals(project.getStatus())) {
-            return Result.fail(1, "正在统计项目,请稍后再试");
-        }
+//        ExamProject project = projectService.findProject(projectId);
+//        if (ProjectStatus.Importing.name().equals(project.getStatus())) {
+//            return Result.fail(1, "正在统计项目,请稍后再试");
+//        }
         String condition = StringUtil.isEmpty(subjectId) ? "" : " and subject_id in (" + subjectId + ")";
 
         String replace = QUERY_AGGREGATION_STATUS
